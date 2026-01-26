@@ -43,16 +43,44 @@
         .page-section { display: none; animation: fadeIn 0.3s ease-in-out; }
         .page-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 驗證視窗樣式 */
+        #auth-modal {
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
 
+    <!-- ================= 0. 驗證視窗 (新增) ================= -->
+    <div id="auth-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm text-center">
+            <div class="mb-4 text-blue-900">
+                <i class="fa-solid fa-shield-halved text-5xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">系統存取驗證</h2>
+            <p class="text-gray-500 text-sm mb-6">請輸入存取金鑰 (Token) 以繼續</p>
+            
+            <input type="password" id="auth-token-input" class="w-full border border-gray-300 rounded-lg p-3 text-center mb-4 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="輸入 Token">
+            
+            <button onclick="submitAuth()" class="w-full bg-blue-900 text-white font-bold py-3 rounded-lg hover:bg-blue-800 transition">
+                驗證登入
+            </button>
+            <p id="auth-error" class="text-red-500 text-xs mt-3 hidden">請輸入 Token</p>
+        </div>
+    </div>
+
     <!-- ================= 1. 首頁 (主選單) ================= -->
     <div id="page-home" class="page-section active p-4 max-w-md mx-auto">
         <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
-            <div class="bg-blue-900 p-6 text-center">
+            <div class="bg-blue-900 p-6 text-center relative">
                 <h1 class="text-2xl font-bold text-white tracking-wider">工程管理整合系統</h1>
                 <p class="text-blue-200 text-sm mt-2">健益工程有限公司</p>
+                <!-- 登出按鈕 -->
+                <button onclick="logout()" class="absolute top-4 right-4 text-blue-200 hover:text-white text-xs">
+                    <i class="fa-solid fa-right-from-bracket"></i> 登出
+                </button>
             </div>
             <div class="p-6 grid gap-4">
                 <button onclick="navigateTo('page-quotation')" class="flex items-center p-4 bg-white border-2 border-blue-100 rounded-lg shadow-sm hover:bg-blue-50 hover:border-blue-300 transition group">
@@ -203,13 +231,46 @@
 
         // 當前系統狀態 'quotation' | 'cost' | 'accounting'
         let currentSystem = 'quotation'; 
+        const AUTH_KEY = 'system_auth_token'; // 用於 localStorage 的 key
 
         // 初始化
         window.onload = function() {
-            // 修正：使用 'app-container' 而不是 'page-quotation'，避免覆蓋掉 page-quotation 的 HTML 結構
-            // 確保 renderUI 已定義
+            checkAuth(); // 檢查驗證
             renderUI('app-container', 'quotation'); 
         };
+
+        // --- 驗證相關函式 ---
+        function checkAuth() {
+            const token = localStorage.getItem(AUTH_KEY);
+            const modal = document.getElementById('auth-modal');
+            if (!token) {
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function submitAuth() {
+            const input = document.getElementById('auth-token-input');
+            const errorMsg = document.getElementById('auth-error');
+            const token = input.value.trim();
+
+            if (token) {
+                localStorage.setItem(AUTH_KEY, token);
+                checkAuth();
+                errorMsg.classList.add('hidden');
+            } else {
+                errorMsg.innerText = "請輸入有效的 Token";
+                errorMsg.classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            if(confirm("確定要登出並清除 Token 嗎？")) {
+                localStorage.removeItem(AUTH_KEY);
+                location.reload();
+            }
+        }
 
         // --- 核心：頁面與系統切換 ---
         function navigateTo(pageId) {
@@ -430,10 +491,12 @@
             document.getElementById('fees-container').insertAdjacentHTML('beforeend', html);
         }
 
-        // --- 生成預覽與資料處理 (已更新：自動截圖傳送至後端) ---
+        // --- 生成預覽與資料處理 (已更新：Token 驗證) ---
         async function generatePreview(docTitle) {
             const customer = document.getElementById('customer').value.trim();
             if (!customer) return alert('請輸入客戶/廠商名稱');
+
+            const authToken = localStorage.getItem(AUTH_KEY); // 取得 Token
 
             const needTax = document.getElementById('needTax').checked;
             const sellerName = document.getElementById('sellerName').value;
@@ -554,34 +617,28 @@
             // 存入 LocalStorage 歷史紀錄
             saveToHistory(currentSystem, currentData);
 
-            // 6. [新增] 截圖並傳送至 GAS
+            // 6. [新增] 截圖並傳送至 GAS (含 Token)
             if (GAS_URL && GAS_URL !== '您的_GAS_WEB_APP_URL') {
                 const element = document.getElementById('quotation-canvas');
                 
-                // 延遲 500ms 確保畫面渲染完成後再截圖
                 setTimeout(() => {
-                    // 使用 html2canvas 截取預覽區塊
                     html2canvas(element, { 
-                        scale: 1.5, // 解析度倍率
+                        scale: 1.5, 
                         useCORS: true, 
                         backgroundColor: '#ffffff', 
                         logging: false 
                     }).then(canvas => {
-                        // 轉為 Base64 字串
                         const imageBase64 = canvas.toDataURL('image/jpeg', 0.8);
-                        
-                        // 設定資料夾名稱
                         const folderName = currentSystem === 'quotation' ? '報價資料' : (currentSystem === 'cost' ? '成本資料' : '會計資料');
                         
-                        // 準備傳送資料
                         const payload = { 
+                            token: authToken, // 加入 Token
                             type: currentSystem, 
                             folder: folderName, 
-                            image: imageBase64, // 包含圖片資料
+                            image: imageBase64, 
                             ...currentData 
                         };
 
-                        // 發送 POST 請求
                         fetch(GAS_URL, {
                             method: 'POST',
                             body: JSON.stringify(payload),
