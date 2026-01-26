@@ -350,6 +350,9 @@
         // LIFF 使用者資訊
         let liffUser = { userId: null, displayName: null, pictureUrl: null };
 
+        // [新增] 業務人員預設名單
+        const salesPersons = ['王小明', '李大同', '陳小華'];
+
         // 初始化
         window.onload = function () {
             initializeLiff();
@@ -450,6 +453,20 @@
                         </div>
                         <div><label class="block text-sm font-medium text-gray-700 mb-1">聯絡人</label><input type="text" id="contactPerson" class="w-full border border-gray-300 rounded-md p-2 text-sm"></div>
                         <div><label class="block text-sm font-medium text-gray-700 mb-1">連絡電話</label><input type="text" id="contactPhone" class="w-full border border-gray-300 rounded-md p-2 text-sm"></div>
+                        
+                        <!-- [新增] 內控資訊 -->
+                        <div class="md:col-span-1 bg-gray-50 p-2 rounded border border-gray-200">
+                             <label class="block text-xs font-bold text-gray-500 mb-1">專案ID (內控)</label>
+                             <input type="text" id="internalProjectId" class="w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="P-202X...">
+                        </div>
+                        <div class="md:col-span-1 bg-gray-50 p-2 rounded border border-gray-200">
+                             <label class="block text-xs font-bold text-gray-500 mb-1">業務人員</label>
+                             <input type="text" id="salesPerson" list="sales-list" class="w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="選擇或輸入">
+                             <datalist id="sales-list">
+                                ${salesPersons.map(s => `<option value="${s}">`).join('')}
+                             </datalist>
+                        </div>
+
                         <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">工程/項目名稱</label><input type="text" id="projectName" class="w-full border border-gray-300 rounded-md p-2 text-sm"></div>
                         <div><label class="block text-sm font-medium text-gray-700 mb-1">日期</label><input type="date" id="quoteDate" class="w-full border border-gray-300 rounded-md p-2 text-sm" value="${today}"></div>
                     </div>
@@ -620,6 +637,10 @@
             const sellerName = document.getElementById('sellerName').value;
             const sellerContact = document.getElementById('sellerContact').value;
             const project = document.getElementById('projectName').value;
+            // [新增] 內控資料
+            const internalProjectId = document.getElementById('internalProjectId').value;
+            const salesPerson = document.getElementById('salesPerson').value;
+
             const date = document.getElementById('quoteDate').value;
             const taxId = document.getElementById('taxId').value;
             const contact = document.getElementById('contactPerson').value;
@@ -729,6 +750,7 @@
 
             const currentData = {
                 taxId, contact, phone, project, date, note, orderId, sellerName, sellerContact, customer,
+                internalProjectId, salesPerson, // [新增]
                 items: itemsData, fees: feesData, subtotalNoTax, grandTotal
             };
 
