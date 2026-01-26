@@ -163,10 +163,10 @@
             <div class="bg-blue-900 p-6 text-center relative">
                 <h1 class="text-2xl font-bold text-white tracking-wider">工程管理整合系統</h1>
                 <p class="text-blue-200 text-sm mt-2">健益工程有限公司</p>
-                <!-- 登出按鈕 -->
-                <button onclick="logout()" class="absolute top-4 right-4 text-blue-200 hover:text-white text-xs">
-                    <i class="fa-solid fa-right-from-bracket"></i> 登出
-                </button>
+                <!-- 使用者資訊區 (取代原登出按鈕) -->
+                <div id="header-user-info" class="absolute top-4 right-4 text-blue-200 hover:text-white text-xs">
+                    <!-- JS 載入後顯示 -->
+                </div>
             </div>
             <div class="p-6 grid gap-4">
                 <button onclick="navigateTo('page-quotation')"
@@ -338,9 +338,12 @@
     </div>
 
     <script>
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzDAF6z227x3Hif3CxISbQSNV_xAHXk8BAYbAd8w0haV_39poKQCjnUbJhZAgcEfBBP/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzDAF6z227x3Hif3CxISbQSNV_xAHXk8BAYzAd8w0haV_39poKQCjnUbJhZAgcEfBBP/exec';
         const LIFF_ID = '2008974069-Ecojk6W1'; // 請在此填入您的 LIFF ID
-        const unitOptions = ['m', 'm²', 'm³', 'T(噸)', 'PC', '組', '樘', '才', '坪', '時', '天', '支', '台', '式', '車', '工'];
+        // 資料變數
+        let salesPersons = []; // 從後端載入
+        let unitOptions = [];  // 從後端載入
+        let nextProjectId = ''; // 從後端載入
         const DEFAULT_LOGO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFsAAABbCAMAAAAr6AmrAAAAA3NCSVQICAjb4U/gAAAADFBMVEX/igX/////nS7/kBGlc65UAAAApXpUWHRSYXcgcHJvZmlsZSB0eXBlIEFQUDEAABiVfU5bDsIwDPvvKXYE57G0PU5BBU1CgHb/DxI6xCYhHDV2rShOuvZ7X5fz9Fwfl+XW0xQgtaRVKzcABQMCEIOCvQ9sLOSKXeTtz4OtlgzdzTUcMPuEiVH29zZiFnXs0U+ssBcQx+x2zSd8l/7wGU3jJt78fIyGlEiWIuxdJbuqFiBnNRP8r0B6AQnGQScUvA0CAAABdklEQVRoge3ZWxLCIAwF0DTZ/57V6djyJiG5jjjypZQeUoqAQORNRze56UEFQXaTj7NrPdIu9VibGGhnoYfbhLQJaRPSJqRNSJuBNiFt2tWmXW362y38p21+Jom3swkwLS3lrF5VzpOqq3TdUNkTaion8blsbsE34rG79HE2u8MeyCe+bo+iPpl5P+mk7MaqvjvCsogmdZ5UyqwFu/+gRW0eu77E3Cq4QE9fz7o971Vmm/V3mG192Ot2bFG4LR+wNWOP1eZN7V3bBBn3rr+d6wbFBGi2keOg6AM324aNBLvNatxuD7ZXJM9asJOlT97mXEALdrZkkyrXF3e51Hz+J0m/njUlma/Pev4YpmaBGFyc9gCX9mWDXa+wM8Nnt1f4726jscfvt9TvKxp7/iiWSc5qr6dtbXsz6u1Nt5XMP6jvsWFv0z7K2GzoLrh9E01vQ48doOcl0IMe6AkV9GgNeiYY3hVn82mcHTu2aNYCcXZc8C07qIIHIcAGb2GaLZ0AAAAASUVORK5CYII=';
         let userLogoData = DEFAULT_LOGO;
 
@@ -350,12 +353,10 @@
         // LIFF 使用者資訊
         let liffUser = { userId: null, displayName: null, pictureUrl: null };
 
-        // [新增] 業務人員預設名單
-        const salesPersons = ['王小明', '李大同', '陳小華'];
-
         // 初始化
         window.onload = function () {
             initializeLiff();
+            fetchSystemConfig(); // [新增] 載入系統設定
         };
 
         // --- LIFF 初始化與登入 ---
@@ -363,7 +364,6 @@
             try {
                 if (LIFF_ID === '您的_LIFF_ID') {
                     console.warn('尚未設定 LIFF ID');
-                    // 若無 LIFF ID 仍先渲染 UI，方便測試預覽，但功能會受限
                     renderUI('app-container', 'quotation');
                     return;
                 }
@@ -371,7 +371,7 @@
                 await liff.init({ liffId: LIFF_ID });
 
                 if (!liff.isLoggedIn()) {
-                    liff.login(); // 強制登入
+                    liff.login();
                 } else {
                     const profile = await liff.getProfile();
                     liffUser = {
@@ -380,16 +380,96 @@
                         pictureUrl: profile.pictureUrl
                     };
                     console.log("LIFF 登入成功:", liffUser.displayName);
-                    // 登入成功後渲染 UI
-                    renderUI('app-container', 'quotation');
 
-                    // 可以在這裡做權限檢查 (目前僅記錄 ID)
+                    // [新增] 更新右上角使用者資訊
+                    updateUserInfoUI();
+
+                    renderUI('app-container', 'quotation');
                 }
             } catch (err) {
                 console.error('LIFF 初始化失敗:', err);
-                alert('LIFF 初始化失敗，請檢查 LIFF ID 設定或網路連線。');
-                // 失敗時仍嘗試渲染 UI
                 renderUI('app-container', 'quotation');
+            }
+        }
+
+        function updateUserInfoUI() {
+            const headerInfo = document.getElementById('header-user-info');
+            if (headerInfo && liffUser.displayName) {
+                headerInfo.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <img src="${liffUser.pictureUrl || 'https://via.placeholder.com/30'}" class="w-8 h-8 rounded-full border border-white">
+                        <span class="text-blue-100 text-xs">${liffUser.displayName}</span>
+                        <button onclick="logout()" class="text-white hover:text-gray-300 ml-2 text-xs">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // --- [新增] 取得後端設定 ---
+        function fetchSystemConfig() {
+            if (GAS_URL === '您的_GAS_WEB_APP_URL') return;
+            fetch(GAS_URL)
+                .then(res => res.json())
+                .then(data => {
+                    if (data) {
+                        salesPersons = data.sales || [];
+                        unitOptions = data.units || [];
+                        nextProjectId = data.nextProjectId || '';
+                        // 若 UI 已渲染，重新更新相關欄位 (如 datalist)
+                        renderDynamicLists();
+                    }
+                })
+                .catch(e => console.error("Config fetch failed", e));
+        }
+
+        function renderDynamicLists() {
+            // 更新業務清單
+            const salesList = document.getElementById('sales-list');
+            if (salesList) {
+                salesList.innerHTML = salesPersons.map(s => `<option value="${s}">`).join('');
+            }
+            // 單位清單會在 addRow 時動態生成
+        }
+
+        // --- [新增] 邏輯控制 ---
+        function checkQty(input) {
+            if (parseFloat(input.value) < 0) {
+                alert("數量不能為負數！");
+                input.value = 0;
+            }
+        }
+
+        function checkPrice(input) {
+            if (parseFloat(input.value) < 0) {
+                if (!confirm("警告：單價為負數，確定要繼續嗎？")) {
+                    input.value = 0;
+                }
+            }
+        }
+
+        function generateProjectId() {
+            const input = document.getElementById('internalProjectId');
+            if (input && nextProjectId) {
+                input.value = nextProjectId;
+                // 為了避免重複，前端顯示後暫時 +1 (實際準確度依賴後端再次確認或由後端更新)
+                // 簡易處理：若後端回傳 202601260001, 前端使用後可簡單設為 used
+            } else {
+                alert("尚未取得專案ID或連線中...");
+            }
+        }
+
+        function saveUnit(unit) {
+            // 檢查是否為新單位
+            if (unit && unit !== 'custom' && !unitOptions.includes(unit)) {
+                unitOptions.push(unit); // 前端先更新
+                // 背景送出儲存
+                fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'save_unit', unit: unit }),
+                    mode: 'no-cors'
+                });
             }
         }
 
@@ -409,6 +489,8 @@
                 currentSystem = 'accounting';
                 renderUI('acc-container', 'accounting');
             }
+            // 頁面切換後更新 UI 資訊 (因為 innerHTML 重繪了)
+            setTimeout(updateUserInfoUI, 50);
         }
 
         // --- 動態渲染 UI (共用模板) ---
@@ -457,7 +539,10 @@
                         <!-- [新增] 內控資訊 -->
                         <div class="md:col-span-1 bg-gray-50 p-2 rounded border border-gray-200">
                              <label class="block text-xs font-bold text-gray-500 mb-1">專案ID (內控)</label>
-                             <input type="text" id="internalProjectId" class="w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="P-202X...">
+                             <div class="flex gap-1">
+                                <input type="text" id="internalProjectId" class="w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="編號">
+                                <button onclick="generateProjectId()" class="bg-blue-600 text-white px-2 py-1 rounded text-xs whitespace-nowrap">生成</button>
+                             </div>
                         </div>
                         <div class="md:col-span-1 bg-gray-50 p-2 rounded border border-gray-200">
                              <label class="block text-xs font-bold text-gray-500 mb-1">業務人員</label>
@@ -603,12 +688,12 @@
                     <button onclick="this.parentElement.remove()" class="absolute top-1 right-1 text-gray-400 hover:text-red-500">✕</button>
                     <div class="grid grid-cols-12 gap-2">
                         <div class="col-span-12 md:col-span-6"><label class="text-xs text-gray-500">項目名稱</label><input type="text" class="input-name w-full border border-gray-300 rounded p-1" placeholder="品項" oninput="checkItemHistory(this)"></div>
-                        <div class="col-span-4 md:col-span-2"><label class="text-xs text-gray-500">數量</label><input type="number" class="input-qty w-full border border-gray-300 rounded p-1 text-center" value="1"></div>
+                        <div class="col-span-4 md:col-span-2"><label class="text-xs text-gray-500">數量</label><input type="number" class="input-qty w-full border border-gray-300 rounded p-1 text-center" value="1" onchange="checkQty(this)"></div>
                         <div class="col-span-4 md:col-span-2"><label class="text-xs text-gray-500">單位</label>
                             <select class="input-unit-select w-full border p-1" onchange="toggleUnit(this)">${optionsHtml}</select>
-                            <input type="text" class="input-unit-custom w-full border p-1 hidden" placeholder="輸入">
+                            <input type="text" class="input-unit-custom w-full border p-1 hidden" placeholder="輸入" onchange="saveUnit(this.value)">
                         </div>
-                        <div class="col-span-4 md:col-span-2"><label class="text-xs text-gray-500">單價</label><input type="number" class="input-price w-full border p-1 text-right" placeholder="0"></div>
+                        <div class="col-span-4 md:col-span-2"><label class="text-xs text-gray-500">單價</label><input type="number" class="input-price w-full border p-1 text-right" placeholder="0" onchange="checkPrice(this)"></div>
                         <div class="col-span-12"><label class="text-xs text-gray-500">備註</label><input type="text" class="input-remark w-full border p-1" placeholder="..."></div>
                     </div>
                 </div>`;
