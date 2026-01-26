@@ -328,15 +328,16 @@
             const btn = event.target;
             btn.innerText = "查詢中...";
             try {
-                // 代理查詢 (透過 GAS)
                 const res = await fetch(`${GAS_URL}?action=lookup&taxId=${taxId}`);
                 const data = await res.json();
                 if (data.name) {
                     document.getElementById('customer').value = data.name;
                 } else {
-                    alert("查無此統編資料");
+                    alert(data.error || "查無此統編資料");
                 }
-            } catch (e) { alert("連線失敗"); }
+            } catch (e) {
+                alert("連線失敗，請檢查 GAS 部署是否正確，或是否超過查詢量限制。");
+            }
             btn.innerText = "查詢";
         }
 
