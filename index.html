@@ -671,11 +671,22 @@
         }
 
         function renderDynamicLists() {
-            // 更新業務清單
+            // 更新業務清單 (Datalist)
             const salesList = document.getElementById('sales-list');
             if (salesList) {
                 salesList.innerHTML = salesPersons.map(s => `<option value="${s}">`).join('');
             }
+
+            // 更新業務人員 Select (若為報價單模式)
+            const salesSelect = document.getElementById('salesPerson');
+            if (salesSelect && salesSelect.tagName === 'SELECT') {
+                const currentVal = salesSelect.value;
+                salesSelect.innerHTML = '<option value="">-- 請選擇 --</option>' +
+                    salesPersons.map(s => `<option value="${s}">${s}</option>`).join('') +
+                    '<option value="NEW"> + 新增...</option>';
+                if (currentVal) salesSelect.value = currentVal;
+            }
+
             // 更新廠商清單
             const vendorList = document.getElementById('vendor-list');
             if (vendorList) {
@@ -775,19 +786,37 @@
                 <datalist id="vendor-list">${vendors.map(v => `<option value="${v}">`).join('')}</datalist>
             `;
 
-            // --- 0. 共用頂部區塊 (內控與業務) [置頂需求] ---
-            const internalIdVal = (systemType === 'quotation') ? nextProjectId : ''; // 預設值
+            // --- 0. 置頂資訊 (內控與業務) ---
+            // 內控 ID 自動化 (報價單時唯讀且自動填入, 成本單時隱藏或顯示關聯 ID)
+            const internalIdVal = (systemType === 'quotation') ? (nextProjectId || '讀取中...') : '';
+
+            // 業務人員選單 (報價單模式使用下拉選單)
+            let salesInputIdx = '';
+            if (systemType === 'quotation') {
+                salesInputIdx = `
+                <select id="salesPerson" class="w-full border border-gray-300 rounded p-1 text-sm bg-white" onchange="saveConfig('sales', this.value)">
+                    <option value="">-- 請選擇 --</option>
+                    ${salesPersons.map(s => `<option value="${s}">${s}</option>`).join('')}
+                    <option value="NEW"> + 新增...</option>
+                </select>`;
+                // 簡單處理新增邏輯: 若選 NEW 則 prompt
+            } else {
+                // 其他模式或保留彈性
+                salesInputIdx = `<input type="text" id="salesPerson" list="sales-list" class="w-full border border-gray-300 rounded p-1 text-sm" placeholder="輸入或選擇" onchange="saveConfig('sales', this.value)">`;
+            }
+
             const internalInfoHtml = `
             <div class="mb-4 bg-gray-100 p-3 rounded border border-gray-300">
-                <h3 class="text-xs font-bold text-gray-500 mb-2 border-b pb-1">業務與內控資訊 (本單據歸屬)</h3>
+                <h3 class="text-xs font-bold text-gray-500 mb-2 border-b pb-1">業務與內控資訊</h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                      <div>
-                         <label class="block text-xs font-bold text-gray-600 mb-1">專案ID (內控)</label>
-                         <input type="text" id="internalProjectId" class="w-full border border-gray-300 rounded p-1 text-sm bg-white" value="${internalIdVal}" readonly>
+                         <label class="block text-xs font-bold text-gray-600 mb-1">專案ID (內控/臨時碼)</label>
+                         <input type="text" id="internalProjectId" class="w-full border border-gray-300 rounded p-1 text-sm bg-gray-100" value="${internalIdVal}" readonly>
+                         <span class="text-[10px] text-gray-400 block mt-0.5">格式：年份+日期+序號</span>
                      </div>
                      <div>
                          <label class="block text-xs font-bold text-gray-600 mb-1">業務人員</label>
-                         <input type="text" id="salesPerson" list="sales-list" class="w-full border border-gray-300 rounded p-1 text-sm" placeholder="輸入或選擇" onchange="saveConfig('sales', this.value)">
+                         ${salesInputIdx}
                      </div>
                      <div>
                          <label class="block text-xs font-bold text-gray-600 mb-1">業務手機</label>
@@ -1043,10 +1072,17 @@
                 // 如果選擇了 "-- 選擇單號以載入 --" 或找不到，則重置表單
                 document.getElementById('edit-mode-badge').classList.add('hidden');
                 currentOriginId = null;
-                // 清空表單 (簡化處理，實際應重繪或逐一清空)
+                // 重繪 UI 以清空
                 renderUI('app-container', 'quotation');
+                // 確保 ID 填回預設 (nextProjectId)
+                setTimeout(() => {
+                    const idInput = document.getElementById('internalProjectId');
+                    if (idInput) idInput.value = nextProjectId || '讀取中...';
+                }, 50);
                 return;
             }
+
+            // ... (後續載入邏輯) ...
 
             // 標記為修改模式
             currentOriginId = project.id.split('-').slice(0, 2).join('-'); // 取得原始 ID (移除版本號)
