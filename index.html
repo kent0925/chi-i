@@ -205,6 +205,104 @@
                     </div>
                     <i class="fa-solid fa-chevron-right ml-auto text-gray-300 group-hover:text-orange-500"></i>
                 </button>
+
+                <!-- [新增] 使用說明按鈕 -->
+                <button onclick="showUserGuide()"
+                    class="flex items-center p-4 bg-white border-2 border-gray-200 rounded-lg shadow-sm hover:bg-gray-100 hover:border-gray-400 transition group mt-2">
+                    <div
+                        class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 group-hover:bg-gray-600 group-hover:text-white transition">
+                        <i class="fa-solid fa-book-open text-xl"></i>
+                    </div>
+                    <div class="ml-4 text-left">
+                        <h3 class="text-lg font-bold text-gray-800">系統使用說明</h3>
+                        <p class="text-xs text-gray-500">操作教學與注意事項</p>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- [新增] 使用說明 Modal -->
+    <div id="guide-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black bg-opacity-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[85vh] overflow-y-auto p-8 relative">
+            <button onclick="document.getElementById('guide-modal').classList.add('hidden')"
+                class="absolute top-4 right-4 text-gray-500 hover:text-black">
+                <i class="fa-solid fa-times text-2xl"></i>
+            </button>
+            <h2 class="text-3xl font-bold mb-6 border-b pb-4 text-gray-800">工程管理整合系統 - 操作手冊</h2>
+
+            <div class="space-y-8 text-gray-700 leading-relaxed overflow-y-auto pr-2">
+
+                <section>
+                    <h3 class="text-xl font-bold text-blue-900 mb-3 border-l-4 border-blue-500 pl-3">一、系統登入與驗證</h3>
+                    <ul class="list-disc pl-5 mt-2 space-y-2">
+                        <li><strong>操作方式：</strong>系統採用 <strong>LIFF (LINE Front-end Framework)</strong>
+                            進行身分驗證，開啟網頁即自動登入。</li>
+                        <li><strong>權限說明：</strong>系統將自動記錄您的 LINE User ID，作為後續資料權限判斷依據。</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h3 class="text-xl font-bold text-blue-900 mb-3 border-l-4 border-blue-500 pl-3">二、建立單據步驟</h3>
+                    <ol class="list-decimal pl-5 mt-2 space-y-2">
+                        <li>
+                            <strong>填寫基本資料：</strong>
+                            <ul class="list-disc pl-5 mt-1 text-sm text-gray-600">
+                                <li><strong>統編查詢：</strong>輸入 8 碼統編後，系統自動帶入公司名稱 (無需手動輸入)。</li>
+                                <li><strong>內控資訊：</strong>點擊「生成」按鈕可取得當日最新專案編號；業務人員可由選單選擇。</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>新增項目明細：</strong>
+                            <ul class="list-disc pl-5 mt-1 text-sm text-gray-600">
+                                <li><strong>智慧提示：</strong>輸入項目名稱前兩字，若歷史資料有相同項目，可直接選用 (自動帶入單價/單位)。</li>
+                                <li><strong>單位記憶：</strong>若輸入新單位，系統會自動儲存至後台供下次使用。</li>
+                            </ul>
+                        </li>
+                        <li><strong>預覽與存檔：</strong>確認內容無誤後，點擊下方「預覽並儲存」，系統將自動生成圖片並上傳至資料庫。</li>
+                    </ol>
+                </section>
+
+                <section>
+                    <h3 class="text-xl font-bold text-blue-900 mb-3 border-l-4 border-blue-500 pl-3">三、資料庫欄位說明</h3>
+                    <p class="mb-2">系統自動將資料存入 Google Sheet，主要欄位包含：</p>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm text-left text-gray-700 border border-gray-200">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 border">欄位</th>
+                                    <th class="px-4 py-2 border">說明</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="bg-white border-b">
+                                    <td class="px-4 py-2 font-medium">單號/日期/客戶</td>
+                                    <td class="px-4 py-2">基本索引資訊</td>
+                                </tr>
+                                <tr class="bg-gray-50 border-b">
+                                    <td class="px-4 py-2 font-medium">專案ID (內控)</td>
+                                    <td class="px-4 py-2">內部列管編號 (P-YYYYMMDDxxxx)</td>
+                                </tr>
+                                <tr class="bg-white border-b">
+                                    <td class="px-4 py-2 font-medium">業務人員</td>
+                                    <td class="px-4 py-2">負責該案人員</td>
+                                </tr>
+                                <tr class="bg-gray-50 border-b">
+                                    <td class="px-4 py-2 font-medium">檔案連結</td>
+                                    <td class="px-4 py-2">自動產生的報價單圖檔連結</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+            </div>
+
+            <div class="mt-8 text-center pt-4 border-t">
+                <button onclick="document.getElementById('guide-modal').classList.add('hidden')"
+                    class="bg-gray-800 text-white px-8 py-3 rounded-lg hover:bg-gray-700 font-bold transition shadow-lg">
+                    關閉說明
+                </button>
             </div>
         </div>
     </div>
@@ -214,6 +312,101 @@
         <!-- 內容由 JS 動態渲染 -->
         <div id="app-container"></div>
     </div>
+
+    <!-- (JS 部分更新) -->
+    <script>
+        // ... (保留前面)
+
+        function showUserGuide() {
+            document.getElementById('guide-modal').classList.remove('hidden');
+        }
+
+        // --- 統編查詢 ---
+        async function lookupCompany() {
+            const taxId = document.getElementById('taxId').value.trim();
+            const nameInput = document.getElementById('customer');
+
+            // [新增] 自動查詢邏輯
+            if (taxId.length === 8) {
+                nameInput.placeholder = "查詢中...";
+                try {
+                    const response = await fetch(`https://data.gcis.nat.gov.tw/od/data/api/9D17AE0D-09B5-4432-A8F4-81B43F75F718?$format=json&$filter=Business_Accounting_NO eq ${taxId}&$skip=0&$top=1`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data && data.length > 0) {
+                            nameInput.value = data[0].Company_Name;
+                            loadHistory(currentSystem);
+                        } else {
+                            // 查無資料不報錯，僅提示
+                            nameInput.placeholder = "查無統編，請手動輸入";
+                        }
+                    }
+                } catch (e) { console.log("Lookup error", e); }
+            }
+        }
+
+        // --- 項目歷史紀錄 ---
+        function checkItemHistory(input) {
+            const val = input.value.trim();
+            if (val.length < 1) return;
+
+            const listId = 'list-' + input.closest('.item-row').id;
+            let datalist = document.getElementById(listId);
+
+            // 動態建立 datalist
+            if (!datalist) {
+                datalist = document.createElement('datalist');
+                datalist.id = listId;
+                document.body.appendChild(datalist);
+                input.setAttribute('list', listId);
+
+                // 監聽選擇事件 (較複雜，需配合 input event 判斷是否選中)
+                input.addEventListener('change', function () {
+                    const selectedOption = Array.from(datalist.options).find(opt => opt.value === this.value);
+                    if (selectedOption) {
+                        const price = selectedOption.getAttribute('data-price');
+                        const unit = selectedOption.getAttribute('data-unit');
+                        const row = this.closest('.item-row');
+                        if (price) row.querySelector('.input-price').value = price;
+                        // 單位處理較複雜，暫略，或簡單填入 custom
+                        if (unit) {
+                            row.querySelector('.input-unit-custom').value = unit;
+                            row.querySelector('.input-unit-custom').classList.remove('hidden');
+                            row.querySelector('.input-unit-select').classList.add('hidden');
+                            row.querySelector('.input-unit-select').value = 'custom';
+                        }
+                    }
+                });
+            }
+
+            // 讀取歷史
+            const history = JSON.parse(localStorage.getItem('item_history') || '[]');
+            // 過濾前兩個字符合的
+            const matches = history.filter(item => item.name.startsWith(val.slice(0, 2))); // 至少前兩字
+
+            datalist.innerHTML = matches.map(item =>
+                `<option value="${item.name}" data-price="${item.price}" data-unit="${item.unit}">歷史: $${item.price}/${item.unit}</option>`
+            ).join('');
+        }
+
+        function saveNewItemsToHistory(items) {
+            let history = JSON.parse(localStorage.getItem('item_history') || '[]');
+            items.forEach(newItem => {
+                if (newItem.type === 'item') {
+                    // 避免重複：以前兩字+名稱完全相同判斷，或更新最新單價
+                    const idx = history.findIndex(h => h.name === newItem.name);
+                    if (idx > -1) {
+                        history[idx] = { name: newItem.name, price: newItem.price, unit: newItem.unit }; // 更新價格
+                    } else {
+                        history.push({ name: newItem.name, price: newItem.price, unit: newItem.unit });
+                    }
+                }
+            });
+            localStorage.setItem('item_history', JSON.stringify(history));
+        }
+
+        // ...
+    </script>
 
     <!-- ================= 3. 成本系統 ================= -->
     <div id="page-cost" class="page-section p-4">
@@ -524,9 +717,12 @@
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                         <div class="md:col-span-2 bg-${color}-50 p-3 rounded-md border border-${color}-100">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">客戶/廠商名稱</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                客戶/廠商名稱 
+                                <span class="text-xs text-blue-500 font-normal ml-2">(公司戶請輸入統編即可自動帶入)</span>
+                            </label>
                             <div class="flex gap-2 mb-2">
-                                <input type="text" id="taxId" class="w-1/3 border border-gray-300 rounded-md p-2 text-sm" placeholder="統編(選填)" onchange="lookupCompany()">
+                                <input type="text" id="taxId" class="w-1/3 border border-gray-300 rounded-md p-2 text-sm" placeholder="統編(選填)" oninput="lookupCompany()">
                                 <button onclick="lookupCompany()" class="bg-${color}-600 text-white px-3 rounded-md text-xs hover:bg-${color}-700">查詢</button>
                             </div>
                             <input type="text" id="customer" class="w-full border border-gray-300 rounded-md p-2" placeholder="輸入名稱" oninput="loadHistory('${systemType}')">
