@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工程管理 - 報價系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        .preview-canvas {
+            font-family: 'DFKai-SB', 'BiauKai', '標楷體', 'Noto Serif TC', serif;
+            background-color: white;
+            color: black;
+            line-height: 1.3;
+        }
+
+        .company-title {
+            font-size: 20pt;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .doc-title {
+            font-size: 16pt;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .info-table,
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12pt;
+        }
+
+        .info-table td,
+        .items-table th,
+        .items-table td {
+            border: 1px solid #000;
+            padding: 4px 8px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: flex-end;
+            font-size: 12pt;
+            padding: 2px 0;
+        }
+
+        .summary-label {
+            text-align: right;
+            padding-right: 10px;
+            width: 150px;
+        }
+
+        .summary-value {
+            text-align: right;
+            width: 120px;
+            padding-right: 4px;
+        }
+    </style>
+</head>
+
+<body class="p-4 max-w-4xl mx-auto">
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+        <div class="p-6 bg-blue-900 text-white flex justify-between items-center">
+            <h1 class="text-2xl font-bold">工程報價系統</h1>
+            <button onclick="location.href='index.html'"
+                class="text-sm bg-blue-800 px-3 py-1 rounded hover:bg-blue-700">返回主選單</button>
+        </div>
+
+        <div class="p-6">
+            <!-- 來源資料 (修改模式) -->
+            <div class="mb-4 bg-blue-50 p-3 rounded border border-blue-200">
+                <label class="font-bold text-blue-900 text-sm mr-2">修改歷史單據：</label>
+                <select id="historySelect" onchange="loadQuoteForEdit(this.value)"
+                    class="border border-blue-300 rounded p-1 text-sm w-64">
+                    <option value="">-- 建立新單據 --</option>
+                </select>
+                <span id="edit-mode-badge"
+                    class="hidden bg-red-500 text-white text-xs px-2 py-1 rounded ml-2">修改模式</span>
+            </div>
+
+            <!-- 業務與內部資訊 -->
+            <div class="mb-4 bg-gray-100 p-3 rounded border border-gray-300">
+                <h3 class="text-xs font-bold text-gray-500 mb-2 border-b pb-1">業務與內控資訊</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">專案ID (內控/臨時碼)</label>
+                        <input type="text" id="internalProjectId"
+                            class="w-full border border-gray-300 rounded p-1 text-sm bg-gray-100 text-gray-400 italic font-bold"
+                            value="(存檔後自動產生)" readonly>
+                        <span class="text-[10px] text-gray-400 block mt-0.5">格式：年份+日期+序號</span>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">業務人員</label>
+                        <select id="salesPerson" class="w-full border border-gray-300 rounded p-1 text-sm bg-white"
+                            onchange="saveConfig('sales', this.value)">
+                            <option value="">-- 請選擇 --</option>
+                            <option value="NEW"> + 新增...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">業務手機</label>
+                        <input type="text" id="salesMobile" class="w-full border border-gray-300 rounded p-1 text-sm"
+                            placeholder="09xx-xxx-xxx">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 客戶基本資料 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div class="md:col-span-2 bg-blue-50 p-3 rounded-md border border-blue-100">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        客戶名稱 <span class="text-xs text-blue-500 font-normal ml-2">(可輸入統編8碼自動帶入)</span>
+                    </label>
+                    <div class="flex gap-2 mb-2 items-center">
+                        <div class="w-1/3 relative">
+                            <input type="text" id="taxId" class="w-full border border-gray-300 rounded-md p-2 text-sm"
+                                placeholder="統編(選填)" oninput="checkTaxId(this)">
+                            <span id="tax-warning"
+                                class="hidden absolute top-full left-0 text-[10px] text-red-500 font-bold">請輸入8碼數字</span>
+                        </div>
+                        <button onclick="lookupCompany()"
+                            class="bg-blue-600 text-white px-3 py-1 rounded-md text-xs h-9">查詢</button>
+                        <input type="text" id="customer" class="flex-1 border border-gray-300 rounded-md p-2"
+                            placeholder="輸入客戶名稱">
+                    </div>
+                </div>
+                <div><label class="block text-sm font-medium text-gray-700 mb-1">客戶聯絡人</label><input type="text"
+                        id="contactPerson" class="w-full border border-gray-300 rounded-md p-2 text-sm"></div>
+                <div><label class="block text-sm font-medium text-gray-700 mb-1">客戶聯絡電話</label><input type="text"
+                        id="contactPhone" class="w-full border border-gray-300 rounded-md p-2 text-sm"></div>
+                <div class="md:col-span-2"><label
+                        class="block text-sm font-medium text-gray-700 mb-1">工程/專案名稱</label><input type="text"
+                        id="projectName" class="w-full border border-gray-300 rounded-md p-2 text-sm"></div>
+                <div><label class="block text-sm font-medium text-gray-700 mb-1">日期</label><input type="date"
+                        id="quoteDate" class="w-full border border-gray-300 rounded-md p-2 text-sm"></div>
+            </div>
+
+            <!-- 明細內容 -->
+            <h3 class="text-md font-bold text-gray-700 mb-2">明細內容</h3>
+            <div id="items-container" class="space-y-3 mb-4"></div>
+            <div class="flex gap-3 mb-6">
+                <button onclick="addRow('category')"
+                    class="flex-1 py-2 px-4 border border-gray-300 bg-gray-50 text-gray-700 font-bold rounded hover:bg-gray-100">+
+                    大項次</button>
+                <button onclick="addRow('item')"
+                    class="flex-1 py-2 px-4 border border-blue-300 bg-blue-50 text-blue-700 font-bold rounded hover:bg-blue-100">+
+                    細項</button>
+            </div>
+
+            <!-- 額外費用 -->
+            <div class="mb-4 bg-yellow-50 p-4 rounded border border-yellow-200">
+                <label class="block text-sm font-bold text-gray-700 mb-2">額外費用</label>
+                <div id="fees-container" class="space-y-2 mb-3"></div>
+                <button onclick="addFeeRow()"
+                    class="text-sm bg-white border border-yellow-400 text-yellow-700 px-3 py-1 rounded hover:bg-yellow-100">+
+                    新增費用</button>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">備註說明</label>
+                <textarea id="footerNote" class="w-full border border-gray-300 rounded-md p-2 text-sm h-20"
+                    placeholder="例如：報價有效期、付款條件..."></textarea>
+            </div>
+
+            <button onclick="generatePreview('工程報價單')"
+                class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-blue-700 transition">
+                預覽並確認內容
+            </button>
+        </div>
+    </div>
+
+    <!-- 預覽視窗 -->
+    <div id="preview-modal"
+        class="hidden fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center z-50 overflow-y-auto p-4">
+        <div class="bg-white rounded shadow-xl max-w-[230mm] w-full overflow-hidden flex flex-col max-h-[95vh]">
+            <div class="overflow-y-auto flex-1 bg-gray-500 p-4 flex justify-center">
+                <div id="quotation-canvas"
+                    class="preview-canvas bg-white p-12 w-full max-w-[210mm] min-h-[297mm] shadow-lg relative">
+                    <!-- 預覽內容由 JS 填充 -->
+                </div>
+            </div>
+            <div class="p-4 bg-gray-50 flex gap-4 border-t z-50">
+                <button onclick="document.getElementById('preview-modal').classList.add('hidden')"
+                    class="flex-1 py-2 bg-gray-200 text-gray-800 rounded font-bold hover:bg-gray-300">返回修改</button>
+                <button onclick="submitData()"
+                    class="flex-1 py-2 bg-blue-600 text-white rounded font-bold shadow hover:bg-blue-700">確認儲存並產生圖檔</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 共用 Datalists -->
+    <datalist id="sales-list"></datalist>
+    <datalist id="unit-list"></datalist>
+
+    <script>
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbx6P6g9-YpM0WjX2JvP9G97L1b1L1L1L1L1L1L1L1L1L1L1/exec'; // 請更換為正確的 GAS 網址
+        let salesPersons = [];
+        let unitOptions = [];
+        let projectList = [];
+        let currentOriginId = null;
+
+        window.onload = function () {
+            const dateInput = document.getElementById('quoteDate');
+            if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+            fetchConfig();
+            addRow('category');
+            addRow('item');
+        };
+
+        function fetchConfig() {
+            if (GAS_URL.includes('您的')) return;
+            fetch(GAS_URL)
+                .then(res => res.json())
+                .then(data => {
+                    salesPersons = data.sales || [];
+                    unitOptions = data.units || [];
+                    projectList = data.projects || [];
+                    renderLists();
+                    populateHistory();
+                });
+        }
+
+        function renderLists() {
+            const sList = document.getElementById('sales-list');
+            if (sList) sList.innerHTML = salesPersons.map(s => `<option value="${s}">`).join('');
+
+            const sSelect = document.getElementById('salesPerson');
+            if (sSelect) {
+                const cur = sSelect.value;
+                sSelect.innerHTML = '<option value="">-- 請選擇 --</option>' + salesPersons.map(s => `<option value="${s}">${s}</option>`).join('') + '<option value="NEW"> + 新增...</option>';
+                if (cur) sSelect.value = cur;
+            }
+
+            const uList = document.getElementById('unit-list');
+            if (uList) uList.innerHTML = unitOptions.map(u => `<option value="${u}">`).join('');
+        }
+
+        function populateHistory() {
+            const hSel = document.getElementById('historySelect');
+            if (hSel) {
+                hSel.innerHTML = '<option value="">-- 建立新單據 --</option>' + projectList.map(p => {
+                    const label = `${p.date} ${p.customer} (${p.project})`;
+                    return `<option value="${p.id}">${label}</option>`;
+                }).join('');
+            }
+        }
+
+        function addRow(type) {
+            const container = document.getElementById('items-container');
+            const id = Date.now();
+            const div = document.createElement('div');
+            div.className = "flex gap-2 items-center item-row p-2 rounded " + (type === 'category' ? "bg-gray-100 border-l-4 border-gray-400" : "bg-white border border-gray-100 shadow-sm");
+            div.id = 'row-' + id;
+            div.innerHTML = type === 'category' ? `
+                <div class="font-bold text-gray-400 px-2">●</div>
+                <input type="text" class="input-category flex-1 border-b border-gray-300 bg-transparent p-1 font-bold outline-none" placeholder="大項次名稱 (例如: 一、拆除工程)">
+                <button onclick="this.parentElement.remove()" class="text-gray-300 hover:text-red-500 px-2"><i class="fa-solid fa-trash-can"></i></button>
+            ` : `
+                <div class="w-8 text-center text-xs text-gray-300">${container.querySelectorAll('.item-row').length + 1}</div>
+                <input type="text" class="input-name flex-[3] border border-gray-300 rounded p-1 text-sm" placeholder="細項描述">
+                <input type="number" class="input-qty w-16 border border-gray-300 rounded p-1 text-sm text-center" placeholder="數量" value="1">
+                <div class="w-20">
+                    <select onchange="handleUnitChange(this)" class="input-unit-select w-full border border-gray-300 rounded p-1 text-xs">
+                        <option value="">單位</option>
+                        ${unitOptions.map(u => `<option value="${u}">${u}</option>`).join('')}
+                        <option value="custom">+ 其他</option>
+                    </select>
+                    <input type="text" class="input-unit-custom hidden w-full border border-gray-300 rounded p-1 text-xs" placeholder="新單位">
+                </div>
+                <input type="number" class="input-price flex-[1.5] border border-gray-300 rounded p-1 text-sm text-right" placeholder="單價">
+                <input type="text" class="input-remark flex-[2] border border-gray-300 rounded p-1 text-xs" placeholder="備註">
+                <button onclick="this.parentElement.remove()" class="text-gray-300 hover:text-red-500 px-2"><i class="fa-solid fa-trash-can"></i></button>
+            `;
+            container.appendChild(div);
+        }
+
+        function handleUnitChange(sel) {
+            const custom = sel.nextElementSibling;
+            if (sel.value === 'custom') {
+                sel.classList.add('hidden');
+                custom.classList.remove('hidden');
+                custom.focus();
+            }
+        }
+
+        function addFeeRow() {
+            const container = document.getElementById('fees-container');
+            const div = document.createElement('div');
+            div.className = "flex gap-2 fee-row";
+            div.innerHTML = `
+                <input type="text" class="fee-name flex-1 border border-gray-300 rounded p-1 text-sm" placeholder="費用項目 (例如：管理費)">
+                <select class="fee-type border border-gray-300 rounded p-1 text-sm">
+                    <option value="fixed">固定金額($)</option>
+                    <option value="percent">百分比(%)</option>
+                </select>
+                <input type="number" class="fee-value w-24 border border-gray-300 rounded p-1 text-sm" placeholder="數值">
+                <button onclick="this.parentElement.remove()" class="text-red-400 px-2">×</button>
+            `;
+            container.appendChild(div);
+        }
+
+        async function lookupCompany() {
+            const taxId = document.getElementById('taxId').value;
+            if (taxId.length !== 8) return alert("請輸入8碼統編");
+            const btn = event.target;
+            btn.innerText = "查詢中...";
+            try {
+                // 代理查詢 (透過 GAS)
+                const res = await fetch(`${GAS_URL}?action=lookup&taxId=${taxId}`);
+                const data = await res.json();
+                if (data.name) {
+                    document.getElementById('customer').value = data.name;
+                } else {
+                    alert("查無此統編資料");
+                }
+            } catch (e) { alert("連線失敗"); }
+            btn.innerText = "查詢";
+        }
+
+        function saveConfig(type, val) {
+            if (val === 'NEW') {
+                const nv = prompt("請輸入新增項目名稱:");
+                if (nv) saveToBackend(type, nv);
+                return;
+            }
+            if (val) saveToBackend(type, val);
+        }
+
+        function saveToBackend(type, val) {
+            fetch(GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'save_config', configType: type, value: val }),
+                mode: 'no-cors'
+            });
+            if (type === 'sales' && !salesPersons.includes(val)) salesPersons.push(val);
+            if (type === 'unit' && !unitOptions.includes(val)) unitOptions.push(val);
+            renderLists();
+        }
+
+        function checkTaxId(input) {
+            input.value = input.value.replace(/\D/g, '');
+            const warn = document.getElementById('tax-warning');
+            if (input.value.length > 0 && input.value.length !== 8) warn.classList.remove('hidden');
+            else warn.classList.add('hidden');
+        }
+
+        async function generatePreview(title) {
+            const data = collectData();
+            if (!data.customer || !data.project) return alert("客戶與專案名稱為必填");
+
+            const canvas = document.getElementById('quotation-canvas');
+            let itemsHtml = '';
+            let subtotal = 0;
+
+            data.items.forEach((item, idx) => {
+                if (item.type === 'category') {
+                    itemsHtml += `<tr class="bg-gray-50"><td colspan="7" class="font-bold">${item.category}</td></tr>`;
+                } else {
+                    const total = item.qty * item.price;
+                    subtotal += total;
+                    itemsHtml += `<tr>
+                        <td class="text-center">${idx + 1}</td>
+                        <td>${item.name}</td>
+                        <td class="text-center">${item.unit}</td>
+                        <td class="text-center">${item.qty}</td>
+                        <td class="text-right">${item.price.toLocaleString()}</td>
+                        <td class="text-right">${total.toLocaleString()}</td>
+                        <td class="text-xs">${item.remark || ''}</td>
+                    </tr>`;
+                }
+            });
+
+            let feesHtml = '';
+            let feesTotal = 0;
+            data.fees.forEach(fee => {
+                const amt = fee.type === 'percent' ? Math.round(subtotal * fee.val / 100) : fee.val;
+                feesTotal += amt;
+                feesHtml += `<div class="summary-row"><div class="summary-label">${fee.name}:</div><div class="summary-value">${amt.toLocaleString()}</div></div>`;
+            });
+
+            const grandTotal = subtotal + feesTotal;
+            // 稅額移除 (依使用者需求)
+
+            canvas.innerHTML = `
+                <div class="company-title">健益工程有限公司</div>
+                <div class="doc-title">${title}</div>
+                <table class="info-table mb-2">
+                    <tr><td class="w-1/6 text-center">客戶名稱</td><td class="w-2/6">${data.customer}</td><td class="w-1/6 text-center">聯絡人</td><td class="w-2/6">${data.contactPerson}</td></tr>
+                    <tr><td class="text-center">工程名稱</td><td>${data.projectName}</td><td class="text-center">聯絡電話</td><td>${data.contactPhone}</td></tr>
+                </table>
+                <div class="text-right text-xs mb-1">日期: ${data.date} &nbsp; 單號: (存檔後產生) &nbsp; 統編: ${data.taxId || '-'}</div>
+                <table class="items-table">
+                    <thead><tr><th>項次</th><th>項目名稱</th><th>單位</th><th>數量</th><th>單價</th><th>複價</th><th>備註</th></tr></thead>
+                    <tbody>${itemsHtml}</tbody>
+                </table>
+                <div class="flex justify-end p-2">
+                    <div class="w-1/2">
+                        <div class="summary-row"><div class="summary-label">合計:</div><div class="summary-value">${subtotal.toLocaleString()}</div></div>
+                        ${feesHtml}
+                        <div class="summary-row border-t-2 border-black font-bold">
+                            <div class="summary-label">總計:</div><div class="summary-value">${grandTotal.toLocaleString()}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 border-b border-gray-300 pb-1">新台幣：<span class="font-bold underline">${toChineseAmt(grandTotal)}</span></div>
+                <div class="mt-4 text-xs italic">備註: ${data.note.replace(/\n/g, '<br>')}</div>
+            `;
+
+            document.getElementById('preview-modal').classList.remove('hidden');
+        }
+
+        function collectData() {
+            const rows = document.querySelectorAll('.item-row');
+            const items = Array.from(rows).map(row => {
+                if (row.querySelector('.input-category')) {
+                    return { type: 'category', category: row.querySelector('.input-category').value };
+                } else {
+                    const uSel = row.querySelector('.input-unit-select');
+                    const uCustom = row.querySelector('.input-unit-custom');
+                    return {
+                        type: 'item',
+                        name: row.querySelector('.input-name').value,
+                        qty: parseFloat(row.querySelector('.input-qty').value) || 0,
+                        unit: uSel.classList.contains('hidden') ? uCustom.value : uSel.value,
+                        price: parseFloat(row.querySelector('.input-price').value) || 0,
+                        remark: row.querySelector('.input-remark').value
+                    };
+                }
+            });
+
+            const fees = Array.from(document.querySelectorAll('.fee-row')).map(row => ({
+                name: row.querySelector('.fee-name').value,
+                type: row.querySelector('.fee-type').value,
+                val: parseFloat(row.querySelector('.fee-value').value) || 0
+            }));
+
+            return {
+                type: 'quotation',
+                customer: document.getElementById('customer').value,
+                taxId: document.getElementById('taxId').value,
+                contactPerson: document.getElementById('contactPerson').value,
+                contactPhone: document.getElementById('contactPhone').value,
+                project: document.getElementById('projectName').value,
+                projectName: document.getElementById('projectName').value,
+                date: document.getElementById('quoteDate').value,
+                salesPerson: document.getElementById('salesPerson').value,
+                salesMobile: document.getElementById('salesMobile').value,
+                originId: currentOriginId,
+                items: items,
+                fees: fees,
+                note: document.getElementById('footerNote').value
+            };
+        }
+
+        async function submitData() {
+            const data = collectData();
+            // 擷取畫布
+            const canvas = document.getElementById('quotation-canvas');
+            const bitmap = await html2canvas(canvas, { scale: 2 });
+            data.image = bitmap.toDataURL('image/jpeg', 0.8);
+
+            document.querySelector('#preview-modal button:last-child').innerText = "上傳中...";
+            document.querySelector('#preview-modal button:last-child').disabled = true;
+
+            try {
+                const res = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (result.status === 'success') {
+                    alert(`儲存成功！\n正式單號：${result.id}\n內控ID：${result.internalId}`);
+                    document.getElementById('internalProjectId').value = result.internalId;
+                    location.reload();
+                } else {
+                    alert("儲存失敗: " + result.message);
+                }
+            } catch (e) { alert("儲存失敗: " + e.toString()); }
+        }
+
+        function toChineseAmt(n) {
+            const fraction = ['角', '分'];
+            const digit = ['零', '壹', '貳', '參', '肆', '伍', '陸', '柒', '捌', '玖'];
+            const unit = [['元', '萬', '億'], ['', '拾', '佰', '仟']];
+            let s = '';
+            for (let i = 0; i < fraction.length; i++) {
+                s += (digit[Math.floor(n * 10 * Math.pow(10, i)) % 10] + fraction[i]).replace(/零./, '');
+            }
+            s = s || '整';
+            n = Math.floor(n);
+            for (let i = 0; i < unit[0].length && n > 0; i++) {
+                let p = '';
+                for (let j = 0; j < unit[1].length && n > 0; j++) {
+                    p = digit[n % 10] + unit[1][j] + p;
+                    n = Math.floor(n / 10);
+                }
+                s = p.replace(/(零.)*零$/, '').replace(/^$/, '零') + unit[0][i] + s;
+            }
+            return s.replace(/(零.)*零元/, '元').replace(/(零.)+/g, '零').replace(/^整$/, '零元整');
+        }
+
+        function loadQuoteForEdit(id) {
+            if (!id) {
+                location.reload();
+                return;
+            }
+            const p = projectList.find(x => x.id === id);
+            if (!p) return;
+            currentOriginId = p.id.split('-').slice(0, 2).join('-');
+            document.getElementById('edit-mode-badge').classList.remove('hidden');
+            document.getElementById('customer').value = p.customer;
+            document.getElementById('projectName').value = p.project;
+            document.getElementById('quoteDate').value = p.date;
+            // 這裡簡化載入，實際需解析 JSON 填充細項
+            alert("載入基本資料，細項請手動重新填寫或參考歷史圖檔。");
+        }
+    </script>
+</body>
+
+</html>
