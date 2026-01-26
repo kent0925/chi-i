@@ -396,10 +396,12 @@
             const headerInfo = document.getElementById('header-user-info');
             if (headerInfo && liffUser.displayName) {
                 headerInfo.innerHTML = `
-                    <div class="flex items-center gap-2">
-                        <img src="${liffUser.pictureUrl || 'https://via.placeholder.com/30'}" class="w-8 h-8 rounded-full border border-white">
-                        <span class="text-blue-100 text-xs">${liffUser.displayName}</span>
-                        <button onclick="logout()" class="text-white hover:text-gray-300 ml-2 text-xs">
+                    <div class="flex items-center gap-3">
+                        <div class="flex flex-col text-right">
+                             <span class="text-white font-bold text-sm">${liffUser.displayName}</span>
+                        </div>
+                        <img src="${liffUser.pictureUrl || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-full border-2 border-white shadow-sm">
+                        <button onclick="logout()" class="text-blue-200 hover:text-white ml-1 text-sm" title="登出">
                             <i class="fa-solid fa-right-from-bracket"></i>
                         </button>
                     </div>
