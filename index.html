@@ -677,7 +677,8 @@
                 salesList.innerHTML = salesPersons.map(s => `<option value="${s}">`).join('');
             }
 
-            // 更新業務人員 Select (若為報價單模式)
+            // 更新人員 Selects (通用邏輯: 業務/工務/採購)
+            // 業務 (Quotation)
             const salesSelect = document.getElementById('salesPerson');
             if (salesSelect && salesSelect.tagName === 'SELECT') {
                 const currentVal = salesSelect.value;
@@ -685,6 +686,24 @@
                     salesPersons.map(s => `<option value="${s}">${s}</option>`).join('') +
                     '<option value="NEW"> + 新增...</option>';
                 if (currentVal) salesSelect.value = currentVal;
+            }
+
+            // 工務 (Cost)
+            const workerSelect = document.getElementById('workerPerson');
+            if (workerSelect && workerSelect.tagName === 'SELECT') {
+                const currentVal = workerSelect.value;
+                workerSelect.innerHTML = '<option value="">請選擇</option>' +
+                    salesPersons.map(s => `<option value="${s}">${s}</option>`).join('');
+                if (currentVal) workerSelect.value = currentVal;
+            }
+
+            // 採購 (Cost)
+            const buyerSelect = document.getElementById('buyerPerson');
+            if (buyerSelect && buyerSelect.tagName === 'SELECT') {
+                const currentVal = buyerSelect.value;
+                buyerSelect.innerHTML = '<option value="">請選擇</option>' +
+                    salesPersons.map(s => `<option value="${s}">${s}</option>`).join('');
+                if (currentVal) buyerSelect.value = currentVal;
             }
 
             // 更新廠商清單
@@ -894,10 +913,8 @@
 
                 // --- 成本系統特有 UI (鎖定與專案選擇) ---
             } else if (systemType === 'cost') {
-                // 成本系統不需要 loadQuoteForEdit (除非也要做修正成本單，這邊先針對新建處理)
-                // 但若要修改成本單，邏輯類似。這裡先實作「建立新成本單」需選專案
+                // Cost: 移除頂部內控區塊 (extraHtml 僅保留來源專案選擇)
                 extraHtml = `
-                 ${internalInfoHtml}
                  <div class="mb-4 bg-green-50 p-3 rounded border border-green-200">
                     <label class="font-bold text-green-900 text-sm block mb-1">1. 選擇來源專案 (報價單)：</label>
                     <select id="projectSelect" onchange="fillProjectInfo(this.value)" class="w-full border border-green-300 rounded p-2 text-sm">
@@ -917,21 +934,21 @@
                             </div>
                         </div>
 
-                        <!-- 廠商資料 (輸入) -->
+                        <!-- 廠商資訊 (含摘要與金額) -->
                         <div class="md:col-span-2 bg-green-50 p-3 rounded-md border border-green-200 relative">
                              <div class="absolute top-0 left-0 bg-green-600 text-white text-xs px-2 py-1 rounded-br">廠商資訊</div>
-                             <div class="mt-4 grid grid-cols-2 gap-4">
+                             <div class="mt-5 grid grid-cols-2 gap-4">
                                 <div class="col-span-2">
-                                    <label class="block text-sm font-bold text-gray-700 mb-1">廠商統編/名稱</label>
+                                    <label class="block text-sm font-bold text-gray-700 mb-1">廠商統編/名稱 (可新增)</label>
                                     <div class="flex gap-2 items-center">
                                         <div class="w-1/3 relative">
                                             <input type="text" id="vendorTaxId" class="w-full border border-gray-300 rounded p-2 text-sm" placeholder="統編" oninput="checkTaxId(this); lookupVendor()">
                                             <span id="tax-warning-vendor" class="hidden absolute top-full left-0 text-[10px] text-red-500 font-bold">請輸入8碼數字</span>
                                         </div>
-                                        <input type="text" id="vendorName" list="vendor-list" class="flex-1 border border-gray-300 rounded p-2 text-sm" placeholder="廠商名稱 (可新增)" onchange="saveConfig('vendor', this.value)">
+                                        <input type="text" id="vendorName" list="vendor-list" class="flex-1 border border-gray-300 rounded p-2 text-sm" placeholder="廠商名稱" onchange="saveConfig('vendor', this.value)">
                                     </div>
                                 </div>
-                                <!-- 金額與發票 -->
+                                <!-- 金額 -->
                                 <div>
                                     <label class="block text-sm font-bold text-gray-700 mb-1">未稅金額</label>
                                     <input type="number" id="costAmountNoTax" class="w-full border border-gray-300 rounded p-2 text-sm font-bold" placeholder="0" oninput="calculateCostTotal()">
@@ -940,7 +957,13 @@
                                     <label class="block text-sm font-bold text-blue-700 mb-1">含稅總計 (自動)</label>
                                     <input type="number" id="costAmountTax" class="w-full bg-blue-50 border border-blue-300 rounded p-2 text-sm font-bold" readonly>
                                 </div>
-                                <div class="col-span-2 grid grid-cols-2 gap-4">
+                                <!-- 支出摘要 (移至此) -->
+                                <div class="col-span-2">
+                                    <label class="block text-sm font-bold text-gray-700 mb-1">支出摘要</label>
+                                    <input type="text" id="costSummary" class="w-full border border-gray-300 rounded p-2 text-sm" placeholder="例如：水電材料費">
+                                </div>
+                                <!-- 發票資訊 -->
+                                <div class="col-span-2 grid grid-cols-2 gap-4 border-t border-green-200 pt-3 mt-1">
                                     <div>
                                         <label class="block text-sm font-bold text-gray-700 mb-1">發票號碼</label>
                                         <input type="text" id="invoiceNo" class="w-full border border-gray-300 rounded p-2 text-sm" placeholder="AB-12345678">
@@ -953,25 +976,31 @@
                              </div>
                         </div>
 
-                        <!-- 人員設定 (業務鎖定、工務採購共用選單) -->
+                        <!-- 人員設定 (業務鎖定、工務採購選單) -->
                         <div class="md:col-span-2 grid grid-cols-3 gap-2 bg-yellow-50 p-2 rounded border border-yellow-200">
                              <div><label class="block text-xs font-bold text-gray-600">業務人員 (鎖定)</label><input type="text" id="costSalesPerson" class="w-full border p-1 text-sm rounded bg-gray-100" readonly></div>
-                             <div><label class="block text-xs font-bold text-gray-600">工務人員</label><input type="text" id="workerPerson" list="sales-list" class="w-full border p-1 text-sm rounded bg-white" onchange="saveConfig('sales', this.value)"></div>
-                             <div><label class="block text-xs font-bold text-gray-600">採購人員</label><input type="text" id="buyerPerson" list="sales-list" class="w-full border p-1 text-sm rounded bg-white" onchange="saveConfig('sales', this.value)"></div>
+                             <div>
+                                 <label class="block text-xs font-bold text-gray-600">工務人員</label>
+                                 <select id="workerPerson" class="w-full border p-1 text-sm rounded bg-white">
+                                     <option value="">請選擇</option>
+                                     ${salesPersons.map(s => `<option value="${s}">${s}</option>`).join('')}
+                                 </select>
+                             </div>
+                             <div>
+                                 <label class="block text-xs font-bold text-gray-600">採購人員</label>
+                                 <select id="buyerPerson" class="w-full border p-1 text-sm rounded bg-white">
+                                     <option value="">請選擇</option>
+                                     ${salesPersons.map(s => `<option value="${s}">${s}</option>`).join('')}
+                                 </select>
+                             </div>
                         </div>
 
                         <!-- 隱藏日期 (預設今日) -->
                         <input type="hidden" id="quoteDate" value="${today}">
                     </div>`;
 
-                // 支出內容 (僅保留摘要)
-                detailSectionHtml = `
-                 <div class="bg-white p-4 rounded border border-green-300 shadow-sm mt-4">
-                     <div class="mb-3">
-                         <label class="block text-sm font-bold text-gray-700 mb-1">支出摘要</label>
-                         <input type="text" id="costSummary" class="w-full border border-gray-300 rounded p-2 text-lg" placeholder="例如：水電材料費">
-                     </div>
-                 </div>`;
+                // 移除原有的 detailSectionHtml
+                detailSectionHtml = '';
             } else {
                 // 會計系統維持原樣 (暫簡化)
                 extraHtml = internalInfoHtml;
@@ -1382,7 +1411,7 @@
 
             // 額外驗證：成本單金額
             if (currentSystem === 'cost') {
-                const costAmount = parseInt(document.getElementById('costAmount').value) || 0;
+                const costAmount = parseInt(document.getElementById('costAmountNoTax').value) || 0;
                 if (costAmount <= 0) {
                     alert('成本金額必須大於 0');
                     return;
@@ -1391,6 +1420,14 @@
 
             // 收集資料
             const basicData = collectFormBasicData();
+            // 對於 Cost 系統，補充額外欄位
+            if (currentSystem === 'cost') {
+                basicData.worker = document.getElementById('workerPerson')?.value || '';
+                basicData.buyer = document.getElementById('buyerPerson')?.value || '';
+                basicData.costSales = document.getElementById('costSalesPerson')?.value || '';
+                basicData.invoiceNo = document.getElementById('invoiceNo')?.value || '';
+            }
+
             let itemsData = [];
             let feesData = [];
             let subtotal = 0;
@@ -1400,7 +1437,7 @@
             if (currentSystem === 'cost') {
                 // Cost 系統：讀取單一輸入
                 const summary = document.getElementById('costSummary').value || '支出';
-                const amount = parseInt(document.getElementById('costAmount').value) || 0;
+                const amount = parseInt(document.getElementById('costAmountNoTax').value) || 0;
 
                 // 為了相容報價單格式，轉為單一項目陣列 (或後端只需總額)
                 itemsData = [{
