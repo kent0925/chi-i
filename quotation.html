@@ -221,26 +221,36 @@
         };
 
         function fetchConfig() {
-            if (GAS_URL.includes('您的')) return;
+            if (GAS_URL.includes('your-gas-id') || GAS_URL.includes('L1L1L1')) {
+                console.warn("GAS_URL 尚未設定。請將 GAS_URL 替換為您的 Web App 網址。");
+                return;
+            }
             fetch(GAS_URL)
                 .then(res => res.json())
                 .then(data => {
+                    console.log("從 GAS 取得設定資料:", data);
                     salesPersons = data.sales || [];
                     unitOptions = data.units || [];
                     projectList = data.projects || [];
                     renderLists();
                     populateHistory();
+                })
+                .catch(err => {
+                    console.error("無法連線至 GAS:", err);
                 });
         }
 
         function renderLists() {
+            console.log("執行 renderLists, 目前業務名單:", salesPersons);
             const sList = document.getElementById('sales-list');
             if (sList) sList.innerHTML = salesPersons.map(s => `<option value="${s}">`).join('');
 
             const sSelect = document.getElementById('salesPerson');
             if (sSelect) {
                 const cur = sSelect.value;
-                sSelect.innerHTML = '<option value="">-- 請選擇 --</option>' + salesPersons.map(s => `<option value="${s}">${s}</option>`).join('') + '<option value="NEW"> + 新增...</option>';
+                sSelect.innerHTML = '<option value="">-- 請選擇 --</option>' +
+                    salesPersons.map(s => `<option value="${s}">${s}</option>`).join('') +
+                    '<option value="NEW"> + 新增...</option>';
                 if (cur) sSelect.value = cur;
             }
 
@@ -333,7 +343,19 @@
         function saveConfig(type, val) {
             if (val === 'NEW') {
                 const nv = prompt("請輸入新增項目名稱:");
-                if (nv) saveToBackend(type, nv);
+                if (nv) {
+                    saveToBackend(type, nv);
+                    // 如果是新增業務人員，自動選中該人員
+                    if (type === 'sales') {
+                        setTimeout(() => {
+                            const sel = document.getElementById('salesPerson');
+                            if (sel) sel.value = nv;
+                        }, 200);
+                    }
+                } else {
+                    // 若取消新增，將選單切換回空值
+                    document.getElementById('salesPerson').value = "";
+                }
                 return;
             }
             if (val) saveToBackend(type, val);
