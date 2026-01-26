@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,10 +12,20 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap');
 
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f3f4f6; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
         /* 預覽畫布樣式 */
         .preview-canvas {
             font-family: 'DFKai-SB', 'BiauKai', '標楷體', 'Noto Serif TC', serif;
@@ -22,27 +33,98 @@
             color: black;
             line-height: 1.3;
         }
-        
-        .company-title { font-size: 20pt; font-weight: bold; text-align: center; }
-        .doc-title { font-size: 16pt; font-weight: bold; text-align: center; margin-bottom: 10px; }
+
+        .company-title {
+            font-size: 20pt;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .doc-title {
+            font-size: 16pt;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+        }
 
         /* 表格樣式 */
-        .info-table, .items-table { width: 100%; border-collapse: collapse; font-size: 12pt; }
-        .info-table td { border: 1px solid #000; padding: 4px 8px; }
-        .items-table th { border: 1px solid #000; border-bottom: 2px solid #000; padding: 4px; text-align: center; font-weight: normal; }
-        .items-table td { border: 1px solid #000; padding: 4px; }
+        .info-table,
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12pt;
+        }
 
-        .summary-row { display: flex; justify-content: flex-end; font-size: 12pt; padding: 2px 0; }
-        .summary-label { text-align: right; padding-right: 10px; width: 150px; }
-        .summary-value { text-align: right; width: 120px; padding-right: 4px; }
+        .info-table td {
+            border: 1px solid #000;
+            padding: 4px 8px;
+        }
 
-        .history-hint { font-size: 0.75rem; color: #d97706; margin-top: 2px; font-family: 'Noto Sans TC', sans-serif; }
+        .items-table th {
+            border: 1px solid #000;
+            border-bottom: 2px solid #000;
+            padding: 4px;
+            text-align: center;
+            font-weight: normal;
+        }
 
-        @media print { .no-print { display: none; } }
+        .items-table td {
+            border: 1px solid #000;
+            padding: 4px;
+        }
 
-        .page-section { display: none; animation: fadeIn 0.3s ease-in-out; }
-        .page-section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .summary-row {
+            display: flex;
+            justify-content: flex-end;
+            font-size: 12pt;
+            padding: 2px 0;
+        }
+
+        .summary-label {
+            text-align: right;
+            padding-right: 10px;
+            width: 150px;
+        }
+
+        .summary-value {
+            text-align: right;
+            width: 120px;
+            padding-right: 4px;
+        }
+
+        .history-hint {
+            font-size: 0.75rem;
+            color: #d97706;
+            margin-top: 2px;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+
+        @media print {
+            .no-print {
+                display: none;
+            }
+        }
+
+        .page-section {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .page-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
         /* 驗證視窗樣式 */
         #auth-modal {
@@ -51,6 +133,7 @@
         }
     </style>
 </head>
+
 <body class="bg-gray-100 min-h-screen">
 
     <!-- ================= 0. 驗證視窗 (新增) ================= -->
@@ -61,10 +144,13 @@
             </div>
             <h2 class="text-2xl font-bold text-gray-800 mb-2">系統存取驗證</h2>
             <p class="text-gray-500 text-sm mb-6">請輸入存取金鑰 (Token) 以繼續</p>
-            
-            <input type="password" id="auth-token-input" class="w-full border border-gray-300 rounded-lg p-3 text-center mb-4 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="輸入 Token">
-            
-            <button onclick="submitAuth()" class="w-full bg-blue-900 text-white font-bold py-3 rounded-lg hover:bg-blue-800 transition">
+
+            <input type="password" id="auth-token-input"
+                class="w-full border border-gray-300 rounded-lg p-3 text-center mb-4 focus:ring-2 focus:ring-blue-500 outline-none"
+                placeholder="輸入 Token">
+
+            <button onclick="submitAuth()"
+                class="w-full bg-blue-900 text-white font-bold py-3 rounded-lg hover:bg-blue-800 transition">
                 驗證登入
             </button>
             <p id="auth-error" class="text-red-500 text-xs mt-3 hidden">請輸入 Token</p>
@@ -83,19 +169,40 @@
                 </button>
             </div>
             <div class="p-6 grid gap-4">
-                <button onclick="navigateTo('page-quotation')" class="flex items-center p-4 bg-white border-2 border-blue-100 rounded-lg shadow-sm hover:bg-blue-50 hover:border-blue-300 transition group">
-                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition"><i class="fa-solid fa-file-invoice-dollar text-xl"></i></div>
-                    <div class="ml-4 text-left"><h3 class="text-lg font-bold text-gray-800">報價系統</h3><p class="text-xs text-gray-500">客戶報價單</p></div>
+                <button onclick="navigateTo('page-quotation')"
+                    class="flex items-center p-4 bg-white border-2 border-blue-100 rounded-lg shadow-sm hover:bg-blue-50 hover:border-blue-300 transition group">
+                    <div
+                        class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition">
+                        <i class="fa-solid fa-file-invoice-dollar text-xl"></i>
+                    </div>
+                    <div class="ml-4 text-left">
+                        <h3 class="text-lg font-bold text-gray-800">報價系統</h3>
+                        <p class="text-xs text-gray-500">客戶報價單</p>
+                    </div>
                     <i class="fa-solid fa-chevron-right ml-auto text-gray-300 group-hover:text-blue-500"></i>
                 </button>
-                <button onclick="navigateTo('page-cost')" class="flex items-center p-4 bg-white border-2 border-green-100 rounded-lg shadow-sm hover:bg-green-50 hover:border-green-300 transition group">
-                    <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 group-hover:bg-green-600 group-hover:text-white transition"><i class="fa-solid fa-calculator text-xl"></i></div>
-                    <div class="ml-4 text-left"><h3 class="text-lg font-bold text-gray-800">成本系統</h3><p class="text-xs text-gray-500">工料成本分析</p></div>
+                <button onclick="navigateTo('page-cost')"
+                    class="flex items-center p-4 bg-white border-2 border-green-100 rounded-lg shadow-sm hover:bg-green-50 hover:border-green-300 transition group">
+                    <div
+                        class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 group-hover:bg-green-600 group-hover:text-white transition">
+                        <i class="fa-solid fa-calculator text-xl"></i>
+                    </div>
+                    <div class="ml-4 text-left">
+                        <h3 class="text-lg font-bold text-gray-800">成本系統</h3>
+                        <p class="text-xs text-gray-500">工料成本分析</p>
+                    </div>
                     <i class="fa-solid fa-chevron-right ml-auto text-gray-300 group-hover:text-green-500"></i>
                 </button>
-                <button onclick="navigateTo('page-accounting')" class="flex items-center p-4 bg-white border-2 border-orange-100 rounded-lg shadow-sm hover:bg-orange-50 hover:border-orange-300 transition group">
-                    <div class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition"><i class="fa-solid fa-coins text-xl"></i></div>
-                    <div class="ml-4 text-left"><h3 class="text-lg font-bold text-gray-800">會計系統</h3><p class="text-xs text-gray-500">請款與帳務</p></div>
+                <button onclick="navigateTo('page-accounting')"
+                    class="flex items-center p-4 bg-white border-2 border-orange-100 rounded-lg shadow-sm hover:bg-orange-50 hover:border-orange-300 transition group">
+                    <div
+                        class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition">
+                        <i class="fa-solid fa-coins text-xl"></i>
+                    </div>
+                    <div class="ml-4 text-left">
+                        <h3 class="text-lg font-bold text-gray-800">會計系統</h3>
+                        <p class="text-xs text-gray-500">請款與帳務</p>
+                    </div>
                     <i class="fa-solid fa-chevron-right ml-auto text-gray-300 group-hover:text-orange-500"></i>
                 </button>
             </div>
@@ -119,11 +226,13 @@
     </div>
 
     <!-- 共用預覽區 -->
-    <div id="preview-section" class="hidden fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center z-50 overflow-y-auto p-4">
+    <div id="preview-section"
+        class="hidden fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center z-50 overflow-y-auto p-4">
         <div class="bg-white rounded shadow-xl max-w-[230mm] w-full overflow-hidden flex flex-col max-h-[95vh]">
             <div class="overflow-y-auto flex-1 bg-gray-500 p-4 flex justify-center">
-                <div id="quotation-canvas" class="preview-canvas bg-white p-12 w-full max-w-[210mm] min-h-[297mm] shadow-lg relative">
-                    
+                <div id="quotation-canvas"
+                    class="preview-canvas bg-white p-12 w-full max-w-[210mm] min-h-[297mm] shadow-lg relative">
+
                     <!-- 1. 抬頭與 Logo -->
                     <div class="flex items-start mb-4 relative">
                         <div class="absolute left-0 top-0">
@@ -152,7 +261,8 @@
                     </table>
                     <div class="text-right text-sm mb-2 font-kai">
                         日期：<span id="disp-date"></span> &nbsp;&nbsp; 單號：<span id="disp-id"></span>
-                        <span id="disp-taxId-wrapper" class="hidden">&nbsp;&nbsp; 統編：<span id="disp-taxId"></span></span>
+                        <span id="disp-taxId-wrapper" class="hidden">&nbsp;&nbsp; 統編：<span
+                                id="disp-taxId"></span></span>
                     </div>
 
                     <!-- 3. 明細表格 -->
@@ -210,65 +320,73 @@
 
                     <!-- 8. LINE帳號/頁尾資訊 -->
                     <div class="mt-12">
-                         <div class="mb-2 font-bold">LINE帳號</div>
-                         <div class="border-t border-black pt-2 text-center text-sm" id="disp-seller-contact-footer"></div>
+                        <div class="mb-2 font-bold">LINE帳號</div>
+                        <div class="border-t border-black pt-2 text-center text-sm" id="disp-seller-contact-footer">
+                        </div>
                     </div>
 
                 </div>
             </div>
             <div class="p-4 bg-gray-50 flex gap-4 border-t z-50">
-                <button onclick="closePreview()" class="flex-1 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 font-bold">返回修改</button>
-                <button onclick="downloadJPG()" id="btn-download" class="flex-1 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold shadow">下載 JPG 圖片</button>
+                <button onclick="closePreview()"
+                    class="flex-1 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 font-bold">返回修改</button>
+                <button onclick="downloadJPG()" id="btn-download"
+                    class="flex-1 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-bold shadow">下載 JPG
+                    圖片</button>
             </div>
         </div>
     </div>
 
     <script>
-        const GAS_URL = '您的_GAS_WEB_APP_URL'; 
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzDAF6z227x3Hif3CxISbQSNV_xAHXk8BAYbAd8w0haV_39poKQCjnUbJhZAgcEfBBP/exec';
+        const LIFF_ID = '2008974069-Ecojk6W1'; // 請在此填入您的 LIFF ID
         const unitOptions = ['m', 'm²', 'm³', 'T(噸)', 'PC', '組', '樘', '才', '坪', '時', '天', '支', '台', '式', '車', '工'];
         const DEFAULT_LOGO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFsAAABbCAMAAAAr6AmrAAAAA3NCSVQICAjb4U/gAAAADFBMVEX/igX/////nS7/kBGlc65UAAAApXpUWHRSYXcgcHJvZmlsZSB0eXBlIEFQUDEAABiVfU5bDsIwDPvvKXYE57G0PU5BBU1CgHb/DxI6xCYhHDV2rShOuvZ7X5fz9Fwfl+XW0xQgtaRVKzcABQMCEIOCvQ9sLOSKXeTtz4OtlgzdzTUcMPuEiVH29zZiFnXs0U+ssBcQx+x2zSd8l/7wGU3jJt78fIyGlEiWIuxdJbuqFiBnNRP8r0B6AQnGQScUvA0CAAABdklEQVRoge3ZWxLCIAwF0DTZ/57V6djyJiG5jjjypZQeUoqAQORNRze56UEFQXaTj7NrPdIu9VibGGhnoYfbhLQJaRPSJqRNSJuBNiFt2tWmXW362y38p21+Jom3swkwLS3lrF5VzpOqq3TdUNkTaion8blsbsE34rG79HE2u8MeyCe+bo+iPpl5P+mk7MaqvjvCsogmdZ5UyqwFu/+gRW0eu77E3Cq4QE9fz7o971Vmm/V3mG192Ot2bFG4LR+wNWOP1eZN7V3bBBn3rr+d6wbFBGi2keOg6AM324aNBLvNatxuD7ZXJM9asJOlT97mXEALdrZkkyrXF3e51Hz+J0m/njUlma/Pev4YpmaBGFyc9gCX9mWDXa+wM8Nnt1f4726jscfvt9TvKxp7/iiWSc5qr6dtbXsz6u1Nt5XMP6jvsWFv0z7K2GzoLrh9E01vQ48doOcl0IMe6AkV9GgNeiYY3hVn82mcHTu2aNYCcXZc8C07qIIHIcAGb2GaLZ0AAAAASUVORK5CYII=';
         let userLogoData = DEFAULT_LOGO;
 
         // 當前系統狀態 'quotation' | 'cost' | 'accounting'
-        let currentSystem = 'quotation'; 
-        const AUTH_KEY = 'system_auth_token'; // 用於 localStorage 的 key
+        let currentSystem = 'quotation';
+
+        // LIFF 使用者資訊
+        let liffUser = { userId: null, displayName: null, pictureUrl: null };
 
         // 初始化
-        window.onload = function() {
-            checkAuth(); // 檢查驗證
-            renderUI('app-container', 'quotation'); 
+        window.onload = function () {
+            initializeLiff();
         };
 
-        // --- 驗證相關函式 ---
-        function checkAuth() {
-            const token = localStorage.getItem(AUTH_KEY);
-            const modal = document.getElementById('auth-modal');
-            if (!token) {
-                modal.classList.remove('hidden');
-            } else {
-                modal.classList.add('hidden');
-            }
-        }
+        // --- LIFF 初始化與登入 ---
+        async function initializeLiff() {
+            try {
+                if (LIFF_ID === '您的_LIFF_ID') {
+                    console.warn('尚未設定 LIFF ID');
+                    // 若無 LIFF ID 仍先渲染 UI，方便測試預覽，但功能會受限
+                    renderUI('app-container', 'quotation');
+                    return;
+                }
 
-        function submitAuth() {
-            const input = document.getElementById('auth-token-input');
-            const errorMsg = document.getElementById('auth-error');
-            const token = input.value.trim();
+                await liff.init({ liffId: LIFF_ID });
 
-            if (token) {
-                localStorage.setItem(AUTH_KEY, token);
-                checkAuth();
-                errorMsg.classList.add('hidden');
-            } else {
-                errorMsg.innerText = "請輸入有效的 Token";
-                errorMsg.classList.remove('hidden');
-            }
-        }
+                if (!liff.isLoggedIn()) {
+                    liff.login(); // 強制登入
+                } else {
+                    const profile = await liff.getProfile();
+                    liffUser = {
+                        userId: profile.userId,
+                        displayName: profile.displayName,
+                        pictureUrl: profile.pictureUrl
+                    };
+                    console.log("LIFF 登入成功:", liffUser.displayName);
+                    // 登入成功後渲染 UI
+                    renderUI('app-container', 'quotation');
 
-        function logout() {
-            if(confirm("確定要登出並清除 Token 嗎？")) {
-                localStorage.removeItem(AUTH_KEY);
-                location.reload();
+                    // 可以在這裡做權限檢查 (目前僅記錄 ID)
+                }
+            } catch (err) {
+                console.error('LIFF 初始化失敗:', err);
+                alert('LIFF 初始化失敗，請檢查 LIFF ID 設定或網路連線。');
+                // 失敗時仍嘗試渲染 UI
+                renderUI('app-container', 'quotation');
             }
         }
 
@@ -295,7 +413,7 @@
             const titles = { quotation: '建立工程報價單', cost: '專案成本分析表', accounting: '會計請款/帳務單' };
             const docTitles = { quotation: '工程報價單', cost: '成本分析單', accounting: '請款單' };
             const themeColor = { quotation: 'blue', cost: 'green', accounting: 'orange' };
-            
+
             const color = themeColor[systemType];
             const today = new Date().toISOString().split('T')[0];
 
@@ -364,9 +482,9 @@
                     <button onclick="generatePreview('${docTitles[systemType]}')" class="w-full py-3 px-4 text-lg font-bold rounded-md text-white bg-${color}-600 hover:bg-${color}-700 shadow-lg">預覽並儲存</button>
                 </div>
             </div>`;
-            
+
             const target = document.getElementById(containerId);
-            if(target) {
+            if (target) {
                 target.innerHTML = html;
             } else {
                 console.error("Target container not found:", containerId);
@@ -392,9 +510,9 @@
             const customerName = document.getElementById('customer').value.trim();
             const historyArea = document.getElementById('history-area');
             const historyList = document.getElementById('history-list');
-            if (!customerName || !historyArea) { 
-                if(historyArea) historyArea.classList.add('hidden'); 
-                return; 
+            if (!customerName || !historyArea) {
+                if (historyArea) historyArea.classList.add('hidden');
+                return;
             }
 
             const history = getHistory(type);
@@ -436,13 +554,13 @@
                 } else throw new Error("API Error");
             } catch (e) {
                 console.log("Auto lookup failed.", e);
-                if(nameInput.value === "") nameInput.placeholder = "無法自動取得，請手動輸入";
+                if (nameInput.value === "") nameInput.placeholder = "無法自動取得，請手動輸入";
             }
         }
 
         // --- 表格列操作 ---
         function toggleUnit(el) {
-            if(el.value === 'custom') { el.classList.add('hidden'); el.nextElementSibling.classList.remove('hidden'); el.nextElementSibling.focus(); }
+            if (el.value === 'custom') { el.classList.add('hidden'); el.nextElementSibling.classList.remove('hidden'); el.nextElementSibling.focus(); }
         }
         function resetUnit(btn) {
             /* 預留重置功能 */
@@ -452,7 +570,7 @@
             const container = document.getElementById('items-container');
             const rowId = 'row-' + Date.now();
             let html = '';
-            
+
             if (type === 'category') {
                 html = `<div id="${rowId}" class="item-row bg-gray-50 p-3 rounded border border-gray-300 relative mb-2 border-l-4 border-l-gray-500">
                     <input type="hidden" class="row-type" value="category">
@@ -496,7 +614,7 @@
             const customer = document.getElementById('customer').value.trim();
             if (!customer) return alert('請輸入客戶/廠商名稱');
 
-            const authToken = localStorage.getItem(AUTH_KEY); // 取得 Token
+            const authToken = "123456"; // 為了相容後端，暫時保留預設 Token，實際驗證依賴 LIFF User ID
 
             const needTax = document.getElementById('needTax').checked;
             const sellerName = document.getElementById('sellerName').value;
@@ -514,9 +632,9 @@
             let displayHtml = '';
             let globalIndex = 1;
             let itemsData = [];
-            
-            let currentGroup = null; 
-            let miscItems = []; 
+
+            let currentGroup = null;
+            let miscItems = [];
             let groups = [];
 
             // 1. 收集表格資料
@@ -534,10 +652,10 @@
                         const price = parseFloat(row.querySelector('.input-price').value) || 0;
                         const subtotal = qty * price;
                         const remark = row.querySelector('.input-remark').value;
-                        
+
                         const itemObj = { name, qty, unit, price, subtotal, remark };
                         itemsTotal += subtotal;
-                        
+
                         if (currentGroup) {
                             currentGroup.items.push(itemObj);
                             currentGroup.subtotal += subtotal;
@@ -549,7 +667,7 @@
             });
             if (currentGroup) groups.push(currentGroup);
 
-            if(groups.length === 0 && miscItems.length === 0) return alert('請至少輸入一項內容');
+            if (groups.length === 0 && miscItems.length === 0) return alert('請至少輸入一項內容');
 
             // 2. 處理額外費用
             let totalFees = 0;
@@ -563,7 +681,7 @@
                     let amount = type === 'percent' ? Math.round(itemsTotal * (val / 100)) : val;
                     totalFees += amount;
                     feesData.push({ name, type, val, amount });
-                    feesHtml += `<div class="summary-row"><div class="summary-label">${name}${type==='percent'?'('+val+'%)':''} :</div><div class="summary-value">$${amount.toLocaleString()}</div></div>`;
+                    feesHtml += `<div class="summary-row"><div class="summary-label">${name}${type === 'percent' ? '(' + val + '%)' : ''} :</div><div class="summary-value">$${amount.toLocaleString()}</div></div>`;
                 }
             });
 
@@ -573,12 +691,12 @@
 
             // 3. 產生 HTML 表格
             const genRow = (idx, item) => `<tr><td class="text-center">${idx}</td><td>${item.name}</td><td class="text-center">${item.unit}</td><td class="text-center">${item.qty}</td><td class="text-right">${item.price.toLocaleString()}</td><td class="text-right">${item.subtotal.toLocaleString()}</td><td class="text-left text-sm">${item.remark}</td></tr>`;
-            
-            miscItems.forEach(item => { displayHtml += genRow(globalIndex++, item); itemsData.push({type:'item', ...item}); });
+
+            miscItems.forEach(item => { displayHtml += genRow(globalIndex++, item); itemsData.push({ type: 'item', ...item }); });
             groups.forEach(group => {
                 displayHtml += `<tr><td class="text-center">${globalIndex++}</td><td class="font-bold text-lg" colspan="4">${group.name}</td><td class="text-right font-bold">${group.subtotal.toLocaleString()}</td><td></td></tr>`;
-                itemsData.push({type:'category', category: group.name, subtotal: group.subtotal});
-                group.items.forEach(item => { displayHtml += genRow(globalIndex++, item); itemsData.push({type:'item', ...item}); });
+                itemsData.push({ type: 'category', category: group.name, subtotal: group.subtotal });
+                group.items.forEach(item => { displayHtml += genRow(globalIndex++, item); itemsData.push({ type: 'item', ...item }); });
             });
 
             // 4. 填入預覽資料
@@ -586,8 +704,8 @@
             document.getElementById('disp-seller-name').innerText = sellerName;
             document.getElementById('disp-customer').innerText = customer;
             document.getElementById('disp-taxId').innerText = taxId;
-            if(taxId) document.getElementById('disp-taxId-wrapper').classList.remove('hidden'); else document.getElementById('disp-taxId-wrapper').classList.add('hidden');
-            
+            if (taxId) document.getElementById('disp-taxId-wrapper').classList.remove('hidden'); else document.getElementById('disp-taxId-wrapper').classList.add('hidden');
+
             document.getElementById('disp-project').innerText = project;
             document.getElementById('disp-contact').innerText = contact;
             document.getElementById('disp-phone').innerText = phone;
@@ -609,34 +727,35 @@
             // 5. 顯示預覽視窗
             document.getElementById('preview-section').classList.remove('hidden');
 
-            const currentData = { 
+            const currentData = {
                 taxId, contact, phone, project, date, note, orderId, sellerName, sellerContact, customer,
                 items: itemsData, fees: feesData, subtotalNoTax, grandTotal
             };
-            
+
             // 存入 LocalStorage 歷史紀錄
             saveToHistory(currentSystem, currentData);
 
             // 6. [新增] 截圖並傳送至 GAS (含 Token)
             if (GAS_URL && GAS_URL !== '您的_GAS_WEB_APP_URL') {
                 const element = document.getElementById('quotation-canvas');
-                
+
                 setTimeout(() => {
-                    html2canvas(element, { 
-                        scale: 1.5, 
-                        useCORS: true, 
-                        backgroundColor: '#ffffff', 
-                        logging: false 
+                    html2canvas(element, {
+                        scale: 1.5,
+                        useCORS: true,
+                        backgroundColor: '#ffffff',
+                        logging: false
                     }).then(canvas => {
                         const imageBase64 = canvas.toDataURL('image/jpeg', 0.8);
                         const folderName = currentSystem === 'quotation' ? '報價資料' : (currentSystem === 'cost' ? '成本資料' : '會計資料');
-                        
-                        const payload = { 
+
+                        const payload = {
                             token: authToken, // 加入 Token
-                            type: currentSystem, 
-                            folder: folderName, 
-                            image: imageBase64, 
-                            ...currentData 
+                            type: currentSystem,
+                            lineUser: liffUser, // 加入 LINE 使用者資訊
+                            folder: folderName,
+                            image: imageBase64,
+                            ...currentData
                         };
 
                         fetch(GAS_URL, {
@@ -648,7 +767,7 @@
                             console.log("資料與圖片已傳送至後端儲存");
                         }).catch(e => console.error("傳送失敗:", e));
                     });
-                }, 500); 
+                }, 500);
             }
         }
 
@@ -700,4 +819,5 @@
         }
     </script>
 </body>
+
 </html>
