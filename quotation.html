@@ -331,7 +331,7 @@
                 }
             }
 
-            const id = Date.now();
+            const id = Date.now() + Math.random().toString(36).substr(2, 5);
             const div = document.createElement('div');
             // Category: 灰色背景; Item: 白色背景
             const isCat = (type === 'category');
@@ -504,10 +504,12 @@
             let currentCategoryName = '';
             let currentCategoryTotal = 0;
             let currentCategoryItems = [];
+            let catIndex = 1;
 
             const renderCategoryRow = (name, total) => {
+                const displayName = toChineseIndex(catIndex++) + "、" + name;
                 return `<tr class="bg-gray-50 border-t-2 border-gray-400">
-            <td colspan="5" class="font-bold text-left pl-4">${name}</td>
+            <td colspan="5" class="font-bold text-left pl-4">${displayName}</td>
             <td class="font-bold text-right pr-2">小計：${total.toLocaleString()}</td>
             <td></td>
         </tr>`;
@@ -748,6 +750,18 @@
             return s.replace(/(零.)*零元/, '元').replace(/(零.)+/g, '零').replace(/^整$/, '零元整');
         }
 
+        function toChineseIndex(num) {
+            const chineseNums = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+            if (num < 10) return chineseNums[num];
+            if (num < 20) {
+                const digit = num % 10;
+                return '十' + (digit === 0 ? '' : chineseNums[digit]);
+            }
+            const ten = Math.floor(num / 10);
+            const digit = num % 10;
+            return chineseNums[ten] + '十' + (digit === 0 ? '' : chineseNums[digit]);
+        }
+
         function loadQuoteForEdit(id) {
             if (!id) {
                 location.reload();
@@ -755,12 +769,84 @@
             }
             const p = projectList.find(x => x.id === id);
             if (!p) return;
+
+            // 載入基本資料
             currentOriginId = p.id.split('-').slice(0, 2).join('-');
             document.getElementById('edit-mode-badge').classList.remove('hidden');
-            document.getElementById('customer').value = p.customer;
-            document.getElementById('projectName').value = p.project;
-            document.getElementById('quoteDate').value = p.date;
-            alert("已載入基本資料，請重新建立細項內容。");
+            document.getElementById('customer').value = p.customer || "";
+            document.getElementById('projectName').value = p.project || "";
+            document.getElementById('quoteDate').value = p.date || "";
+            if (p.sales) document.getElementById('salesPerson').value = p.sales;
+
+            // 載入詳細/歷史資料
+            if (p.json) {
+                try {
+                    const data = JSON.parse(p.json);
+
+                    document.getElementById('contactPerson').value = data.contactPerson || "";
+                    document.getElementById('contactPhone').value = data.contactPhone || "";
+                    document.getElementById('salesMobile').value = data.salesMobile || "";
+                    document.getElementById('footerNote').value = data.note || "";
+                    if (data.taxId) document.getElementById('taxId').value = data.taxId;
+
+                    // 清空現有項目
+                    const container = document.getElementById('items-container');
+                    container.innerHTML = '';
+
+                    if (data.items && data.items.length > 0) {
+                        data.items.forEach(item => {
+                            addRow(item.type);
+                            const row = container.lastElementChild;
+                            if (item.type === 'category') {
+                                row.querySelector('.input-category').value = item.category;
+                            } else {
+                                row.querySelector('.input-name').value = item.name;
+                                row.querySelector('.input-qty').value = item.qty;
+                                row.querySelector('.input-price').value = item.price;
+                                row.querySelector('.input-remark').value = item.remark || "";
+
+                                // 單位處理
+                                const safeUnit = item.unit || "";
+                                const uSel = row.querySelector('.input-unit-select');
+                                const uCustom = row.querySelector('.input-unit-custom');
+
+                                // 檢查單位是否在清單中
+                                let exists = false;
+                                Array.from(uSel.options).forEach(opt => {
+                                    if (opt.value === safeUnit) exists = true;
+                                });
+
+                                if (exists) {
+                                    uSel.value = safeUnit;
+                                } else {
+                                    uSel.value = 'custom';
+                                    handleUnitChange(uSel);
+                                    uCustom.value = safeUnit;
+                                }
+                            }
+                        });
+                    }
+
+                    // 清空並載入費用
+                    const feesContainer = document.getElementById('fees-container');
+                    feesContainer.innerHTML = '';
+                    if (data.fees && data.fees.length > 0) {
+                        data.fees.forEach(fee => {
+                            addFeeRow();
+                            const row = feesContainer.lastElementChild;
+                            row.querySelector('.fee-name').value = fee.name;
+                            row.querySelector('.fee-type').value = fee.type;
+                            row.querySelector('.fee-value').value = fee.val;
+                        });
+                    }
+                    alert("已載入歷史單據完整內容。");
+                } catch (e) {
+                    console.error(e);
+                    alert("載入細項失敗，JSON格式錯誤。");
+                }
+            } else {
+                alert("此單據無詳細紀錄，僅載入基本資料。");
+            }
         }
     </script>
 </body>
