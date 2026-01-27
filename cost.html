@@ -185,6 +185,10 @@
                 .then(res => res.json())
                 .then(data => {
                     salesPersons = data.sales || [];
+                    // 使用者要求：工務與採購人員選單要跟業務人員相同 (都來自 sales)
+                    // 後端 doGet 雖然有回傳 workers/buyers，但內容就是 sales。
+                    // 為了保險起見，前端直接拿 salesPersons 即可。
+                    // 若後端有區分，可改回 data.workers || []
                     vendors = data.vendors || [];
                     projectList = data.projects || [];
 
