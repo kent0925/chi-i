@@ -164,11 +164,8 @@
         </div>
 
         <!-- 測試連線 (已成交已移至上方) -->
-        <div class="flex justify-end items-center mb-2 px-1">
-            <button onclick="testConnection()"
-                class="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded border border-gray-300">
-                <i class="fa-solid fa-plug mr-1"></i> 測試系統連線
-            </button>
+        <!-- 測試連線 (移除) -->
+        <div class="hidden flex justify-end items-center mb-2 px-1">
         </div>
 
         <!-- 客戶基本資料 -->
@@ -200,8 +197,9 @@
             <div><label class="block text-sm font-medium text-gray-700 mb-1">客戶市話 (自動加分隔線)</label><input type="text"
                     id="customerTel" class="w-full border border-gray-300 rounded-md p-2 text-sm"
                     oninput="formatPhone(this)" placeholder="02-xxxxxxx"></div>
-            <div><label class="block text-sm font-medium text-gray-700 mb-1">客戶傳真</label><input type="text"
-                    id="customerFax" class="w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="傳真號碼">
+            <div><label class="block text-sm font-medium text-gray-700 mb-1">客戶傳真 (自動加分隔線)</label><input type="text"
+                    id="customerFax" oninput="formatPhone(this)"
+                    class="w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="傳真號碼">
             </div>
             <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">工程/專案名稱</label><input
                     type="text" id="projectName" class="w-full border border-gray-300 rounded-md p-2 text-sm"></div>
@@ -833,11 +831,15 @@
 
         function loadQuoteForEdit(id) {
             if (!id) {
+                // 如果是切換回「建立新單據」，則重整頁面
                 location.reload();
                 return;
             }
             const p = projectList.find(x => x.id === id);
-            if (!p) return;
+            if (!p) {
+                alert("找不到該單據資料，請稍後再試。");
+                return;
+            }
 
             // 載入基本資料
             currentOriginId = p.id.split('-').slice(0, 2).join('-');
