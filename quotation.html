@@ -612,16 +612,13 @@
                 <img src="${LOGO_URL}" style="max-height: 80px; max-width: 100%; object-fit: contain;">
             </div>
             <div class="flex-1 text-center relative">
-                <!-- [更新] 日期調整至聯絡人上方線外 (右上角) -->
-                <div class="absolute -top-2 right-0 font-bold text-lg text-gray-600">${data.date}</div>
-                
                 <div class="company-title text-3xl mb-1 text-blue-900 font-bold">健益工程有限公司</div>
                 <div
                     class="doc-title text-xl text-gray-600 font-bold tracking-widest border-b-2 border-gray-400 inline-block px-4 pb-1 mb-2">
                     ${title}</div>
             </div>
-            <div class="w-1/4 text-right">
-                 <!-- 日期已移至中間區塊的絕對定位 -->
+            <div class="w-1/4 text-right flex flex-col justify-end pb-2">
+                 <div class="font-bold text-lg text-gray-600 border-b-2 border-gray-400 inline-block">${data.date}</div>
             </div>
         </div>
 
