@@ -408,13 +408,13 @@
             const val = parseFloat(input.value);
             if (val < 0) {
                 if (confirm("金額為負數，是否設為折抵項目？（將自動於備註加入'折抵'）")) {
-                    const row = input.closest('.item-row'); const
-                        remarkInput = row.querySelector('.input-remark'); if (remarkInput.value.indexOf('折抵') === -1) {
-                            remarkInput.value = (remarkInput.value + " (折抵)").trim();
-                        }
+                    const row = input.closest('.item-row');
+                    const remarkInput = row.querySelector('.input-remark');
+                    if (remarkInput.value.indexOf('折抵') === -1) {
+                        remarkInput.value = (remarkInput.value + " (折抵)").trim();
+                    }
                 }
             }
-        }
         }
 
         function addFeeRow() {
