@@ -830,12 +830,14 @@
         }
 
         function loadQuoteForEdit(id) {
+            alert("Debug: Start Loading ID: " + id); // Debug Start
             if (!id) {
                 // 如果是切換回「建立新單據」，則重整頁面
                 location.reload();
                 return;
             }
-            const p = projectList.find(x => x.id === id);
+            // Use loose equality (==) in case ID is number vs string
+            const p = projectList.find(x => x.id == id);
             if (!p) {
                 alert("找不到該單據資料，請稍後再試。");
                 return;
