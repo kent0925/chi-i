@@ -224,11 +224,18 @@
             if (p) {
                 document.getElementById('customer').value = p.customer;
                 document.getElementById('projectName').value = p.project;
-                document.getElementById('costSalesPerson').value = p.sales;
+                document.getElementById('costSalesPerson').value = p.sales || "";
+
+                // Store mobile in a hidden attribute or global variable if needed, 
+                // but since we send all logic from frontend, let's keep it simple.
+                // We'll trust p.sales is enough for display, but for MOBILE we need to check if p object has it.
+                // We updated doPost to return it in projectList.
+                if (p.salesMobile) document.getElementById('costSalesPerson').dataset.mobile = p.salesMobile;
             } else {
                 document.getElementById('customer').value = "";
                 document.getElementById('projectName').value = "";
                 document.getElementById('costSalesPerson').value = "";
+                delete document.getElementById('costSalesPerson').dataset.mobile;
             }
         }
 
@@ -477,6 +484,9 @@
                 amount: block.querySelector('.v-inc').value, // 存含稅總額
                 note: `未稅:${block.querySelector('.v-untax').value}, 稅:${block.querySelector('.v-tax-amt').value}, 發票:${block.querySelector('.v-inv').value}`,
                 invoiceNo: block.querySelector('.v-inv').value,
+
+                // [更新] 傳送業務手機
+                salesMobile: document.getElementById('costSalesPerson').dataset.mobile || "",
 
                 fileData: "",
                 fileUrl: fileUrl,
