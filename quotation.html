@@ -127,10 +127,32 @@
                 font-size: 16px !important;
             }
         }
+
+        /* Loading Overlay */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
     </style>
 </head>
 
 <body class="bg-slate-50 min-h-screen pb-32">
+    <!-- Loading Overlay -->
+    <div id="loading-overlay">
+        <div class="text-center">
+            <i class="fa-solid fa-circle-notch fa-spin text-4xl text-blue-600 mb-4"></i>
+            <p class="text-blue-800 font-bold tracking-widest animate-pulse">資料載入中...</p>
+        </div>
+    </div>
 
     <!-- Header Background -->
     <div class="fixed top-0 left-0 w-full h-64 bg-gradient-to-br from-blue-900 via-slate-800 to-gray-900 -z-10"></div>
@@ -500,8 +522,23 @@
                     projectList = data.projects || [];
                     renderLists();
                     populateHistory();
+
+                    // Hide Loading
+                    const overlay = document.getElementById('loading-overlay');
+                    if (overlay) {
+                        overlay.style.opacity = '0';
+                        setTimeout(() => overlay.remove(), 500);
+                    }
                 })
-                .catch(err => console.error("GAS Error:", err));
+                .catch(err => {
+                    console.error("GAS Error:", err);
+                    // Hide Loading even on error
+                    const overlay = document.getElementById('loading-overlay');
+                    if (overlay) {
+                        overlay.style.opacity = '0';
+                        setTimeout(() => overlay.remove(), 500);
+                    }
+                });
         }
 
         function renderLists() {
