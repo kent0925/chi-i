@@ -464,6 +464,8 @@
 
         function generatePreview() {
             // Validation first
+            if (!validatePersonnel()) return;
+
             const projectId = document.getElementById('projectSelect').value;
             if (!projectId) return alert("請選擇來源專案");
             const blocks = document.querySelectorAll('.vendor-block');
@@ -641,6 +643,33 @@
                 btn.innerText = originalText;
                 btn.disabled = false;
             }
+        }
+
+        function validatePersonnel() {
+            const groups = [];
+            // Sales
+            const s = document.getElementById('costSalesPerson').value.trim();
+            if (s) groups.push({ name: s, role: '業務人員' });
+
+            // Workers
+            const wInputs = document.querySelectorAll('.person-row[data-type="worker"] select');
+            wInputs.forEach(inp => { if (inp.value) groups.push({ name: inp.value.trim(), role: '工務人員' }); });
+
+            // Buyers
+            const bInputs = document.querySelectorAll('.person-row[data-type="buyer"] select');
+            bInputs.forEach(inp => { if (inp.value) groups.push({ name: inp.value.trim(), role: '採購人員' }); });
+
+            // Check duplicates
+            const seen = {};
+            for (let i = 0; i < groups.length; i++) {
+                const item = groups[i];
+                if (seen[item.name]) {
+                    alert(`人員重複錯誤：\n${item.name} 同時出現在「${seen[item.name]}」與「${item.role}」。\n請修正後再試。`);
+                    return false;
+                }
+                seen[item.name] = item.role;
+            }
+            return true;
         }
 
         function getPersons(type) {
