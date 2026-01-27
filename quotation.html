@@ -851,6 +851,8 @@
 
             // 載入詳細/歷史資料
             if (p.json) {
+                // Debug Information
+                // alert("Debug: JSON Length " + p.json.length);
                 try {
                     const data = JSON.parse(p.json);
 
@@ -918,12 +920,13 @@
                     alert("已載入歷史單據完整內容。");
                 } catch (e) {
                     console.error(e);
-                    alert("載入細項失敗，JSON格式錯誤。");
+                    alert("載入細項失敗，JSON格式錯誤: " + e.message);
                 }
             } else {
-                alert("此單據無詳細紀錄，僅載入基本資料。");
+                alert("此單據無詳細紀錄(JSON為空)，僅載入基本資料。請確認後端 GAS 是否已更新並部署(需發布新版本)。");
             }
         }
+
         function formatPhone(input) {
             let val = input.value.replace(/\D/g, '');
             if (val.length > 10) val = val.substring(0, 10);
