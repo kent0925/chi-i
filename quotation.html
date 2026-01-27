@@ -137,7 +137,7 @@
                         </label>
                     </div>
                     <div class="flex items-center">
-                        <input type="checkbox" id="dealClosed"
+                        <input type="checkbox" id="dealClosed" onchange="updateAdditionState()"
                             class="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
                         <label for="dealClosed"
                             class="ml-2 text-sm font-bold text-red-600 bg-red-100 px-2 py-1 rounded border border-red-200">
@@ -855,6 +855,30 @@
                 alert("找不到該單據資料，請稍後再試。");
                 return;
             }
+            if (id === "") {
+                // 回復到新建模式
+                currentOriginId = null;
+                lineUser = null; // Reset line user
+                document.getElementById('edit-mode-badge').classList.add('hidden');
+                document.getElementById('customer').value = "";
+                document.getElementById('projectName').value = "";
+                document.getElementById('quoteDate').value = "";
+                document.getElementById('contactPerson').value = "";
+                document.getElementById('contactPhone').value = "";
+                document.getElementById('salesMobile').value = "";
+                document.getElementById('footerNote').value = "";
+                document.getElementById('taxId').value = "";
+
+                document.getElementById('internalProjectId').value = "(存檔後自動產生)";
+                const sSelect = document.getElementById('salesPerson');
+                if (sSelect) sSelect.value = "";
+
+                // Reset Addition State
+                document.getElementById('isAddition').checked = false;
+                document.getElementById('isAddition').disabled = true;
+
+                return;
+            }
 
             // 載入基本資料
             currentOriginId = p.id.split('-').slice(0, 2).join('-');
@@ -938,6 +962,8 @@
             } else {
                 alert("此單據無詳細紀錄(JSON為空)，僅載入基本資料。請確認後端 GAS 是否已更新並部署(需發布新版本)。");
             }
+            // Update Addition Checkbox State
+            updateAdditionState();
         }
 
         function formatPhone(input) {
@@ -982,6 +1008,40 @@
             } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
+            }
+        }
+        // [新增] 檢查追加單選項狀態
+        function updateAdditionState() {
+            const chk = document.getElementById('isAddition');
+            const dealClosed = document.getElementById('dealClosed').checked;
+
+            // 規則：只有「原始報價單」且「已成交」時，才可勾選「追加」
+            // 原始報價單 ID 格式: Q-YYYYMMDDxxxx (無英文字尾)
+            // 追加單 ID 格式: Q-YYYYMMDDxxxxA
+            // 若 currentOriginId 為空 (新單)，不開放
+
+            if (!currentOriginId) {
+                chk.disabled = true;
+                chk.checked = false;
+                chk.parentElement.title = "僅限載入已成交之原始報價單後使用";
+                return;
+            }
+
+            // 檢查 ID 是否為原始單
+            // OriginId 通常為 Q-202301010001
+            // 若是追加單 Q-202301010001A
+            const isOriginal = /^[Q-]?\d{8,}\d{3,4}$/.test(currentOriginId) || /^[Q-]?\d{12}$/.test(currentOriginId);
+            // 寬鬆一點：只要沒有 A-Z 結尾
+            const hasLetterSuffix = /[A-Z]$/.test(currentOriginId);
+
+            if (!hasLetterSuffix && dealClosed) {
+                chk.disabled = false;
+                chk.parentElement.title = "可製作此單據之追加單";
+            } else {
+                chk.disabled = true;
+                chk.checked = false;
+                if (hasLetterSuffix) chk.parentElement.title = "此單據已是追加單，無法再追加 (請編輯內容視為修訂)";
+                else if (!dealClosed) chk.parentElement.title = "需先將原始單據標記為「已成交」才可製作追加單";
             }
         }
     </script>
