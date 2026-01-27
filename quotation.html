@@ -328,6 +328,7 @@
 
         function renderLists() {
             const sList = document.getElementById('sales-list');
+
             if (sList) sList.innerHTML = salesPersons.map(s => `<option value="${s}">`).join('');
 
             const sSelect = document.getElementById('salesPerson');
@@ -337,6 +338,8 @@
                     salesPersons.map(s => `<option value="${s}">${s}</option>`).join('');
                 if (cur) sSelect.value = cur;
             }
+
+            // Sales Person Input does not need innerHTML options loop anymore (it uses datalist)
 
             const uList = document.getElementById('unit-list');
             if (uList) uList.innerHTML = unitOptions.map(u => `<option value="${u}">`).join('');
@@ -617,8 +620,8 @@
                     class="doc-title text-xl text-gray-600 font-bold tracking-widest border-b-2 border-gray-400 inline-block px-4 pb-1 mb-2">
                     ${title}</div>
             </div>
-            <div class="w-1/4 text-right flex flex-col justify-end pb-2">
-                 <div class="font-bold text-lg text-gray-600 border-b-2 border-gray-400 inline-block">${data.date}</div>
+            <div class="w-1/4 text-right flex flex-col justify-end pb-0">
+                 <div class="font-bold text-lg text-gray-600 border-b-2 border-gray-400 inline-block leading-none pb-1">${data.date}</div>
             </div>
         </div>
 

@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap');
 
@@ -22,6 +23,13 @@
 
         .vendor-block:hover {
             border-color: #10b981;
+        }
+
+        .preview-canvas {
+            font-family: 'Noto Serif TC', serif;
+            background: white;
+            color: #333;
+            line-height: 1.6;
         }
     </style>
 </head>
@@ -135,16 +143,36 @@
             </div>
 
             <div class="mt-8">
-                <button onclick="submitCostData()" id="btn-submit"
+                <button onclick="generatePreview()" id="btn-submit"
                     class="w-full bg-green-700 text-white font-bold py-4 rounded-xl shadow-xl hover:bg-green-800 transition text-lg">
-                    確認並儲存所有明細
+                    預覽並確認儲存
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 預覽視窗 -->
+    <div id="preview-modal"
+        class="hidden fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center z-50 overflow-y-auto p-4">
+        <div class="bg-white rounded shadow-xl max-w-[230mm] w-full overflow-hidden flex flex-col max-h-[95vh]">
+            <div class="overflow-y-auto flex-1 bg-gray-500 p-4 flex justify-center">
+                <div id="cost-canvas"
+                    class="preview-canvas bg-white p-12 w-full max-w-[210mm] min-h-[148mm] shadow-lg relative">
+                    <!-- 預覽內容內容由 JS 填充 -->
+                </div>
+            </div>
+            <div class="p-4 bg-gray-50 flex gap-4 border-t z-50">
+                <button onclick="document.getElementById('preview-modal').classList.add('hidden')"
+                    class="flex-1 py-2 bg-gray-200 text-gray-800 rounded font-bold hover:bg-gray-300">返回修改</button>
+                <button onclick="executeSubmission()"
+                    class="flex-1 py-2 bg-blue-600 text-white rounded font-bold shadow hover:bg-blue-700">確認儲存並產生圖檔</button>
             </div>
         </div>
     </div>
 
     <!-- Datalists -->
     <datalist id="vendor-list"></datalist>
+    <datalist id="sales-list"></datalist>
 
     <script>
         const LIFF_ID = '2008974069-Ecojk6W1';
@@ -152,13 +180,13 @@
         let salesPersons = [];
         let vendors = [];
         let projectList = [];
+        let costList = []; // [新增]
         let lineUser = null;
 
         window.onload = function () {
             initializeLiff();
-            // document.getElementById('costDate').value = new Date().toISOString().split('T')[0]; // Remove Date
             fetchConfig();
-            addVendorBlock(); // 預設增加一個
+            // addVendorBlock(); // Wait for config to load or validation
         };
 
         async function initializeLiff() {
@@ -185,24 +213,20 @@
                 .then(res => res.json())
                 .then(data => {
                     salesPersons = data.sales || [];
-                    // 使用者要求：工務與採購人員選單要跟業務人員相同 (都來自 sales)
-                    // 後端 doGet 雖然有回傳 workers/buyers，但內容就是 sales。
-                    // 為了保險起見，前端直接拿 salesPersons 即可。
-                    // 若後端有區分，可改回 data.workers || []
                     vendors = data.vendors || [];
                     projectList = data.projects || [];
-
+                    costList = data.costs || []; // [新增]
 
                     fillProjectSelect();
                     renderVendorList();
+                    renderSalesList();
+
+                    // Default block if no data loaded
+                    if (document.querySelectorAll('.vendor-block').length === 0) {
+                        addVendorBlock();
+                    }
                 })
                 .catch(err => console.error("GAS Error", err));
-        }
-
-        function fillSelect(id, list) {
-            const sel = document.getElementById(id);
-            if (!sel) return;
-            sel.innerHTML = '<option value="">請選擇</option>' + list.map(s => `<option value="${s}">${s}</option>`).join('');
         }
 
         function fillProjectSelect() {
@@ -210,7 +234,6 @@
             // [更新] 過濾：只顯示「已成交」或「Closed」的專案
             const activeProjects = projectList.filter(p => p.status === 'closed' || p.status === '已成交');
 
-            // 若完全沒有已成交專案，顯示提示
             if (activeProjects.length === 0 && projectList.length > 0) {
                 sel.innerHTML = '<option value="">-- 無已成交專案 --</option>';
                 return;
@@ -228,32 +251,97 @@
             list.innerHTML = vendors.map(v => `<option value="${v}">`).join('');
         }
 
+        function renderSalesList() {
+            const list = document.getElementById('sales-list');
+            list.innerHTML = salesPersons.map(s => `<option value="${s}">`).join('');
+        }
+
         function fillProjectInfo(id) {
+            // 1. Fill Header Info
             const p = projectList.find(x => x.id === id);
+            const container = document.getElementById('vendor-items-container');
+            container.innerHTML = ''; // Clear current blocks
+            document.getElementById('person-container').innerHTML = ''; // Clear persons
+
             if (p) {
                 document.getElementById('customer').value = p.customer;
                 document.getElementById('projectName').value = p.project;
                 document.getElementById('costSalesPerson').value = p.sales || "";
-
-                // Store mobile in a hidden attribute or global variable if needed, 
-                // but since we send all logic from frontend, let's keep it simple.
-                // We'll trust p.sales is enough for display, but for MOBILE we need to check if p object has it.
-                // We updated doPost to return it in projectList.
                 if (p.salesMobile) document.getElementById('costSalesPerson').dataset.mobile = p.salesMobile;
+
+                // 2. [新增] Load Existing Cost History
+                // Filter costList by Project Name (since we link by name in Cost system)
+                // We reverse loop to find the 'latest' batch for this project.
+                // costList is already reversed (latest first).
+
+                const existing = costList.filter(c => c.project === p.project);
+                if (existing.length > 0) {
+                    // Find the latest OrderID batch
+                    const latestId = existing[0].id; // e.g. Q-xxx-1
+                    const batch = existing.filter(c => c.id === latestId);
+
+                    // Populate Vendor Blocks
+                    batch.forEach(item => {
+                        // Need to parse JSON for full details if available
+                        let details = {};
+                        try { details = JSON.parse(item.json); } catch (e) { }
+
+                        // Add Block with data
+                        addVendorBlock(details);
+                    });
+
+                    // Populate Workers/Buyers? 
+                    // Usually they are project-wide, but saved per row. 
+                    // We take from the first item of batch.
+                    const first = batch[0] || {};
+                    // Parsing worker/buyer from item.worker (might be string "A, B")
+                    // doGet costList needs to return these columns?
+                    // Step 619 doGet costList only returns: id, date, project, vendor, grandTotal, json.
+                    // So we must rely on JSON.
+                    let firstJson = {};
+                    try { firstJson = JSON.parse(first.json); } catch (e) { }
+
+                    if (firstJson.worker) {
+                        const wList = Array.isArray(firstJson.worker) ? firstJson.worker : firstJson.worker.split(',').map(s => s.trim()); // legacy check
+                        // Actually payload uses string "A, B".
+                        // If it's a string, split it.
+                        if (typeof firstJson.worker === 'string') firstJson.worker.split(',').forEach(w => addPerson('worker', w.trim()));
+                    }
+                    if (firstJson.buyer) {
+                        if (typeof firstJson.buyer === 'string') firstJson.buyer.split(',').forEach(b => addPerson('buyer', b.trim()));
+                    }
+
+                } else {
+                    addVendorBlock(); // New clean block
+                }
+
             } else {
                 document.getElementById('customer').value = "";
                 document.getElementById('projectName').value = "";
                 document.getElementById('costSalesPerson').value = "";
                 delete document.getElementById('costSalesPerson').dataset.mobile;
+                addVendorBlock();
             }
+            updateCount();
+            calcTotal();
         }
 
-        function addVendorBlock() {
+        function addVendorBlock(data = null) {
             const container = document.getElementById('vendor-items-container');
-            const id = Date.now();
+            const id = Date.now() + Math.random().toString(16).slice(2);
             const div = document.createElement('div');
             div.className = "vendor-block bg-white p-4 rounded-xl shadow border-l-4 border-green-500 relative";
             div.id = 'block-' + id;
+
+            // Values
+            const vName = data ? (data.vendorName || "") : "";
+            const vTaxId = data ? (data.vendorTaxId || "") : "";
+            const vSummary = data ? (data.costSummary || data.summary || "") : ""; // costSummary (legacy) or summary
+            const vUntax = data ? (data.subtotalNoTax || "") : "";
+            const vTax = data ? (data.taxAmount || "") : "";
+            const vInc = data ? (data.grandTotal || "") : "";
+            const vInv = data ? (data.invoiceNo || "") : "";
+
             div.innerHTML = `
                 <button onclick="removeBlock('${id}')" class="absolute top-2 right-2 text-gray-300 hover:text-red-500">
                     <i class="fa-solid fa-trash-can text-lg"></i>
@@ -263,47 +351,52 @@
                         <label class="block text-xs font-bold text-gray-700 mb-1">廠商名稱 / 對象</label>
                         <div class="flex gap-2">
                              <div class="w-1/3 relative">
-                                <input type="text" class="v-tax w-full border border-gray-300 rounded p-2 text-sm" placeholder="輸入統編" onchange="lookupBlockVendor(this)">
+                                <input type="text" value="${vTaxId}" class="v-tax w-full border border-gray-300 rounded p-2 text-sm" placeholder="輸入統編" onchange="lookupBlockVendor(this)">
                                 <span class="v-msg hidden absolute top-full left-0 text-[10px] text-orange-500">查詢中... (需等待 3-5 秒)</span>
                              </div>
-                             <input type="text" class="v-name flex-1 border border-gray-300 rounded p-2 text-sm font-bold" list="vendor-list" placeholder="輸入或選擇廠商">
+                             <input type="text" value="${vName}" class="v-name flex-1 border border-gray-300 rounded p-2 text-sm font-bold" list="vendor-list" placeholder="輸入或選擇廠商">
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-1">支出摘要 (必填)</label>
-                        <input type="text" class="v-summary w-full border border-gray-300 rounded p-2 text-sm" placeholder="例如：材料費、工資...">
+                        <input type="text" value="${vSummary}" class="v-summary w-full border border-gray-300 rounded p-2 text-sm" placeholder="例如：材料費、工資...">
                     </div>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 bg-green-50/50 p-2 rounded">
                     <div>
                         <label class="block text-xs font-bold text-green-800 mb-1">未稅金額</label>
-                        <input type="number" class="v-untax w-full border border-green-300 rounded p-2 text-sm text-right font-mono" placeholder="0" oninput="calcRow(this)">
+                        <input type="number" value="${vUntax}" class="v-untax w-full border border-green-300 rounded p-2 text-sm text-right font-mono" placeholder="0" oninput="calcRow(this)">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-green-800 mb-1">稅金 (5%)</label>
-                        <input type="number" class="v-tax-amt w-full border border-green-300 rounded p-2 text-sm text-right font-mono bg-gray-100" readonly>
+                        <input type="number" value="${vTax}" class="v-tax-amt w-full border border-green-300 rounded p-2 text-sm text-right font-mono bg-gray-100" readonly>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-green-800 mb-1">含稅總額</label>
-                        <input type="number" class="v-inc w-full border border-green-300 rounded p-2 text-sm text-right font-mono font-bold bg-green-100" readonly>
+                        <input type="number" value="${vInc}" class="v-inc w-full border border-green-300 rounded p-2 text-sm text-right font-mono font-bold bg-green-100" readonly>
                     </div>
                 </div>
 
                 <div class="flex gap-4 items-center">
                     <div class="flex-1">
                         <label class="block text-xs font-bold text-gray-500 mb-1">發票/收據號碼</label>
-                        <input type="text" class="v-inv w-full border border-gray-300 rounded p-1 text-sm" placeholder="輸入號碼">
+                        <input type="text" value="${vInv}" class="v-inv w-full border border-gray-300 rounded p-1 text-sm" placeholder="輸入號碼">
                     </div>
                     <div class="flex-1">
                         <label class="block text-xs font-bold text-gray-500 mb-1">上傳單據 (圖片/PDF)</label>
-                        <input type="file" class="v-file w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                        <!-- Not displaying existing file here yet, too complex for now. Just allow new upload -->
+                        <input type="file" class="v-file w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 mb-1">
+                        ${data && data.invoiceImage ? `<span class="text-[10px] text-green-600">已存在照片 (上傳將覆蓋)</span>` : ''}
                     </div>
                 </div>
             `;
             container.appendChild(div);
-            updateCount();
-            calcTotal();
+            // If editing, trigger calcTotal once (or calcRow to ensure tax is set if missing)
+            if (data) {
+                // Ensure tax/inc matches untax (re-calc to be safe or trust data?)
+                // Trust data for now.
+            }
         }
 
         function removeBlock(id) {
@@ -351,7 +444,7 @@
             const msg = block.querySelector('.v-msg');
             const nameInput = block.querySelector('.v-name');
 
-            msg.classList.remove('hidden'); // 顯示等待提示
+            msg.classList.remove('hidden');
             nameInput.placeholder = "查詢中...";
 
             try {
@@ -359,164 +452,224 @@
                 const data = await res.json();
                 if (data.name) {
                     nameInput.value = data.name;
-                    // 同步儲存到 vendors (optimistic)
                     if (!vendors.includes(data.name)) vendors.push(data.name);
                 } else {
                     alert('查無資料');
                 }
             } catch (e) { console.error(e); }
 
-            msg.classList.add('hidden'); // 隱藏提示
+            msg.classList.add('hidden');
             nameInput.placeholder = "輸入或選擇廠商";
         }
 
-        async function submitCostData() {
+        function generatePreview() {
+            // Validation first
             const projectId = document.getElementById('projectSelect').value;
             if (!projectId) return alert("請選擇來源專案");
-
             const blocks = document.querySelectorAll('.vendor-block');
             if (blocks.length === 0) return alert("請至少新增一筆支出");
 
-            // 檢查必填
             let isValid = true;
             blocks.forEach(b => {
                 const summary = b.querySelector('.v-summary').value.trim();
                 const amt = b.querySelector('.v-untax').value;
-                if (!summary) {
-                    b.querySelector('.v-summary').classList.add('border-red-500');
-                    isValid = false;
-                } else {
-                    b.querySelector('.v-summary').classList.remove('border-red-500');
-                }
-                if (!amt || parseFloat(amt) <= 0) {
-                    b.querySelector('.v-untax').classList.add('border-red-500');
-                    isValid = false;
-                } else {
-                    b.querySelector('.v-untax').classList.remove('border-red-500');
-                }
+                if (!summary || !amt || parseFloat(amt) <= 0) isValid = false;
             });
+            if (!isValid) return alert("請檢查「支出摘要」與「未稅金額」(皆須大於0)");
 
-            if (!isValid) return alert("請檢查「支出摘要」與「未稅金額」是否皆已填寫且大於 0。");
-
-            // 收集人員
+            // Populate Modal
+            const canvas = document.getElementById('cost-canvas');
+            const dateStr = new Date().toLocaleDateString('zh-TW');
+            const pName = document.getElementById('projectName').value;
+            const pCust = document.getElementById('customer').value;
+            const pSales = document.getElementById('costSalesPerson').value;
             const workers = getPersons('worker');
             const buyers = getPersons('buyer');
 
-            // 按鈕 Loading
-            const btn = document.getElementById('btn-submit');
+            // Build Table
+            let tableRows = '';
+            blocks.forEach((b, idx) => {
+                const vendor = b.querySelector('.v-name').value;
+                const summary = b.querySelector('.v-summary').value;
+                const grand = parseFloat(b.querySelector('.v-inc').value).toLocaleString();
+                tableRows += `
+                    <tr class="border-b">
+                        <td class="py-2 px-2 text-center text-gray-500">${idx + 1}</td>
+                        <td class="py-2 px-2 font-bold">${vendor}</td>
+                        <td class="py-2 px-2 text-gray-700">${summary}</td>
+                        <td class="py-2 px-2 text-right font-mono text-lg">$ ${grand}</td>
+                    </tr>
+                `;
+            });
+
+            const totalStr = document.getElementById('total-inc').innerText;
+
+            canvas.innerHTML = `
+                <div class="text-center mb-6 relative">
+                     <h2 class="text-3xl font-bold text-gray-800 mb-2">工程成本分析表</h2>
+                     <div class="border-b-2 border-gray-800 w-1/3 mx-auto mb-2"></div>
+                     <p class="text-sm text-gray-500">列表日期: ${dateStr}</p>
+                </div>
+                
+                <div class="flex justify-between mb-6 bg-gray-50 p-4 rounded text-sm">
+                    <div>
+                        <p class="mb-1"><span class="font-bold text-gray-600">專案名稱：</span>${pName}</p>
+                        <p class="mb-1"><span class="font-bold text-gray-600">客戶名稱：</span>${pCust}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="mb-1"><span class="font-bold text-gray-600">業務人員：</span>${pSales}</p>
+                        <p class="mb-1"><span class="font-bold text-gray-600">工務人員：</span>${workers}</p>
+                        <p class="mb-1"><span class="font-bold text-gray-600">採購人員：</span>${buyers}</p>
+                    </div>
+                </div>
+                
+                <table class="w-full mb-8 text-sm">
+                    <thead>
+                        <tr class="bg-gray-800 text-white">
+                            <th class="py-2 px-2 w-10">No.</th>
+                            <th class="py-2 px-2 text-left">廠商/對象</th>
+                            <th class="py-2 px-2 text-left">支出摘要</th>
+                            <th class="py-2 px-2 text-right">含稅金額</th>
+                        </tr>
+                    </thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+                
+                <div class="flex justify-end mb-8">
+                    <div class="text-right border-t-2 border-gray-300 pt-2">
+                        <span class="text-gray-600 font-bold mr-4">總支出金額</span>
+                        <span class="text-2xl font-bold text-red-600 font-mono">${totalStr}</span>
+                    </div>
+                </div>
+                
+                <div class="text-xs text-gray-400 text-center mt-12 border-t pt-2">
+                    <p>由 健益工程 ERP 系統自動生成</p>
+                </div>
+            `;
+
+            // Show Modal
+            document.getElementById('preview-modal').classList.remove('hidden');
+        }
+
+        async function executeSubmission() {
+            // 1. Capture Image
+            const btn = document.querySelector('#preview-modal button:last-child');
             const originalText = btn.innerText;
-            btn.innerText = "資料處理中...請勿關閉視窗";
+            btn.innerText = "處理中...";
             btn.disabled = true;
 
-            const tasks = [];
+            const canvasBlock = document.getElementById('cost-canvas');
+            let summaryBase64 = "";
+            try {
+                const canvas = await html2canvas(canvasBlock, { scale: 2, useCORS: true });
+                summaryBase64 = canvas.toDataURL('image/jpeg', 0.8);
+            } catch (e) {
+                console.error("Canvas Error", e);
+            }
 
-            blocks.forEach(block => {
-                const fileInput = block.querySelector('.v-file');
-                const file = fileInput.files[0];
+            // 2. Prepare Data (One Request)
+            const blocks = document.querySelectorAll('.vendor-block');
+            const items = [];
 
-                const p = new Promise(async (resolve, reject) => {
-                    let fileUrl = "";
+            // Async handling for file reading
+            const filePromises = Array.from(blocks).map(block => {
+                return new Promise((resolve) => {
+                    const fileInput = block.querySelector('.v-file');
+                    const file = fileInput.files[0];
+                    const itemData = {
+                        vendorTaxId: block.querySelector('.v-tax').value,
+                        vendorName: block.querySelector('.v-name').value,
+                        costSummary: block.querySelector('.v-summary').value,
+                        subtotalNoTax: block.querySelector('.v-untax').value,
+                        taxAmount: block.querySelector('.v-tax-amt').value,
+                        grandTotal: block.querySelector('.v-inc').value,
+                        invoiceNo: block.querySelector('.v-inv').value,
+                    };
+
                     if (file) {
                         const reader = new FileReader();
-                        reader.onload = async function () {
-                            const base64 = reader.result.split(',')[1];
-                            try {
-                                const upRes = await fetch(GAS_URL, {
-                                    method: 'POST',
-                                    body: JSON.stringify({
-                                        type: 'upload', // 呼叫 GAS upload 邏輯
-                                        fileName: file.name,
-                                        mimeType: file.type,
-                                        fileData: base64
-                                    })
-                                });
-                                const upData = await upRes.json();
-                                fileUrl = upData.url;
-                                resolve(buildPayload(block, fileUrl, workers, buyers));
-                            } catch (e) {
-                                console.error('Upload failed', e);
-                                resolve(buildPayload(block, "Upload Failed", workers, buyers));
-                            }
+                        reader.onload = function () {
+                            itemData.invoiceImage = reader.result.split(',')[1];
+                            resolve(itemData);
                         };
                         reader.readAsDataURL(file);
                     } else {
-                        resolve(buildPayload(block, "", workers, buyers));
+                        resolve(itemData);
                     }
                 });
-                tasks.push(p);
             });
 
-            Promise.all(tasks).then(async (payloads) => {
-                try {
-                    for (const data of payloads) {
-                        await fetch(GAS_URL, {
-                            method: 'POST',
-                            body: JSON.stringify(data),
-                            mode: 'no-cors'
-                        });
-                    }
-                    alert("所有明細已儲存完畢！");
-                    location.reload();
-                } catch (e) {
-                    alert("儲存過程發生錯誤：" + e);
-                } finally {
-                    btn.innerText = originalText;
-                    btn.disabled = false;
-                }
-            });
-        }
+            const loadedItems = await Promise.all(filePromises);
 
-        function getPersons(type) {
-            const rows = document.querySelectorAll(`.person-row[data-type="${type}"] select`);
-            const vals = [];
-            rows.forEach(sel => {
-                if (sel.value) vals.push(sel.value);
-            });
-            return [...new Set(vals)].join(', ');
-        }
-
-        function buildPayload(block, fileUrl, workers, buyers) {
-            return {
+            const payload = {
                 type: 'cost',
                 projectId: document.getElementById('projectSelect').value,
                 customer: document.getElementById('customer').value,
                 projectName: document.getElementById('projectName').value,
                 salesPerson: document.getElementById('costSalesPerson').value,
-                worker: workers,
-                buyer: buyers,
-
-
-                vendorTaxId: block.querySelector('.v-tax').value,
-                vendorName: block.querySelector('.v-name').value,
-                summary: block.querySelector('.v-summary').value,
-
-                amount: block.querySelector('.v-inc').value, // 存含稅總額
-                note: `未稅:${block.querySelector('.v-untax').value}, 稅:${block.querySelector('.v-tax-amt').value}, 發票:${block.querySelector('.v-inv').value}`,
-                invoiceNo: block.querySelector('.v-inv').value,
-
-                // [更新] 傳送業務手機
                 salesMobile: document.getElementById('costSalesPerson').dataset.mobile || "",
+                worker: getPersons('worker'),
+                buyer: getPersons('buyer'),
 
-                fileData: "",
-                fileUrl: fileUrl,
+                date: new Date().toISOString().split('T')[0], // Use current date for submission
+
+                // Summary Image
+                image: summaryBase64,
+
+                // Items List
+                items: loadedItems,
+
+                // Aggregates
+                grandTotal: document.getElementById('total-inc').innerText.replace('$', '').trim().replace(/,/g, ''),
                 lineUser: lineUser
             };
+
+            // 3. Send
+            try {
+                // Use no-cors trick? No, we need response?
+                // GAS POST usually works with CORS if returning JSON properly.
+                // Our doGet/doPost handles JSON output.
+                await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                alert("儲存成功！");
+                location.reload();
+            } catch (e) {
+                alert("上傳失敗: " + e);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
         }
 
-        function addPerson(type) {
+        function getPersons(type) {
+            const inputs = document.querySelectorAll(`.person-row[data-type="${type}"] select`);
+            const vals = [];
+            inputs.forEach(inp => {
+                if (inp.value) vals.push(inp.value.trim());
+            });
+            return [...new Set(vals)].join(', ');
+        }
+
+        function addPerson(type, content = "") {
             const container = document.getElementById('person-container');
             const div = document.createElement('div');
             const labelText = type === 'worker' ? '工務人員' : '採購人員';
             const colorClass = type === 'worker' ? 'border-yellow-300 bg-yellow-50' : 'border-blue-300 bg-blue-50';
+
+            const options = ['<option value="">請選擇</option>', ...salesPersons.map(s => {
+                const selected = (s === content) ? 'selected' : '';
+                return `<option value="${s}" ${selected}>${s}</option>`;
+            })].join('');
 
             div.className = `flex items-center gap-2 p-2 rounded border ${colorClass} person-row`;
             div.dataset.type = type;
 
             div.innerHTML = `
                 <span class="text-xs font-bold ${type === 'worker' ? 'text-yellow-800' : 'text-blue-800'}">${labelText}</span>
-                <select class="flex-1 border border-gray-300 rounded p-1 text-sm bg-white person-select">
-                    <option value="">請選擇</option>
-                    ${salesPersons.map(s => `<option value="${s}">${s}</option>`).join('')}
+                <select class="flex-1 border border-gray-300 rounded p-1 text-sm bg-white">
+                    ${options}
                 </select>
                 <button onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 px-1">
                     <i class="fa-solid fa-times"></i>
