@@ -136,7 +136,6 @@
                         <select id="salesPerson" class="w-full border border-gray-300 rounded p-1 text-sm bg-white"
                             onchange="saveConfig('sales', this.value)">
                             <option value="">-- 請選擇 --</option>
-                            <option value="NEW"> + 新增...</option>
                         </select>
                     </div>
                     <div>
@@ -299,8 +298,7 @@
             if (sSelect) {
                 const cur = sSelect.value;
                 sSelect.innerHTML = '<option value="">-- 請選擇 --</option>' +
-                    salesPersons.map(s => `<option value="${s}">${s}</option>`).join('') +
-                    '<option value="NEW"> + 新增...</option>';
+                    salesPersons.map(s => `<option value="${s}">${s}</option>`).join('');
                 if (cur) sSelect.value = cur;
             }
 
@@ -453,21 +451,6 @@
         }
 
         function saveConfig(type, val) {
-            if (val === 'NEW') {
-                const nv = prompt("請輸入新增項目名稱:");
-                if (nv) {
-                    saveToBackend(type, nv);
-                    if (type === 'sales') {
-                        setTimeout(() => {
-                            const sel = document.getElementById('salesPerson');
-                            if (sel) sel.value = nv;
-                        }, 200);
-                    }
-                } else {
-                    document.getElementById('salesPerson').value = "";
-                }
-                return;
-            }
             if (val) saveToBackend(type, val);
         }
 
@@ -677,6 +660,18 @@
                 val: parseFloat(row.querySelector('.fee-value').value) || 0
             }));
 
+            let subtotal = 0;
+            items.forEach(item => {
+                if (item.type !== 'category') subtotal += (item.qty * item.price);
+            });
+
+            let feesTotal = 0;
+            fees.forEach(fee => {
+                feesTotal += fee.type === 'percent' ? Math.round(subtotal * fee.val / 100) : fee.val;
+            });
+
+            const grandTotal = subtotal + feesTotal;
+
             return {
                 type: 'quotation',
                 customer: document.getElementById('customer').value,
@@ -692,7 +687,11 @@
                 lineUser: lineUser,
                 items: items,
                 fees: fees,
-                note: document.getElementById('footerNote').value
+                note: document.getElementById('footerNote').value,
+                // 新增計算欄位
+                subtotalNoTax: subtotal,
+                taxAmount: 0, // 目前無稅金計算邏輯，預設為0
+                grandTotal: grandTotal
             };
         }
 
