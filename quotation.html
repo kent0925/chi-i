@@ -320,6 +320,12 @@
                     salesPersons = data.sales || [];
                     unitOptions = data.units || [];
                     projectList = data.projects || [];
+                    // Debug: Check project list content
+                    if (projectList.length > 0) {
+                        alert("Debug: Loaded " + projectList.length + " projects. First ID: " + projectList[0].id);
+                    } else {
+                        alert("Debug: No projects loaded from GAS.");
+                    }
                     renderLists();
                     populateHistory();
                 })
@@ -363,7 +369,7 @@
             const hSel = document.getElementById('historySelect');
             if (hSel) {
                 hSel.innerHTML = '<option value="">-- 建立新單據 --</option>' + projectList.map(p => {
-                    const label = `${p.date} ${p.customer} (${p.project})`;
+                    const label = `[${p.id}] ${p.date} ${p.customer} (${p.project})`;
                     return `<option value="${p.id}">${label}</option>`;
                 }).join('');
             }
