@@ -234,374 +234,534 @@
     <datalist id="sales-list"></datalist>
     <datalist id="unit-list"></datalist>
 
-    <script>
-        const LIFF_ID = '2008974069-Ecojk6W1'; // 已設定
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxrXo9AcczzlIazBPTqxZij7CVAcqcXtbbpGJMKQ4RoEFRp8JsTtjLZw1R6xZwwvnnt/exec'; // 已更新為正式網址
-        let salesPersons = [];
-        let unitOptions = [];
-        let projectList = [];
-        let currentOriginId = null;
-        let lineUser = null; // 儲存 LINE 使用者資料
+    const LIFF_ID = '2008974069-Ecojk6W1';
+    const GAS_URL =
+    'https://script.google.com/macros/s/AKfycbxrXo9AcczzlIazBPTqxZij7CVAcqcXtbbpGJMKQ4RoEFRp8JsTtjLZw1R6xZwwvnnt/exec';
+    let salesPersons = [];
+    let unitOptions = [];
+    let projectList = [];
+    let currentOriginId = null;
+    let lineUser = null;
 
-        window.onload = function () {
-            initializeLiff();
-            const dateInput = document.getElementById('quoteDate');
-            if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
-            fetchConfig();
-            addRow('category');
-            addRow('item');
-        };
+    // Logo URL (請使用者自行替換為真實 Logo URL，需注意 CORS)
+    const LOGO_URL = 'UNNAME.PNG';
 
-        async function initializeLiff() {
-            if (LIFF_ID === 'YOUR_LIFF_ID') return console.warn('LIFF ID 未設定');
-            try {
-                await liff.init({ liffId: LIFF_ID });
-                if (liff.isLoggedIn()) {
-                    const profile = await liff.getProfile();
-                    lineUser = profile;
-                    document.getElementById('liff-profile').classList.remove('hidden');
-                    document.getElementById('liff-picture').src = profile.pictureUrl;
-                    document.getElementById('liff-name').innerText = profile.displayName;
-                } else {
-                    liff.login();
-                }
-            } catch (e) {
-                console.error('LIFF Init Error', e);
-            }
-        }
+    window.onload = function () {
+    initializeLiff();
+    const dateInput = document.getElementById('quoteDate');
+    if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+    fetchConfig();
+    // 預設不新增行，讓使用者自己點，或維持預設
+    if(document.querySelectorAll('.item-row').length === 0) {
+    addRow('category');
+    addRow('item');
+    }
+    };
 
-        function fetchConfig() {
-            if (GAS_URL.includes('your-gas-id') || GAS_URL.includes('L1L1L1')) {
-                console.warn("GAS_URL 尚未設定。請將 GAS_URL 替換為您的 Web App 網址。");
-                return;
-            }
-            fetch(GAS_URL)
-                .then(res => res.json())
-                .then(data => {
-                    console.log("從 GAS 取得設定資料:", data);
-                    salesPersons = data.sales || [];
-                    unitOptions = data.units || [];
-                    projectList = data.projects || [];
-                    renderLists();
-                    populateHistory();
-                })
-                .catch(err => {
-                    console.error("無法連線至 GAS:", err);
-                });
-        }
+    async function initializeLiff() {
+    try {
+    await liff.init({ liffId: LIFF_ID });
+    if (liff.isLoggedIn()) {
+    const profile = await liff.getProfile();
+    lineUser = profile;
+    const pBlock = document.getElementById('liff-profile');
+    if(pBlock) {
+    pBlock.classList.remove('hidden');
+    document.getElementById('liff-picture').src = profile.pictureUrl;
+    document.getElementById('liff-name').innerText = profile.displayName;
+    }
+    } else {
+    liff.login();
+    }
+    } catch (e) {
+    console.error('LIFF Init Error', e);
+    }
+    }
 
-        function renderLists() {
-            console.log("執行 renderLists, 目前業務名單:", salesPersons);
-            const sList = document.getElementById('sales-list');
-            if (sList) sList.innerHTML = salesPersons.map(s => `<option value="${s}">`).join('');
+    function fetchConfig() {
+    fetch(GAS_URL)
+    .then(res => res.json())
+    .then(data => {
+    salesPersons = data.sales || [];
+    unitOptions = data.units || [];
+    projectList = data.projects || [];
+    renderLists();
+    populateHistory();
+    })
+    .catch(err => console.error("GAS Error:", err));
+    }
 
-            const sSelect = document.getElementById('salesPerson');
-            if (sSelect) {
-                const cur = sSelect.value;
-                sSelect.innerHTML = '<option value="">-- 請選擇 --</option>' +
-                    salesPersons.map(s => `<option value="${s}">${s}</option>`).join('') +
-                    '<option value="NEW"> + 新增...</option>';
-                if (cur) sSelect.value = cur;
-            }
+    function renderLists() {
+    const sList = document.getElementById('sales-list');
+    if (sList) sList.innerHTML = salesPersons.map(s => `<option value="${s}">`).join('');
 
-            const uList = document.getElementById('unit-list');
-            if (uList) uList.innerHTML = unitOptions.map(u => `<option value="${u}">`).join('');
+        const sSelect = document.getElementById('salesPerson');
+        if (sSelect) {
+        const cur = sSelect.value;
+        sSelect.innerHTML = '
+    <option value="">-- 請選擇 --</option>' +
+    salesPersons.map(s => `<option value="${s}">${s}</option>`).join('') +
+    '<option value="NEW"> + 新增...</option>';
+    if (cur) sSelect.value = cur;
+    }
+
+    const uList = document.getElementById('unit-list');
+    if (uList) uList.innerHTML = unitOptions.map(u => `<option value="${u}">`).join('');
         }
 
         function populateHistory() {
-            const hSel = document.getElementById('historySelect');
-            if (hSel) {
-                hSel.innerHTML = '<option value="">-- 建立新單據 --</option>' + projectList.map(p => {
-                    const label = `${p.date} ${p.customer} (${p.project})`;
-                    return `<option value="${p.id}">${label}</option>`;
-                }).join('');
-            }
-        }
+        const hSel = document.getElementById('historySelect');
+        if (hSel) {
+        hSel.innerHTML = '
+    <option value="">-- 建立新單據 --</option>' + projectList.map(p => {
+    const label = `${p.date} ${p.customer} (${p.project})`;
+    return `<option value="${p.id}">${label}</option>`;
+    }).join('');
+    }
+    }
 
-        function addRow(type) {
-            const container = document.getElementById('items-container');
-            const id = Date.now();
-            const div = document.createElement('div');
-            div.className = "flex gap-2 items-center item-row p-2 rounded " + (type === 'category' ? "bg-gray-100 border-l-4 border-gray-400" : "bg-white border border-gray-100 shadow-sm");
-            div.id = 'row-' + id;
-            div.innerHTML = type === 'category' ? `
-                <div class="font-bold text-gray-400 px-2">●</div>
-                <input type="text" class="input-category flex-1 border-b border-gray-300 bg-transparent p-1 font-bold outline-none" placeholder="大項次名稱 (例如: 一、拆除工程)">
-                <button onclick="this.parentElement.remove()" class="text-gray-300 hover:text-red-500 px-2"><i class="fa-solid fa-trash-can"></i></button>
-            ` : `
-                <div class="w-8 text-center text-xs text-gray-300">${container.querySelectorAll('.item-row').length + 1}</div>
-                <input type="text" class="input-name flex-[3] border border-gray-300 rounded p-1 text-sm" placeholder="細項描述">
-                <input type="number" class="input-qty w-16 border border-gray-300 rounded p-1 text-sm text-center" placeholder="數量" value="1">
-                <div class="w-20">
-                    <select onchange="handleUnitChange(this)" class="input-unit-select w-full border border-gray-300 rounded p-1 text-xs">
-                        <option value="">單位</option>
-                        ${unitOptions.map(u => `<option value="${u}">${u}</option>`).join('')}
-                        <option value="custom">+ 其他</option>
-                    </select>
-                    <input type="text" class="input-unit-custom hidden w-full border border-gray-300 rounded p-1 text-xs" placeholder="新單位">
-                </div>
-                <input type="number" class="input-price flex-[1.5] border border-gray-300 rounded p-1 text-sm text-right" placeholder="單價">
-                <input type="text" class="input-remark flex-[2] border border-gray-300 rounded p-1 text-xs" placeholder="備註">
-                <button onclick="this.parentElement.remove()" class="text-gray-300 hover:text-red-500 px-2"><i class="fa-solid fa-trash-can"></i></button>
-            `;
-            container.appendChild(div);
-        }
+    function addRow(type) {
+    const container = document.getElementById('items-container');
 
-        function handleUnitChange(sel) {
-            const custom = sel.nextElementSibling;
-            if (sel.value === 'custom') {
-                sel.classList.add('hidden');
-                custom.classList.remove('hidden');
-                custom.focus();
-            }
-        }
+    // 防呆：檢查最後一項是否已填寫 (僅檢查 item 類型，category 不強制)
+    const lastRow = container.querySelector('.item-row:last-child');
+    if (lastRow && !lastRow.classList.contains('bg-gray-100')) { // 判斷是否為細項 (Category有 bg-gray-100)
+    const nameVal = lastRow.querySelector('.input-name').value;
+    if (!nameVal.trim()) {
+    alert("請先完成上方細項內容後再新增！");
+    return;
+    }
+    }
 
-        function addFeeRow() {
-            const container = document.getElementById('fees-container');
-            const div = document.createElement('div');
-            div.className = "flex gap-2 fee-row";
-            div.innerHTML = `
-                <input type="text" class="fee-name flex-1 border border-gray-300 rounded p-1 text-sm" placeholder="費用項目 (例如：管理費)">
-                <select class="fee-type border border-gray-300 rounded p-1 text-sm">
-                    <option value="fixed">固定金額($)</option>
-                    <option value="percent">百分比(%)</option>
-                </select>
-                <input type="number" class="fee-value w-24 border border-gray-300 rounded p-1 text-sm" placeholder="數值">
-                <button onclick="this.parentElement.remove()" class="text-red-400 px-2">×</button>
-            `;
-            container.appendChild(div);
+    const id = Date.now();
+    const div = document.createElement('div');
+    // Category: 灰色背景; Item: 白色背景
+    const isCat = (type === 'category');
+    div.className = "flex gap-2 items-center item-row p-2 rounded " + (isCat ? "bg-gray-100 border-l-4 border-gray-400
+    params-category" : "bg-white border border-gray-100 shadow-sm params-item");
+    div.id = 'row-' + id;
+    div.dataset.type = type;
+
+    if (isCat) {
+    div.innerHTML = `
+    <div class="font-bold text-gray-400 px-2">●</div>
+    <input type="text" class="input-category flex-1 border-b border-gray-300 bg-transparent p-1 font-bold outline-none"
+        placeholder="大項次名稱 (例如: 一、拆除工程)">
+    <button onclick="this.parentElement.remove()" class="text-gray-300 hover:text-red-500 px-2"><i
+            class="fa-solid fa-trash-can"></i></button>
+    `;
+    } else {
+    div.innerHTML = `
+    <div class="w-8 text-center text-xs text-gray-300 item-seq"></div>
+    <input type="text" class="input-name flex-[3] border border-gray-300 rounded p-1 text-sm" placeholder="細項描述">
+    <input type="number" class="input-qty w-16 border border-gray-300 rounded p-1 text-sm text-center" placeholder="數量"
+        value="1">
+    <div class="w-20">
+        <select onchange="handleUnitChange(this)"
+            class="input-unit-select w-full border border-gray-300 rounded p-1 text-xs">
+            <option value="">單位</option>
+            ${unitOptions.map(u => `<option value="${u}">${u}</option>`).join('')}
+            <option value="custom">+ 其他</option>
+        </select>
+        <input type="text" onblur="checkNewUnit(this)"
+            class="input-unit-custom hidden w-full border border-gray-300 rounded p-1 text-xs" placeholder="新單位">
+    </div>
+    <input type="number" onchange="checkPrice(this)"
+        class="input-price flex-[1.5] border border-gray-300 rounded p-1 text-sm text-right" placeholder="單價">
+    <input type="text" class="input-remark flex-[2] border border-gray-300 rounded p-1 text-xs" placeholder="備註">
+    <button onclick="this.parentElement.remove(); reindexItems();" class="text-gray-300 hover:text-red-500 px-2"><i
+            class="fa-solid fa-trash-can"></i></button>
+    `;
+    }
+    container.appendChild(div);
+    if (!isCat) reindexItems();
+    }
+
+    function reindexItems() {
+    const rows = document.querySelectorAll('.item-row');
+    let seq = 1;
+    rows.forEach(row => {
+    if (row.dataset.type === 'item') {
+    row.querySelector('.item-seq').innerText = seq++;
+    }
+    });
+    }
+
+    function handleUnitChange(sel) {
+    const custom = sel.nextElementSibling;
+    if (sel.value === 'custom') {
+    sel.classList.add('hidden');
+    custom.classList.remove('hidden');
+    custom.focus();
+    }
+    }
+
+    // 新增單位檢查
+    function checkNewUnit(input) {
+    const val = input.value.trim();
+    if (val && !unitOptions.includes(val)) {
+    if(confirm(`是否將新單位「${val}」加入常用清單？`)) {
+    saveToBackend('unit', val);
+    }
+    }
+    }
+
+    // 負數金額檢查
+    function checkPrice(input) {
+    const val = parseFloat(input.value);
+    if (val < 0) { if (confirm("金額為負數，是否設為折抵項目？（將自動於備註加入'折抵'）")) { const row=input.closest('.item-row'); const
+        remarkInput=row.querySelector('.input-remark'); if (remarkInput.value.indexOf('折抵')===-1) {
+        remarkInput.value=(remarkInput.value + " (折抵)" ).trim(); } } } } function addFeeRow() { const
+        container=document.getElementById('fees-container'); const div=document.createElement('div');
+        div.className="flex gap-2 fee-row" ; div.innerHTML=` <input type="text"
+        class="fee-name flex-1 border border-gray-300 rounded p-1 text-sm" placeholder="費用項目 (例如：管理費)">
+        <select class="fee-type border border-gray-300 rounded p-1 text-sm">
+            <option value="fixed">固定金額($)</option>
+            <option value="percent">百分比(%)</option>
+        </select>
+        <input type="number" class="fee-value w-24 border border-gray-300 rounded p-1 text-sm" placeholder="數值">
+        <button onclick="this.parentElement.remove()" class="text-red-400 px-2">×</button>
+        `;
+        container.appendChild(div);
         }
 
         async function lookupCompany() {
-            const taxId = document.getElementById('taxId').value;
-            if (taxId.length !== 8) return alert("請輸入8碼統編");
-            const btn = event.target;
-            btn.innerText = "查詢中...";
-            try {
-                const res = await fetch(`${GAS_URL}?action=lookup&taxId=${taxId}`);
-                const data = await res.json();
-                if (data.name) {
-                    document.getElementById('customer').value = data.name;
-                } else {
-                    alert(data.error || "查無此統編資料");
-                }
-            } catch (e) {
-                alert("連線失敗，請檢查 GAS 部署是否正確，或是否超過查詢量限制。");
-            }
-            btn.innerText = "查詢";
+        const taxId = document.getElementById('taxId').value;
+        if (taxId.length !== 8) return alert("請輸入8碼統編");
+        const btn = event.target;
+        btn.innerText = "查詢中...";
+        try {
+        const res = await fetch(`${GAS_URL}?action=lookup&taxId=${taxId}`);
+        const data = await res.json();
+        if (data.name) {
+        document.getElementById('customer').value = data.name;
+        } else {
+        alert(data.error || "查無此統編資料");
+        }
+        } catch (e) {
+        alert("連線失敗或超過查詢量限制。");
+        }
+        btn.innerText = "查詢";
         }
 
         function saveConfig(type, val) {
-            if (val === 'NEW') {
-                const nv = prompt("請輸入新增項目名稱:");
-                if (nv) {
-                    saveToBackend(type, nv);
-                    // 如果是新增業務人員，自動選中該人員
-                    if (type === 'sales') {
-                        setTimeout(() => {
-                            const sel = document.getElementById('salesPerson');
-                            if (sel) sel.value = nv;
-                        }, 200);
-                    }
-                } else {
-                    // 若取消新增，將選單切換回空值
-                    document.getElementById('salesPerson').value = "";
-                }
-                return;
-            }
-            if (val) saveToBackend(type, val);
+        if (val === 'NEW') {
+        const nv = prompt("請輸入新增項目名稱:");
+        if (nv) {
+        saveToBackend(type, nv);
+        if (type === 'sales') {
+        setTimeout(() => {
+        const sel = document.getElementById('salesPerson');
+        if (sel) sel.value = nv;
+        }, 200);
+        }
+        } else {
+        document.getElementById('salesPerson').value = "";
+        }
+        return;
+        }
+        if (val) saveToBackend(type, val);
         }
 
         function saveToBackend(type, val) {
-            fetch(GAS_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'save_config', configType: type, value: val }),
-                mode: 'no-cors'
-            });
-            if (type === 'sales' && !salesPersons.includes(val)) salesPersons.push(val);
-            if (type === 'unit' && !unitOptions.includes(val)) unitOptions.push(val);
-            renderLists();
+        // Optimistic update
+        if (type === 'sales' && !salesPersons.includes(val)) salesPersons.push(val);
+        if (type === 'unit' && !unitOptions.includes(val)) unitOptions.push(val);
+        // Re-render immediately
+        renderLists();
+
+        fetch(GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'save_config', configType: type, value: val }),
+        mode: 'no-cors'
+        });
         }
 
         function checkTaxId(input) {
-            input.value = input.value.replace(/\D/g, '');
-            const warn = document.getElementById('tax-warning');
-            if (input.value.length > 0 && input.value.length !== 8) warn.classList.remove('hidden');
-            else warn.classList.add('hidden');
+        input.value = input.value.replace(/\D/g, '');
+        const warn = document.getElementById('tax-warning');
+        if (input.value.length > 0 && input.value.length !== 8) warn.classList.remove('hidden');
+        else warn.classList.add('hidden');
         }
 
         async function generatePreview(title) {
-            const data = collectData();
-            if (!data.customer || !data.project) return alert("客戶與專案名稱為必填");
+        const data = collectData();
+        if (!data.customer || !data.project) return alert("客戶與專案名稱為必填");
 
-            const canvas = document.getElementById('quotation-canvas');
-            let itemsHtml = '';
-            let subtotal = 0;
+        const canvas = document.getElementById('quotation-canvas');
+        let itemsHtml = '';
+        let subtotal = 0; // 全報價小記 (不含稅費)
 
-            data.items.forEach((item, idx) => {
-                if (item.type === 'category') {
-                    itemsHtml += `<tr class="bg-gray-50"><td colspan="7" class="font-bold">${item.category}</td></tr>`;
-                } else {
-                    const total = item.qty * item.price;
-                    subtotal += total;
-                    itemsHtml += `<tr>
-                        <td class="text-center">${idx + 1}</td>
-                        <td>${item.name}</td>
-                        <td class="text-center">${item.unit}</td>
-                        <td class="text-center">${item.qty}</td>
-                        <td class="text-right">${item.price.toLocaleString()}</td>
-                        <td class="text-right">${total.toLocaleString()}</td>
-                        <td class="text-xs">${item.remark || ''}</td>
-                    </tr>`;
-                }
-            });
+        // 處理大項次小計邏輯
+        // 先將 items 分群
+        let currentCategoryName = '';
+        let currentCategoryTotal = 0;
+        let currentCategoryItems = [];
 
-            let feesHtml = '';
-            let feesTotal = 0;
-            data.fees.forEach(fee => {
-                const amt = fee.type === 'percent' ? Math.round(subtotal * fee.val / 100) : fee.val;
-                feesTotal += amt;
-                feesHtml += `<div class="summary-row"><div class="summary-label">${fee.name}:</div><div class="summary-value">${amt.toLocaleString()}</div></div>`;
-            });
+        // 輔助 render 函數
+        const renderCategoryRow = (name, total) => {
+        return `<tr class="bg-gray-50 border-t-2 border-gray-400">
+            <td colspan="5" class="font-bold text-left pl-4">${name}</td>
+            <td class="font-bold text-right pr-2">小計：${total.toLocaleString()}</td>
+            <td></td>
+        </tr>`;
+        };
 
-            const grandTotal = subtotal + feesTotal;
-            // 稅額移除 (依使用者需求)
+        const renderItemRow = (item, idx) => {
+        const total = item.qty * item.price;
+        return `<tr>
+            <td class="text-center">${idx}</td>
+            <td>${item.name}</td>
+            <td class="text-center">${item.unit}</td>
+            <td class="text-center">${item.qty}</td>
+            <td class="text-right">${item.price.toLocaleString()}</td>
+            <td class="text-right">${total.toLocaleString()}</td>
+            <td class="text-xs text-gray-500">${item.remark || ''}</td>
+        </tr>`;
+        };
 
-            canvas.innerHTML = `
-                <div class="company-title">健益工程有限公司</div>
+        let globalIdx = 1;
+
+        data.items.forEach((item) => {
+        if (item.type === 'category') {
+        // 渲染上一個 Category (如果存在)
+        if (currentCategoryName) {
+        itemsHtml += renderCategoryRow(currentCategoryName, currentCategoryTotal);
+        currentCategoryItems.forEach(i => itemsHtml += i);
+        }
+        // 重置下一組
+        currentCategoryName = item.category;
+        currentCategoryTotal = 0;
+        currentCategoryItems = [];
+        } else {
+        // Item
+        const itemTotal = item.qty * item.price;
+        currentCategoryTotal += itemTotal;
+        subtotal += itemTotal;
+
+        // 暫存 Item HTML
+        currentCategoryItems.push(renderItemRow(item, globalIdx++));
+        }
+        });
+        // 渲染最後一組
+        if (currentCategoryName) {
+        itemsHtml += renderCategoryRow(currentCategoryName, currentCategoryTotal);
+        currentCategoryItems.forEach(i => itemsHtml += i);
+        } else {
+        // 若沒有 Category，直接渲染 Item
+        currentCategoryItems.forEach(i => itemsHtml += i);
+        }
+
+        // 費用計算
+        let feesHtml = '';
+        let feesTotal = 0;
+        data.fees.forEach(fee => {
+        const amt = fee.type === 'percent' ? Math.round(subtotal * fee.val / 100) : fee.val;
+        feesTotal += amt;
+        feesHtml += `<div class="summary-row">
+            <div class="summary-label">${fee.name}:</div>
+            <div class="summary-value">${amt.toLocaleString()}</div>
+        </div>`;
+        });
+
+        const grandTotal = subtotal + feesTotal;
+
+        // 客戶與統編顯示
+        const clientDisplay = data.customer + (data.taxId ? ` <span
+            class="text-sm font-normal text-gray-600">(${data.taxId})</span>` : '');
+
+        canvas.innerHTML = `
+        <div class="flex justify-between items-start mb-4">
+            <div class="w-1/4">
+                <!-- Logo Placeholder, 隱藏以避免與背景打架，或顯示 -->
+                <!-- <img src="${LOGO_URL}" style="height: 50px; opacity: 0.8;"> -->
+                <div
+                    class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-blue-500">
+                    LOGO</div>
+            </div>
+            <div class="flex-1">
+                <div class="company-title text-3xl mb-1">健益工程有限公司</div>
                 <div class="doc-title">${title}</div>
-                <table class="info-table mb-2">
-                    <tr><td class="w-1/6 text-center">客戶名稱</td><td class="w-2/6">${data.customer}</td><td class="w-1/6 text-center">聯絡人</td><td class="w-2/6">${data.contactPerson}</td></tr>
-                    <tr><td class="text-center">工程名稱</td><td>${data.projectName}</td><td class="text-center">聯絡電話</td><td>${data.contactPhone}</td></tr>
-                </table>
-                <div class="text-right text-xs mb-1">日期: ${data.date} &nbsp; 單號: (存檔後產生) &nbsp; 統編: ${data.taxId || '-'}</div>
-                <table class="items-table">
-                    <thead><tr><th>項次</th><th>項目名稱</th><th>單位</th><th>數量</th><th>單價</th><th>複價</th><th>備註</th></tr></thead>
-                    <tbody>${itemsHtml}</tbody>
-                </table>
-                <div class="flex justify-end p-2">
-                    <div class="w-1/2">
-                        <div class="summary-row"><div class="summary-label">合計:</div><div class="summary-value">${subtotal.toLocaleString()}</div></div>
-                        ${feesHtml}
-                        <div class="summary-row border-t-2 border-black font-bold">
-                            <div class="summary-label">總計:</div><div class="summary-value">${grandTotal.toLocaleString()}</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-4 border-b border-gray-300 pb-1">新台幣：<span class="font-bold underline">${toChineseAmt(grandTotal)}</span></div>
-                <div class="mt-4 text-xs italic">備註: ${data.note.replace(/\n/g, '<br>')}</div>
-            `;
+            </div>
+            <div class="w-1/4 text-right">
+                <!-- 右上角顯示日期 -->
+                <div class="font-bold text-lg text-gray-600">${data.date}</div>
+            </div>
+        </div>
 
-            document.getElementById('preview-modal').classList.remove('hidden');
+        <table class="info-table mb-4">
+            <tr>
+                <td class="w-24 bg-gray-50 font-bold text-center">客戶名稱</td>
+                <td class="w-[40%]">${clientDisplay}</td>
+                <td class="w-24 bg-gray-50 font-bold text-center">聯絡人</td>
+                <td>${data.contactPerson}</td>
+            </tr>
+            <tr>
+                <td class="bg-gray-50 font-bold text-center">工程名稱</td>
+                <td>${data.projectName}</td>
+                <td class="bg-gray-50 font-bold text-center">聯絡電話</td>
+                <td>${data.contactPhone}</td>
+            </tr>
+        </table>
+
+        <table class="items-table mb-4">
+            <thead class="bg-blue-800 text-white">
+                <tr>
+                    <th class="w-10">項次</th>
+                    <th>項目名稱</th>
+                    <th class="w-16">單位</th>
+                    <th class="w-16">數量</th>
+                    <th class="w-24">單價</th>
+                    <th class="w-24">複價</th>
+                    <th class="w-32">備註</th>
+                </tr>
+            </thead>
+            <tbody>${itemsHtml}</tbody>
+        </table>
+
+        <div class="flex justify-between items-end p-2 mt-auto">
+            <!-- 左下：業務資訊 -->
+            <div class="text-sm text-gray-600">
+                <div class="mb-1"><i class="fa-solid fa-user-tie mr-1"></i>業務專員：<span
+                        class="font-underline font-bold">${data.salesPerson || '-'}</span></div>
+                <div><i class="fa-solid fa-mobile-screen mr-1"></i>聯絡電話：<span
+                        class="font-underline font-bold">${data.salesMobile || '-'}</span></div>
+                <div class="mt-2 text-xs text-gray-400">本報價單有效期限為 15 天，逾期請重新詢價。</div>
+            </div>
+
+            <!-- 右下：金額總計 -->
+            <div class="w-1/2">
+                <div class="summary-row">
+                    <div class="summary-label">合計:</div>
+                    <div class="summary-value">${subtotal.toLocaleString()}</div>
+                </div>
+                ${feesHtml}
+                <div class="summary-row border-t-2 border-black font-bold text-lg mt-1 pt-1">
+                    <div class="summary-label">總計:</div>
+                    <div class="summary-value text-blue-800">${grandTotal.toLocaleString()}</div>
+                </div>
+                <div class="mt-2 text-right border-t border-gray-300 pt-1 text-sm">
+                    新台幣：<span class="font-bold underline text-md">${toChineseAmt(grandTotal)}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 border-t border-gray-200 pt-2 text-xs text-gray-500">
+            <div>備註：</div>
+            <div class="pl-4 whitespace-pre-wrap">${data.note}</div>
+        </div>
+        `;
+
+        document.getElementById('preview-modal').classList.remove('hidden');
         }
 
         function collectData() {
-            const rows = document.querySelectorAll('.item-row');
-            const items = Array.from(rows).map(row => {
-                if (row.querySelector('.input-category')) {
-                    return { type: 'category', category: row.querySelector('.input-category').value };
-                } else {
-                    const uSel = row.querySelector('.input-unit-select');
-                    const uCustom = row.querySelector('.input-unit-custom');
-                    return {
-                        type: 'item',
-                        name: row.querySelector('.input-name').value,
-                        qty: parseFloat(row.querySelector('.input-qty').value) || 0,
-                        unit: uSel.classList.contains('hidden') ? uCustom.value : uSel.value,
-                        price: parseFloat(row.querySelector('.input-price').value) || 0,
-                        remark: row.querySelector('.input-remark').value
-                    };
-                }
-            });
+        const rows = document.querySelectorAll('.item-row');
+        const items = Array.from(rows).map(row => {
+        if (row.dataset.type === 'category') {
+        return { type: 'category', category: row.querySelector('.input-category').value };
+        } else {
+        const uSel = row.querySelector('.input-unit-select');
+        const uCustom = row.querySelector('.input-unit-custom');
+        return {
+        type: 'item',
+        name: row.querySelector('.input-name').value,
+        qty: parseFloat(row.querySelector('.input-qty').value) || 0,
+        unit: uSel.classList.contains('hidden') ? uCustom.value : uSel.value,
+        price: parseFloat(row.querySelector('.input-price').value) || 0,
+        remark: row.querySelector('.input-remark').value
+        };
+        }
+        });
 
-            const fees = Array.from(document.querySelectorAll('.fee-row')).map(row => ({
-                name: row.querySelector('.fee-name').value,
-                type: row.querySelector('.fee-type').value,
-                val: parseFloat(row.querySelector('.fee-value').value) || 0
-            }));
+        const fees = Array.from(document.querySelectorAll('.fee-row')).map(row => ({
+        name: row.querySelector('.fee-name').value,
+        type: row.querySelector('.fee-type').value,
+        val: parseFloat(row.querySelector('.fee-value').value) || 0
+        }));
 
-            return {
-                type: 'quotation',
-                customer: document.getElementById('customer').value,
-                taxId: document.getElementById('taxId').value,
-                contactPerson: document.getElementById('contactPerson').value,
-                contactPhone: document.getElementById('contactPhone').value,
-                project: document.getElementById('projectName').value,
-                projectName: document.getElementById('projectName').value,
-                date: document.getElementById('quoteDate').value,
-                salesPerson: document.getElementById('salesPerson').value,
-                salesMobile: document.getElementById('salesMobile').value,
-                originId: currentOriginId,
-                lineUser: lineUser, // 傳送 LINE 使用者資料
-                items: items,
-                fees: fees,
-                note: document.getElementById('footerNote').value
-            };
+        return {
+        type: 'quotation',
+        customer: document.getElementById('customer').value,
+        taxId: document.getElementById('taxId').value,
+        contactPerson: document.getElementById('contactPerson').value,
+        contactPhone: document.getElementById('contactPhone').value,
+        project: document.getElementById('projectName').value,
+        projectName: document.getElementById('projectName').value,
+        date: document.getElementById('quoteDate').value,
+        salesPerson: document.getElementById('salesPerson').value,
+        salesMobile: document.getElementById('salesMobile').value,
+        originId: currentOriginId,
+        lineUser: lineUser,
+        items: items,
+        fees: fees,
+        note: document.getElementById('footerNote').value
+        };
         }
 
         async function submitData() {
-            const data = collectData();
-            // 擷取畫布
-            const canvas = document.getElementById('quotation-canvas');
-            const bitmap = await html2canvas(canvas, { scale: 2 });
-            data.image = bitmap.toDataURL('image/jpeg', 0.8);
+        const data = collectData();
+        const canvas = document.getElementById('quotation-canvas');
+        const bitmap = await html2canvas(canvas, { scale: 2, useCORS: true });
+        data.image = bitmap.toDataURL('image/jpeg', 0.8);
 
-            document.querySelector('#preview-modal button:last-child').innerText = "上傳中...";
-            document.querySelector('#preview-modal button:last-child').disabled = true;
+        const btn = document.querySelector('#preview-modal button:last-child');
+        const originalText = btn.innerText;
+        btn.innerText = "上傳中...";
+        btn.disabled = true;
 
-            try {
-                const res = await fetch(GAS_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(data)
-                });
-                const result = await res.json();
-                if (result.status === 'success') {
-                    alert(`儲存成功！\n正式單號：${result.id}\n內控ID：${result.internalId}`);
-                    document.getElementById('internalProjectId').value = result.internalId;
-                    location.reload();
-                } else {
-                    alert("儲存失敗: " + result.message);
-                }
-            } catch (e) { alert("儲存失敗: " + e.toString()); }
+        try {
+        const res = await fetch(GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (result.status === 'success') {
+        alert(`儲存成功！\n正式單號：${result.id}\n內控ID：${result.internalId}`);
+        document.getElementById('internalProjectId').value = result.internalId;
+        location.reload();
+        } else {
+        alert("儲存失敗: " + result.message);
+        }
+        } catch (e) {
+        alert("儲存失敗 (可能是網路問題): " + e.toString());
+        } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+        }
         }
 
         function toChineseAmt(n) {
-            const fraction = ['角', '分'];
-            const digit = ['零', '壹', '貳', '參', '肆', '伍', '陸', '柒', '捌', '玖'];
-            const unit = [['元', '萬', '億'], ['', '拾', '佰', '仟']];
-            let s = '';
-            for (let i = 0; i < fraction.length; i++) {
-                s += (digit[Math.floor(n * 10 * Math.pow(10, i)) % 10] + fraction[i]).replace(/零./, '');
-            }
-            s = s || '整';
-            n = Math.floor(n);
-            for (let i = 0; i < unit[0].length && n > 0; i++) {
-                let p = '';
-                for (let j = 0; j < unit[1].length && n > 0; j++) {
-                    p = digit[n % 10] + unit[1][j] + p;
-                    n = Math.floor(n / 10);
+        if(n < 0) return "負 " + toChineseAmt(Math.abs(n)); const fraction=['角', '分' ]; const digit=['零', '壹' , '貳' , '參'
+            , '肆' , '伍' , '陸' , '柒' , '捌' , '玖' ]; const unit=[['元', '萬' , '億' ], ['', '拾' , '佰' , '仟' ]]; let s='' ;
+            for (let i=0; i < fraction.length; i++) { s +=(digit[Math.floor(n * 10 * Math.pow(10, i)) % 10] +
+            fraction[i]).replace(/零./, '' ); } s=s || '整' ; n=Math.floor(n); for (let i=0; i < unit[0].length && n> 0;
+            i++) {
+            let p = '';
+            for (let j = 0; j < unit[1].length && n> 0; j++) {
+                p = digit[n % 10] + unit[1][j] + p;
+                n = Math.floor(n / 10);
                 }
                 s = p.replace(/(零.)*零$/, '').replace(/^$/, '零') + unit[0][i] + s;
-            }
-            return s.replace(/(零.)*零元/, '元').replace(/(零.)+/g, '零').replace(/^整$/, '零元整');
-        }
+                }
+                return s.replace(/(零.)*零元/, '元').replace(/(零.)+/g, '零').replace(/^整$/, '零元整');
+                }
 
-        function loadQuoteForEdit(id) {
-            if (!id) {
+                function loadQuoteForEdit(id) {
+                if (!id) {
                 location.reload();
                 return;
-            }
-            const p = projectList.find(x => x.id === id);
-            if (!p) return;
-            currentOriginId = p.id.split('-').slice(0, 2).join('-');
-            document.getElementById('edit-mode-badge').classList.remove('hidden');
-            document.getElementById('customer').value = p.customer;
-            document.getElementById('projectName').value = p.project;
-            document.getElementById('quoteDate').value = p.date;
-            // 這裡簡化載入，實際需解析 JSON 填充細項
-            alert("載入基本資料，細項請手動重新填寫或參考歷史圖檔。");
-        }
-    </script>
+                }
+                const p = projectList.find(x => x.id === id);
+                if (!p) return;
+                currentOriginId = p.id.split('-').slice(0, 2).join('-');
+                document.getElementById('edit-mode-badge').classList.remove('hidden');
+                document.getElementById('customer').value = p.customer;
+                document.getElementById('projectName').value = p.project;
+                document.getElementById('quoteDate').value = p.date;
+                alert("已載入基本資料，請重新建立細項內容。");
+                }
+                </script>
 </body>
 
 </html>

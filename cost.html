@@ -81,10 +81,8 @@
                             class="w-full bg-gray-200 border border-gray-300 rounded p-1 text-sm" readonly></div>
                     <div><label class="block text-xs text-gray-500 mb-1">業務人員 (鎖定)</label><input type="text"
                             id="costSalesPerson" class="w-full border p-1 text-sm rounded bg-gray-200" readonly></div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1">日期</label>
-                        <input type="date" id="costDate" class="w-full border border-gray-300 rounded p-1 text-sm">
-                    </div>
+                    <div><label class="block text-xs text-gray-500 mb-1">業務人員 (鎖定)</label><input type="text"
+                            id="costSalesPerson" class="w-full border p-1 text-sm rounded bg-gray-200" readonly></div>
                 </div>
             </div>
 
@@ -117,10 +115,22 @@
             <div id="vendor-items-container" class="space-y-6"></div>
 
             <!-- 底部總計區 -->
-            <div class="mt-8 pt-6 border-t-4 border-double border-gray-200">
-                <div class="flex flex-col items-end gap-2">
-                    <div class="text-gray-500 text-sm">明細筆數：<span id="item-count">0</span> 筆</div>
-                    <div class="text-green-900 font-bold text-2xl">全案總計 (含稅)：<span id="grand-total-display">$ 0</span>
+            <div class="mt-8 pt-6 border-t-4 double border-gray-200 bg-gray-50 p-4 rounded-xl">
+                <div class="flex flex-col items-end gap-1 text-gray-700">
+                    <div class="text-sm">明細筆數：<span id="item-count" class="font-bold">0</span> 筆</div>
+                    <div class="w-64 border-t border-gray-300 my-2"></div>
+                    <div class="flex justify-between w-64 text-sm">
+                        <span>未稅金額：</span>
+                        <span id="total-untax" class="font-bold">$ 0</span>
+                    </div>
+                    <div class="flex justify-between w-64 text-sm">
+                        <span>稅額 (5%)：</span>
+                        <span id="total-tax" class="font-bold">$ 0</span>
+                    </div>
+                    <div
+                        class="flex justify-between w-64 text-xl text-green-800 mt-2 font-bold border-t border-green-200 pt-2">
+                        <span>含稅總計：</span>
+                        <span id="total-inc">$ 0</span>
                     </div>
                 </div>
             </div>
@@ -138,7 +148,7 @@
     <datalist id="vendor-list"></datalist>
 
     <script>
-        const LIFF_ID = '2008974069-Ecojk6W1'; // 已設定
+        const LIFF_ID = '2008974069-Ecojk6W1';
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbxrXo9AcczzlIazBPTqxZij7CVAcqcXtbbpGJMKQ4RoEFRp8JsTtjLZw1R6xZwwvnnt/exec';
         let salesPersons = [];
         let vendors = [];
@@ -147,7 +157,7 @@
 
         window.onload = function () {
             initializeLiff();
-            document.getElementById('costDate').value = new Date().toISOString().split('T')[0];
+            // document.getElementById('costDate').value = new Date().toISOString().split('T')[0]; // Remove Date
             fetchConfig();
             addVendorBlock(); // 預設增加一個
         };
@@ -178,202 +188,285 @@
                     salesPersons = data.sales || [];
                     vendors = data.vendors || [];
                     projectList = data.projects || [];
-                    renderLists();
-                });
+
+                    fillSelect('workerPerson', salesPersons);
+                    fillSelect('buyerPerson', salesPersons);
+                    fillProjectSelect();
+                    renderVendorList();
+                })
+                .catch(err => console.error("GAS Error", err));
         }
 
-        function renderLists() {
-            const pSel = document.getElementById('projectSelect');
-            if (pSel) {
-                pSel.innerHTML = '<option value="">-- 請選擇專案 --</option>' + projectList.map(p => {
-                    return `<option value="${p.id}" data-cust="${p.customer}" data-proj="${p.project}" data-sales="${p.sales || ''}">${p.date} ${p.customer} - ${p.project}</option>`;
-                }).join('');
-            }
-            const vList = document.getElementById('vendor-list');
-            if (vList) vList.innerHTML = vendors.map(v => `<option value="${v}">`).join('');
+        function fillSelect(id, list) {
+            const sel = document.getElementById(id);
+            if (!sel) return;
+            sel.innerHTML = '<option value="">請選擇</option>' + list.map(s => `<option value="${s}">${s}</option>`).join('');
+        }
 
-            const wSel = document.getElementById('workerPerson');
-            const bSel = document.getElementById('buyerPerson');
-            if (wSel) wSel.innerHTML = '<option value="">請選擇</option>' + salesPersons.map(s => `<option value="${s}">${s}</option>`).join('');
-            if (bSel) bSel.innerHTML = '<option value="">請選擇</option>' + salesPersons.map(s => `<option value="${s}">${s}</option>`).join('');
+        function fillProjectSelect() {
+            const sel = document.getElementById('projectSelect');
+            sel.innerHTML = '<option value="">-- 請選擇專案 --</option>' +
+                projectList.map(p => {
+                    const label = `${p.date} ${p.customer} (${p.project})`;
+                    return `<option value="${p.id}">${label}</option>`;
+                }).join('');
+        }
+
+        function renderVendorList() {
+            const list = document.getElementById('vendor-list');
+            list.innerHTML = vendors.map(v => `<option value="${v}">`).join('');
         }
 
         function fillProjectInfo(id) {
-            if (!id) return;
-            const sel = document.getElementById('projectSelect');
-            const opt = sel.options[sel.selectedIndex];
-            document.getElementById('customer').value = opt.getAttribute('data-cust');
-            document.getElementById('projectName').value = opt.getAttribute('data-proj');
-            document.getElementById('costSalesPerson').value = opt.getAttribute('data-sales');
+            const p = projectList.find(x => x.id === id);
+            if (p) {
+                document.getElementById('customer').value = p.customer;
+                document.getElementById('projectName').value = p.project;
+                document.getElementById('costSalesPerson').value = p.sales;
+            } else {
+                document.getElementById('customer').value = "";
+                document.getElementById('projectName').value = "";
+                document.getElementById('costSalesPerson').value = "";
+            }
         }
 
         function addVendorBlock() {
             const container = document.getElementById('vendor-items-container');
             const id = Date.now();
             const div = document.createElement('div');
-            div.className = "vendor-block bg-white p-4 rounded-lg border-2 border-gray-100 shadow-sm relative";
-            div.id = 'vendor-row-' + id;
+            div.className = "vendor-block bg-white p-4 rounded-xl shadow border-l-4 border-green-500 relative";
+            div.id = 'block-' + id;
             div.innerHTML = `
-                <button onclick="removeBlock(${id})" class="absolute top-2 right-2 text-gray-300 hover:text-red-500 transition"><i class="fa-solid fa-circle-xmark"></i></button>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-bold text-gray-500 mb-1">廠商統編 & 名稱</label>
+                <button onclick="removeBlock('${id}')" class="absolute top-2 right-2 text-gray-300 hover:text-red-500">
+                    <i class="fa-solid fa-trash-can text-lg"></i>
+                </button>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 pr-6">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">廠商名稱 / 對象</label>
                         <div class="flex gap-2">
-                            <input type="text" placeholder="統編" class="input-taxid w-24 border border-gray-300 rounded p-1 text-sm" oninput="validateTaxId(this); lookupVendor(this)">
-                            <input type="text" placeholder="廠商名稱" list="vendor-list" class="input-vendor-name flex-1 border border-gray-300 rounded p-1 text-sm" onchange="saveConfig('vendor', this.value)">
+                             <div class="w-1/3 relative">
+                                <input type="text" class="v-tax w-full border border-gray-300 rounded p-2 text-sm" placeholder="輸入統編" onchange="lookupBlockVendor(this)">
+                                <span class="v-msg hidden absolute top-full left-0 text-[10px] text-orange-500">查詢中... (需等待 3-5 秒)</span>
+                             </div>
+                             <input type="text" class="v-name flex-1 border border-gray-300 rounded p-2 text-sm font-bold" list="vendor-list" placeholder="輸入或選擇廠商">
                         </div>
                     </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-bold text-gray-500 mb-1">支出摘要</label>
-                        <input type="text" class="input-summary w-full border border-gray-300 rounded p-1 text-sm" placeholder="說明此筆支出用途">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">支出摘要 (必填)</label>
+                        <input type="text" class="v-summary w-full border border-gray-300 rounded p-2 text-sm" placeholder="例如：材料費、工資...">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 bg-green-50/50 p-2 rounded">
+                    <div>
+                        <label class="block text-xs font-bold text-green-800 mb-1">未稅金額</label>
+                        <input type="number" class="v-untax w-full border border-green-300 rounded p-2 text-sm text-right font-mono" placeholder="0" oninput="calcRow(this)">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-green-700 mb-1">未稅金額 (不可負數)</label>
-                        <input type="number" class="input-amount w-full border border-green-300 rounded p-1 text-sm font-bold" value="0" min="0" oninput="calculateRowTax(this)">
+                        <label class="block text-xs font-bold text-green-800 mb-1">稅金 (5%)</label>
+                        <input type="number" class="v-tax-amt w-full border border-green-300 rounded p-2 text-sm text-right font-mono bg-gray-100" readonly>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-blue-700 mb-1">含稅價 (自動計算 x 1.05)</label>
-                        <input type="number" class="input-grand-total w-full border border-blue-300 bg-blue-50 rounded p-1 text-sm font-bold text-blue-900" value="0" readonly>
+                        <label class="block text-xs font-bold text-green-800 mb-1">含稅總額</label>
+                        <input type="number" class="v-inc w-full border border-green-300 rounded p-2 text-sm text-right font-mono font-bold bg-green-100" readonly>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1">發票號碼</label>
-                        <input type="text" class="input-invoice w-full border border-gray-300 rounded p-1 text-sm" placeholder="格式：AB-12345678">
+                </div>
+
+                <div class="flex gap-4 items-center">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">發票/收據號碼</label>
+                        <input type="text" class="v-inv w-full border border-gray-300 rounded p-1 text-sm" placeholder="輸入號碼">
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1">上傳發票憑證</label>
-                        <input type="file" accept="image/*" class="input-file w-full text-[10px] text-gray-400 file:bg-gray-100 file:border-0 file:rounded file:px-2 file:py-1 hover:file:bg-gray-200">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">上傳單據 (圖片/PDF)</label>
+                        <input type="file" class="v-file w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
                     </div>
                 </div>
             `;
             container.appendChild(div);
-            updateSummary();
+            updateCount();
+            calcTotal();
         }
 
         function removeBlock(id) {
-            const el = document.getElementById('vendor-row-' + id);
-            if (el) el.remove();
-            updateSummary();
+            document.getElementById('block-' + id).remove();
+            updateCount();
+            calcTotal();
         }
 
-        function calculateRowTax(input) {
-            if (parseFloat(input.value) < 0) {
-                alert("金額不得為負數！");
-                input.value = 0;
-            }
-            const amount = parseFloat(input.value) || 0;
-            const row = input.closest('.vendor-block');
-            const grandTotalInput = row.querySelector('.input-grand-total');
-            grandTotalInput.value = Math.round(amount * 1.05);
-            updateSummary();
+        function updateCount() {
+            document.getElementById('item-count').innerText = document.querySelectorAll('.vendor-block').length;
         }
 
-        function updateSummary() {
-            const blocks = document.querySelectorAll('.vendor-block');
-            let total = 0;
-            blocks.forEach(b => {
-                total += parseFloat(b.querySelector('.input-grand-total').value) || 0;
+        function calcRow(input) {
+            const block = input.closest('.vendor-block');
+            const unTax = parseFloat(input.value) || 0;
+            const tax = Math.round(unTax * 0.05);
+            const inc = unTax + tax;
+
+            block.querySelector('.v-tax-amt').value = tax;
+            block.querySelector('.v-inc').value = inc;
+            calcTotal();
+        }
+
+        function calcTotal() {
+            let totalUnTax = 0;
+            let totalTax = 0;
+            let totalInc = 0;
+
+            document.querySelectorAll('.vendor-block').forEach(b => {
+                totalUnTax += parseFloat(b.querySelector('.v-untax').value) || 0;
+                totalTax += parseFloat(b.querySelector('.v-tax-amt').value) || 0;
+                totalInc += parseFloat(b.querySelector('.v-inc').value) || 0;
             });
-            document.getElementById('item-count').innerText = blocks.length;
-            document.getElementById('grand-total-display').innerText = '$ ' + total.toLocaleString();
+
+            document.getElementById('total-untax').innerText = "$ " + totalUnTax.toLocaleString();
+            document.getElementById('total-tax').innerText = "$ " + totalTax.toLocaleString();
+            document.getElementById('total-inc').innerText = "$ " + totalInc.toLocaleString();
         }
 
-        async function lookupVendor(input) {
-            const taxId = input.value;
-            if (taxId.length !== 8) return;
+        async function lookupBlockVendor(input) {
+            const val = input.value;
+            if (val.length !== 8) return;
+
+            const block = input.closest('.vendor-block');
+            const msg = block.querySelector('.v-msg');
+            const nameInput = block.querySelector('.v-name');
+
+            msg.classList.remove('hidden'); // 顯示等待提示
+            nameInput.placeholder = "查詢中...";
+
             try {
-                const res = await fetch(`${GAS_URL}?action=lookup&taxId=${taxId}`);
+                const res = await fetch(`${GAS_URL}?action=lookup&taxId=${val}`);
                 const data = await res.json();
                 if (data.name) {
-                    const row = input.closest('.vendor-block');
-                    row.querySelector('.input-vendor-name').value = data.name;
+                    nameInput.value = data.name;
+                    // 同步儲存到 vendors (optimistic)
+                    if (!vendors.includes(data.name)) vendors.push(data.name);
+                } else {
+                    alert('查無資料');
                 }
-            } catch (e) { }
-        }
+            } catch (e) { console.error(e); }
 
-        function validateTaxId(input) {
-            input.value = input.value.replace(/\D/g, '').substring(0, 8);
-        }
-
-        function saveConfig(type, val) {
-            if (!val) return;
-            fetch(GAS_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'save_config', configType: type, value: val }),
-                mode: 'no-cors'
-            });
-            if (type === 'vendor' && !vendors.includes(val)) vendors.push(val);
+            msg.classList.add('hidden'); // 隱藏提示
+            nameInput.placeholder = "輸入或選擇廠商";
         }
 
         async function submitCostData() {
-            const projectSelect = document.getElementById('projectSelect');
-            if (!projectSelect.value) return alert("請先選擇來源專案！");
+            const projectId = document.getElementById('projectSelect').value;
+            if (!projectId) return alert("請選擇來源專案");
 
             const blocks = document.querySelectorAll('.vendor-block');
-            if (blocks.length === 0) return alert("請至少增加一筆明細！");
+            if (blocks.length === 0) return alert("請至少新增一筆支出");
 
-            const mainData = {
-                type: 'cost',
-                date: document.getElementById('costDate').value,
-                projectName: document.getElementById('projectName').value,
-                customer: document.getElementById('customer').value,
-                salesPerson: document.getElementById('costSalesPerson').value,
-                workerPerson: document.getElementById('workerPerson').value,
-                buyerPerson: document.getElementById('buyerPerson').value,
-                orderId: document.getElementById('projectSelect').value,
-                items: []
-            };
+            // 檢查必填
+            let isValid = true;
+            blocks.forEach(b => {
+                const summary = b.querySelector('.v-summary').value.trim();
+                const amt = b.querySelector('.v-untax').value;
+                if (!summary) {
+                    b.querySelector('.v-summary').classList.add('border-red-500');
+                    isValid = false;
+                } else {
+                    b.querySelector('.v-summary').classList.remove('border-red-500');
+                }
+                if (!amt || parseFloat(amt) <= 0) {
+                    b.querySelector('.v-untax').classList.add('border-red-500');
+                    isValid = false;
+                } else {
+                    b.querySelector('.v-untax').classList.remove('border-red-500');
+                }
+            });
 
+            if (!isValid) return alert("請檢查「支出摘要」與「未稅金額」是否皆已填寫且大於 0。");
+
+            // 按鈕 Loading
             const btn = document.getElementById('btn-submit');
-            btn.innerText = "正在處理資料中 (圖檔上傳較慢，請稍候)...";
-            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            const originalText = btn.innerText;
+            btn.innerText = "資料處理中...請勿關閉視窗";
             btn.disabled = true;
 
-            try {
-                for (let b of blocks) {
-                    const amount = parseFloat(b.querySelector('.input-amount').value) || 0;
-                    const item = {
-                        vendorName: b.querySelector('.input-vendor-name').value,
-                        vendorTaxId: b.querySelector('.input-taxid').value,
-                        costSummary: b.querySelector('.input-summary').value,
-                        subtotalNoTax: amount,
-                        taxAmount: Math.round(amount * 0.05),
-                        grandTotal: Math.round(amount * 1.05),
-                        invoiceNo: b.querySelector('.input-invoice').value
-                    };
+            const tasks = [];
 
-                    const fileIn = b.querySelector('.input-file');
-                    if (fileIn.files.length > 0) {
-                        item.invoiceImage = await readFileAsBase64(fileIn.files[0]);
+            blocks.forEach(block => {
+                const fileInput = block.querySelector('.v-file');
+                const file = fileInput.files[0];
+
+                const p = new Promise(async (resolve, reject) => {
+                    let fileUrl = "";
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = async function () {
+                            const base64 = reader.result.split(',')[1];
+                            try {
+                                const upRes = await fetch(GAS_URL, {
+                                    method: 'POST',
+                                    body: JSON.stringify({
+                                        type: 'upload', // 呼叫 GAS upload 邏輯
+                                        fileName: file.name,
+                                        mimeType: file.type,
+                                        fileData: base64
+                                    })
+                                });
+                                const upData = await upRes.json();
+                                fileUrl = upData.url;
+                                resolve(buildPayload(block, fileUrl));
+                            } catch (e) {
+                                console.error('Upload failed', e);
+                                resolve(buildPayload(block, "Upload Failed"));
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        resolve(buildPayload(block, ""));
                     }
-                    mainData.items.push(item);
-                }
-
-                const res = await fetch(GAS_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(mainData)
                 });
-                const result = await res.json();
-                if (result.status === 'success') {
-                    alert(`儲存成功！共處理 ${result.message.match(/\d+/)[0]} 筆明細。`);
+                tasks.push(p);
+            });
+
+            Promise.all(tasks).then(async (payloads) => {
+                try {
+                    for (const data of payloads) {
+                        await fetch(GAS_URL, {
+                            method: 'POST',
+                            body: JSON.stringify(data),
+                            mode: 'no-cors'
+                        });
+                    }
+                    alert("所有明細已儲存完畢！");
                     location.reload();
-                } else {
-                    alert("儲存失敗: " + result.message);
+                } catch (e) {
+                    alert("儲存過程發生錯誤：" + e);
+                } finally {
+                    btn.innerText = originalText;
+                    btn.disabled = false;
                 }
-            } catch (e) {
-                alert("連線出錯: " + e.toString());
-            }
-            btn.innerText = "確認並儲存所有明細";
-            btn.classList.remove('opacity-50', 'cursor-not-allowed');
-            btn.disabled = false;
+            });
         }
 
-        function readFileAsBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
+        function buildPayload(block, fileUrl) {
+            return {
+                type: 'cost',
+                projectId: document.getElementById('projectSelect').value,
+                customer: document.getElementById('customer').value,
+                projectName: document.getElementById('projectName').value,
+                salesPerson: document.getElementById('costSalesPerson').value,
+                // date: removed
+                worker: document.getElementById('workerPerson').value,
+                buyer: document.getElementById('buyerPerson').value,
+
+                vendorTaxId: block.querySelector('.v-tax').value,
+                vendorName: block.querySelector('.v-name').value,
+                summary: block.querySelector('.v-summary').value,
+
+                amount: block.querySelector('.v-inc').value, // 存含稅總額
+                note: `未稅:${block.querySelector('.v-untax').value}, 稅:${block.querySelector('.v-tax-amt').value}, 發票:${block.querySelector('.v-inv').value}`,
+                invoiceNo: block.querySelector('.v-inv').value,
+
+                fileData: "",
+                fileUrl: fileUrl,
+                lineUser: lineUser
+            };
         }
     </script>
 </body>
