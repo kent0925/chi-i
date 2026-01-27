@@ -414,11 +414,13 @@
                         }
                 }
             }
-            function addFeeRow() {
-                const container = document.getElementById('fees-container');
-                const div = document.createElement('div');
-                div.className = "flex gap-2 fee-row";
-                div.innerHTML = `
+        }
+
+        function addFeeRow() {
+            const container = document.getElementById('fees-container');
+            const div = document.createElement('div');
+            div.className = "flex gap-2 fee-row";
+            div.innerHTML = `
                 <input type="text" class="fee-name flex-1 border border-gray-300 rounded p-1 text-sm" placeholder="費用項目 (例如：管理費)">
                 <select class="fee-type border border-gray-300 rounded p-1 text-sm">
                     <option value="fixed">固定金額($)</option>
@@ -427,92 +429,92 @@
                 <input type="number" class="fee-value w-24 border border-gray-300 rounded p-1 text-sm" placeholder="數值">
                 <button onclick="this.parentElement.remove()" class="text-red-400 px-2">×</button>
             `;
-                container.appendChild(div);
-            }
+            container.appendChild(div);
+        }
 
-            async function lookupCompany() {
-                const taxId = document.getElementById('taxId').value;
-                if (taxId.length !== 8) return alert("請輸入8碼統編");
-                const btn = event.target;
-                btn.innerText = "查詢中...";
-                try {
-                    const res = await fetch(`${GAS_URL}?action=lookup&taxId=${taxId}`);
-                    const data = await res.json();
-                    if (data.name) {
-                        document.getElementById('customer').value = data.name;
-                    } else {
-                        alert(data.error || "查無此統編資料");
-                    }
-                } catch (e) {
-                    alert("連線失敗或超過查詢量限制。");
+        async function lookupCompany() {
+            const taxId = document.getElementById('taxId').value;
+            if (taxId.length !== 8) return alert("請輸入8碼統編");
+            const btn = event.target;
+            btn.innerText = "查詢中...";
+            try {
+                const res = await fetch(`${GAS_URL}?action=lookup&taxId=${taxId}`);
+                const data = await res.json();
+                if (data.name) {
+                    document.getElementById('customer').value = data.name;
+                } else {
+                    alert(data.error || "查無此統編資料");
                 }
-                btn.innerText = "查詢";
+            } catch (e) {
+                alert("連線失敗或超過查詢量限制。");
             }
+            btn.innerText = "查詢";
+        }
 
-            function saveConfig(type, val) {
-                if (val === 'NEW') {
-                    const nv = prompt("請輸入新增項目名稱:");
-                    if (nv) {
-                        saveToBackend(type, nv);
-                        if (type === 'sales') {
-                            setTimeout(() => {
-                                const sel = document.getElementById('salesPerson');
-                                if (sel) sel.value = nv;
-                            }, 200);
-                        }
-                    } else {
-                        document.getElementById('salesPerson').value = "";
+        function saveConfig(type, val) {
+            if (val === 'NEW') {
+                const nv = prompt("請輸入新增項目名稱:");
+                if (nv) {
+                    saveToBackend(type, nv);
+                    if (type === 'sales') {
+                        setTimeout(() => {
+                            const sel = document.getElementById('salesPerson');
+                            if (sel) sel.value = nv;
+                        }, 200);
                     }
-                    return;
+                } else {
+                    document.getElementById('salesPerson').value = "";
                 }
-                if (val) saveToBackend(type, val);
+                return;
             }
+            if (val) saveToBackend(type, val);
+        }
 
-            function saveToBackend(type, val) {
-                // Optimistic update
-                if (type === 'sales' && !salesPersons.includes(val)) salesPersons.push(val);
-                if (type === 'unit' && !unitOptions.includes(val)) unitOptions.push(val);
-                // Re-render immediately
-                renderLists();
+        function saveToBackend(type, val) {
+            // Optimistic update
+            if (type === 'sales' && !salesPersons.includes(val)) salesPersons.push(val);
+            if (type === 'unit' && !unitOptions.includes(val)) unitOptions.push(val);
+            // Re-render immediately
+            renderLists();
 
-                fetch(GAS_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'save_config', configType: type, value: val }),
-                    mode: 'no-cors'
-                });
-            }
+            fetch(GAS_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'save_config', configType: type, value: val }),
+                mode: 'no-cors'
+            });
+        }
 
-            function checkTaxId(input) {
-                input.value = input.value.replace(/\D/g, '');
-                const warn = document.getElementById('tax-warning');
-                if (input.value.length > 0 && input.value.length !== 8) warn.classList.remove('hidden');
-                else warn.classList.add('hidden');
-            }
+        function checkTaxId(input) {
+            input.value = input.value.replace(/\D/g, '');
+            const warn = document.getElementById('tax-warning');
+            if (input.value.length > 0 && input.value.length !== 8) warn.classList.remove('hidden');
+            else warn.classList.add('hidden');
+        }
 
-            async function generatePreview(title) {
-                const data = collectData();
-                if (!data.customer || !data.project) return alert("客戶與專案名稱為必填");
+        async function generatePreview(title) {
+            const data = collectData();
+            if (!data.customer || !data.project) return alert("客戶與專案名稱為必填");
 
-                const canvas = document.getElementById('quotation-canvas');
-                let itemsHtml = '';
-                let subtotal = 0; // 全報價小記 (不含稅費)
+            const canvas = document.getElementById('quotation-canvas');
+            let itemsHtml = '';
+            let subtotal = 0; // 全報價小記 (不含稅費)
 
-                // 先將 items 分群處理大項次小計邏輯
-                let currentCategoryName = '';
-                let currentCategoryTotal = 0;
-                let currentCategoryItems = [];
+            // 先將 items 分群處理大項次小計邏輯
+            let currentCategoryName = '';
+            let currentCategoryTotal = 0;
+            let currentCategoryItems = [];
 
-                const renderCategoryRow = (name, total) => {
-                    return `<tr class="bg-gray-50 border-t-2 border-gray-400">
+            const renderCategoryRow = (name, total) => {
+                return `<tr class="bg-gray-50 border-t-2 border-gray-400">
             <td colspan="5" class="font-bold text-left pl-4">${name}</td>
             <td class="font-bold text-right pr-2">小計：${total.toLocaleString()}</td>
             <td></td>
         </tr>`;
-                };
+            };
 
-                const renderItemRow = (item, idx) => {
-                    const total = item.qty * item.price;
-                    return `<tr>
+            const renderItemRow = (item, idx) => {
+                const total = item.qty * item.price;
+                return `<tr>
             <td class="text-center">${idx}</td>
             <td>${item.name}</td>
             <td class="text-center">${item.unit}</td>
@@ -521,50 +523,50 @@
             <td class="text-right">${total.toLocaleString()}</td>
             <td class="text-xs text-gray-500">${item.remark || ''}</td>
         </tr>`;
-                };
+            };
 
-                let globalIdx = 1;
+            let globalIdx = 1;
 
-                data.items.forEach((item) => {
-                    if (item.type === 'category') {
-                        if (currentCategoryName) {
-                            itemsHtml += renderCategoryRow(currentCategoryName, currentCategoryTotal);
-                            currentCategoryItems.forEach(i => itemsHtml += i);
-                        }
-                        currentCategoryName = item.category;
-                        currentCategoryTotal = 0;
-                        currentCategoryItems = [];
-                    } else {
-                        const itemTotal = item.qty * item.price;
-                        currentCategoryTotal += itemTotal;
-                        subtotal += itemTotal;
-                        currentCategoryItems.push(renderItemRow(item, globalIdx++));
+            data.items.forEach((item) => {
+                if (item.type === 'category') {
+                    if (currentCategoryName) {
+                        itemsHtml += renderCategoryRow(currentCategoryName, currentCategoryTotal);
+                        currentCategoryItems.forEach(i => itemsHtml += i);
                     }
-                });
-
-                if (currentCategoryName) {
-                    itemsHtml += renderCategoryRow(currentCategoryName, currentCategoryTotal);
-                    currentCategoryItems.forEach(i => itemsHtml += i);
+                    currentCategoryName = item.category;
+                    currentCategoryTotal = 0;
+                    currentCategoryItems = [];
                 } else {
-                    currentCategoryItems.forEach(i => itemsHtml += i);
+                    const itemTotal = item.qty * item.price;
+                    currentCategoryTotal += itemTotal;
+                    subtotal += itemTotal;
+                    currentCategoryItems.push(renderItemRow(item, globalIdx++));
                 }
+            });
 
-                let feesHtml = '';
-                let feesTotal = 0;
-                data.fees.forEach(fee => {
-                    const amt = fee.type === 'percent' ? Math.round(subtotal * fee.val / 100) : fee.val;
-                    feesTotal += amt;
-                    feesHtml += `<div class="summary-row">
+            if (currentCategoryName) {
+                itemsHtml += renderCategoryRow(currentCategoryName, currentCategoryTotal);
+                currentCategoryItems.forEach(i => itemsHtml += i);
+            } else {
+                currentCategoryItems.forEach(i => itemsHtml += i);
+            }
+
+            let feesHtml = '';
+            let feesTotal = 0;
+            data.fees.forEach(fee => {
+                const amt = fee.type === 'percent' ? Math.round(subtotal * fee.val / 100) : fee.val;
+                feesTotal += amt;
+                feesHtml += `<div class="summary-row">
             <div class="summary-label">${fee.name}:</div>
             <div class="summary-value">${amt.toLocaleString()}</div>
         </div>`;
-                });
+            });
 
-                const grandTotal = subtotal + feesTotal;
-                const clientDisplay = data.customer + (data.taxId ? ` <span
+            const grandTotal = subtotal + feesTotal;
+            const clientDisplay = data.customer + (data.taxId ? ` <span
             class="text-sm font-normal text-gray-600">(${data.taxId})</span>` : '');
 
-                canvas.innerHTML = `
+            canvas.innerHTML = `
         <div class="flex justify-between items-start mb-4">
             <div class="w-1/4">
                 <img src="${LOGO_URL}" style="height: 60px; object-fit: contain;">
@@ -614,10 +616,10 @@
             <div class="text-sm text-gray-600">
                 <div class="mb-1"><i class="fa-solid fa-user-tie mr-1"></i>業務專員：<span
                         class="font-underline font-bold text-black border-b border-black">${data.salesPerson ||
-                    '-'}</span></div>
+                '-'}</span></div>
                 <div><i class="fa-solid fa-mobile-screen mr-1"></i>聯絡電話：<span
                         class="font-underline font-bold text-black border-b border-black">${data.salesMobile ||
-                    '-'}</span></div>
+                '-'}</span></div>
                 <div class="mt-2 text-xs text-gray-400">本報價單有效期限為 15 天，逾期請重新詢價。</div>
             </div>
 
@@ -643,122 +645,122 @@
         </div>
         `;
 
-                document.getElementById('preview-modal').classList.remove('hidden');
-            }
+            document.getElementById('preview-modal').classList.remove('hidden');
+        }
 
 
-            function collectData() {
-                const rows = document.querySelectorAll('.item-row');
-                const items = Array.from(rows).map(row => {
-                    if (row.dataset.type === 'category') {
-                        return { type: 'category', category: row.querySelector('.input-category').value };
-                    } else {
-                        const uSel = row.querySelector('.input-unit-select');
-                        const uCustom = row.querySelector('.input-unit-custom');
-                        return {
-                            type: 'item',
-                            name: row.querySelector('.input-name').value,
-                            qty: parseFloat(row.querySelector('.input-qty').value) || 0,
-                            unit: uSel.classList.contains('hidden') ? uCustom.value : uSel.value,
-                            price: parseFloat(row.querySelector('.input-price').value) || 0,
-                            remark: row.querySelector('.input-remark').value
-                        };
-                    }
+        function collectData() {
+            const rows = document.querySelectorAll('.item-row');
+            const items = Array.from(rows).map(row => {
+                if (row.dataset.type === 'category') {
+                    return { type: 'category', category: row.querySelector('.input-category').value };
+                } else {
+                    const uSel = row.querySelector('.input-unit-select');
+                    const uCustom = row.querySelector('.input-unit-custom');
+                    return {
+                        type: 'item',
+                        name: row.querySelector('.input-name').value,
+                        qty: parseFloat(row.querySelector('.input-qty').value) || 0,
+                        unit: uSel.classList.contains('hidden') ? uCustom.value : uSel.value,
+                        price: parseFloat(row.querySelector('.input-price').value) || 0,
+                        remark: row.querySelector('.input-remark').value
+                    };
+                }
+            });
+
+            const fees = Array.from(document.querySelectorAll('.fee-row')).map(row => ({
+                name: row.querySelector('.fee-name').value,
+                type: row.querySelector('.fee-type').value,
+                val: parseFloat(row.querySelector('.fee-value').value) || 0
+            }));
+
+            return {
+                type: 'quotation',
+                customer: document.getElementById('customer').value,
+                taxId: document.getElementById('taxId').value,
+                contactPerson: document.getElementById('contactPerson').value,
+                contactPhone: document.getElementById('contactPhone').value,
+                project: document.getElementById('projectName').value,
+                projectName: document.getElementById('projectName').value,
+                date: document.getElementById('quoteDate').value,
+                salesPerson: document.getElementById('salesPerson').value,
+                salesMobile: document.getElementById('salesMobile').value,
+                originId: currentOriginId,
+                lineUser: lineUser,
+                items: items,
+                fees: fees,
+                note: document.getElementById('footerNote').value
+            };
+        }
+
+        async function submitData() {
+            const data = collectData();
+            const canvas = document.getElementById('quotation-canvas');
+            const bitmap = await html2canvas(canvas, { scale: 2, useCORS: true });
+            data.image = bitmap.toDataURL('image/jpeg', 0.8);
+
+            const btn = document.querySelector('#preview-modal button:last-child');
+            const originalText = btn.innerText;
+            btn.innerText = "上傳中...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(data)
                 });
-
-                const fees = Array.from(document.querySelectorAll('.fee-row')).map(row => ({
-                    name: row.querySelector('.fee-name').value,
-                    type: row.querySelector('.fee-type').value,
-                    val: parseFloat(row.querySelector('.fee-value').value) || 0
-                }));
-
-                return {
-                    type: 'quotation',
-                    customer: document.getElementById('customer').value,
-                    taxId: document.getElementById('taxId').value,
-                    contactPerson: document.getElementById('contactPerson').value,
-                    contactPhone: document.getElementById('contactPhone').value,
-                    project: document.getElementById('projectName').value,
-                    projectName: document.getElementById('projectName').value,
-                    date: document.getElementById('quoteDate').value,
-                    salesPerson: document.getElementById('salesPerson').value,
-                    salesMobile: document.getElementById('salesMobile').value,
-                    originId: currentOriginId,
-                    lineUser: lineUser,
-                    items: items,
-                    fees: fees,
-                    note: document.getElementById('footerNote').value
-                };
-            }
-
-            async function submitData() {
-                const data = collectData();
-                const canvas = document.getElementById('quotation-canvas');
-                const bitmap = await html2canvas(canvas, { scale: 2, useCORS: true });
-                data.image = bitmap.toDataURL('image/jpeg', 0.8);
-
-                const btn = document.querySelector('#preview-modal button:last-child');
-                const originalText = btn.innerText;
-                btn.innerText = "上傳中...";
-                btn.disabled = true;
-
-                try {
-                    const res = await fetch(GAS_URL, {
-                        method: 'POST',
-                        body: JSON.stringify(data)
-                    });
-                    const result = await res.json();
-                    if (result.status === 'success') {
-                        alert(`儲存成功！\n正式單號：${result.id} \n內控ID：${result.internalId}`);
-                        document.getElementById('internalProjectId').value = result.internalId;
-                        location.reload();
-                    } else {
-                        alert("儲存失敗: " + result.message);
-                    }
-                } catch (e) {
-                    alert("儲存失敗 (可能是網路問題): " + e.toString());
-                } finally {
-                    btn.innerText = originalText;
-                    btn.disabled = false;
-                }
-            }
-
-            function toChineseAmt(n) {
-                if (n < 0) return "負 " + toChineseAmt(Math.abs(n));
-                const fraction = ['角', '分'];
-                const digit = ['零', '壹', '貳', '參', '肆', '伍', '陸', '柒', '捌', '玖'];
-                const unit = [['元', '萬', '億'], ['', '拾', '佰', '仟']];
-                let s = '';
-                for (let i = 0; i < fraction.length; i++) {
-                    s += (digit[Math.floor(n * 10 * Math.pow(10, i)) % 10] + fraction[i]).replace(/零./, '');
-                }
-                s = s || '整';
-                n = Math.floor(n);
-                for (let i = 0; i < unit[0].length && n > 0; i++) {
-                    let p = '';
-                    for (let j = 0; j < unit[1].length && n > 0; j++) {
-                        p = digit[n % 10] + unit[1][j] + p;
-                        n = Math.floor(n / 10);
-                    }
-                    s = p.replace(/(零.)*零$/, '').replace(/^$/, '零') + unit[0][i] + s;
-                }
-                return s.replace(/(零.)*零元/, '元').replace(/(零.)+/g, '零').replace(/^整$/, '零元整');
-            }
-
-            function loadQuoteForEdit(id) {
-                if (!id) {
+                const result = await res.json();
+                if (result.status === 'success') {
+                    alert(`儲存成功！\n正式單號：${result.id} \n內控ID：${result.internalId}`);
+                    document.getElementById('internalProjectId').value = result.internalId;
                     location.reload();
-                    return;
+                } else {
+                    alert("儲存失敗: " + result.message);
                 }
-                const p = projectList.find(x => x.id === id);
-                if (!p) return;
-                currentOriginId = p.id.split('-').slice(0, 2).join('-');
-                document.getElementById('edit-mode-badge').classList.remove('hidden');
-                document.getElementById('customer').value = p.customer;
-                document.getElementById('projectName').value = p.project;
-                document.getElementById('quoteDate').value = p.date;
-                alert("已載入基本資料，請重新建立細項內容。");
+            } catch (e) {
+                alert("儲存失敗 (可能是網路問題): " + e.toString());
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
             }
+        }
+
+        function toChineseAmt(n) {
+            if (n < 0) return "負 " + toChineseAmt(Math.abs(n));
+            const fraction = ['角', '分'];
+            const digit = ['零', '壹', '貳', '參', '肆', '伍', '陸', '柒', '捌', '玖'];
+            const unit = [['元', '萬', '億'], ['', '拾', '佰', '仟']];
+            let s = '';
+            for (let i = 0; i < fraction.length; i++) {
+                s += (digit[Math.floor(n * 10 * Math.pow(10, i)) % 10] + fraction[i]).replace(/零./, '');
+            }
+            s = s || '整';
+            n = Math.floor(n);
+            for (let i = 0; i < unit[0].length && n > 0; i++) {
+                let p = '';
+                for (let j = 0; j < unit[1].length && n > 0; j++) {
+                    p = digit[n % 10] + unit[1][j] + p;
+                    n = Math.floor(n / 10);
+                }
+                s = p.replace(/(零.)*零$/, '').replace(/^$/, '零') + unit[0][i] + s;
+            }
+            return s.replace(/(零.)*零元/, '元').replace(/(零.)+/g, '零').replace(/^整$/, '零元整');
+        }
+
+        function loadQuoteForEdit(id) {
+            if (!id) {
+                location.reload();
+                return;
+            }
+            const p = projectList.find(x => x.id === id);
+            if (!p) return;
+            currentOriginId = p.id.split('-').slice(0, 2).join('-');
+            document.getElementById('edit-mode-badge').classList.remove('hidden');
+            document.getElementById('customer').value = p.customer;
+            document.getElementById('projectName').value = p.project;
+            document.getElementById('quoteDate').value = p.date;
+            alert("已載入基本資料，請重新建立細項內容。");
+        }
     </script>
 </body>
 
