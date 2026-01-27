@@ -81,25 +81,24 @@
                             class="w-full bg-gray-200 border border-gray-300 rounded p-1 text-sm" readonly></div>
                     <div><label class="block text-xs text-gray-500 mb-1">業務人員 (鎖定)</label><input type="text"
                             id="costSalesPerson" class="w-full border p-1 text-sm rounded bg-gray-200" readonly></div>
-                    <div><label class="block text-xs text-gray-500 mb-1">業務人員 (鎖定)</label><input type="text"
-                            id="costSalesPerson" class="w-full border p-1 text-sm rounded bg-gray-200" readonly></div>
+
                 </div>
             </div>
 
             <!-- 人員設定 -->
-            <div class="grid grid-cols-2 gap-4 bg-yellow-50 p-3 rounded border border-yellow-200 mb-6 font-bold">
-                <div>
-                    <label class="block text-xs text-yellow-800">工務人員</label>
-                    <select id="workerPerson" class="w-full border border-yellow-300 p-1 text-sm rounded bg-white">
-                        <option value="">請選擇</option>
-                    </select>
+            <!-- 人員設定 (動態新增) -->
+            <div class="mb-6">
+                <div class="flex gap-2 mb-2">
+                    <button onclick="addPerson('worker')"
+                        class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded text-sm font-bold border border-yellow-300 hover:bg-yellow-200">
+                        <i class="fa-solid fa-hard-hat mr-1"></i> 新增工務人員
+                    </button>
+                    <button onclick="addPerson('buyer')"
+                        class="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm font-bold border border-blue-300 hover:bg-blue-200">
+                        <i class="fa-solid fa-cart-shopping mr-1"></i> 新增採購人員
+                    </button>
                 </div>
-                <div>
-                    <label class="block text-xs text-yellow-800">採購人員</label>
-                    <select id="buyerPerson" class="w-full border border-yellow-300 p-1 text-sm rounded bg-white">
-                        <option value="">請選擇</option>
-                    </select>
-                </div>
+                <div id="person-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2"></div>
             </div>
 
             <div class="flex justify-between items-center mb-4">
@@ -189,8 +188,7 @@
                     vendors = data.vendors || [];
                     projectList = data.projects || [];
 
-                    fillSelect('workerPerson', salesPersons);
-                    fillSelect('buyerPerson', salesPersons);
+
                     fillProjectSelect();
                     renderVendorList();
                 })
@@ -380,6 +378,10 @@
 
             if (!isValid) return alert("請檢查「支出摘要」與「未稅金額」是否皆已填寫且大於 0。");
 
+            // 收集人員
+            const workers = getPersons('worker');
+            const buyers = getPersons('buyer');
+
             // 按鈕 Loading
             const btn = document.getElementById('btn-submit');
             const originalText = btn.innerText;
@@ -410,15 +412,15 @@
                                 });
                                 const upData = await upRes.json();
                                 fileUrl = upData.url;
-                                resolve(buildPayload(block, fileUrl));
+                                resolve(buildPayload(block, fileUrl, workers, buyers));
                             } catch (e) {
                                 console.error('Upload failed', e);
-                                resolve(buildPayload(block, "Upload Failed"));
+                                resolve(buildPayload(block, "Upload Failed", workers, buyers));
                             }
                         };
                         reader.readAsDataURL(file);
                     } else {
-                        resolve(buildPayload(block, ""));
+                        resolve(buildPayload(block, "", workers, buyers));
                     }
                 });
                 tasks.push(p);
@@ -444,16 +446,25 @@
             });
         }
 
-        function buildPayload(block, fileUrl) {
+        function getPersons(type) {
+            const rows = document.querySelectorAll(`.person-row[data-type="${type}"] select`);
+            const vals = [];
+            rows.forEach(sel => {
+                if (sel.value) vals.push(sel.value);
+            });
+            return [...new Set(vals)].join(', ');
+        }
+
+        function buildPayload(block, fileUrl, workers, buyers) {
             return {
                 type: 'cost',
                 projectId: document.getElementById('projectSelect').value,
                 customer: document.getElementById('customer').value,
                 projectName: document.getElementById('projectName').value,
                 salesPerson: document.getElementById('costSalesPerson').value,
-                // date: removed
-                worker: document.getElementById('workerPerson').value,
-                buyer: document.getElementById('buyerPerson').value,
+                worker: workers,
+                buyer: buyers,
+
 
                 vendorTaxId: block.querySelector('.v-tax').value,
                 vendorName: block.querySelector('.v-name').value,
@@ -467,6 +478,28 @@
                 fileUrl: fileUrl,
                 lineUser: lineUser
             };
+        }
+
+        function addPerson(type) {
+            const container = document.getElementById('person-container');
+            const div = document.createElement('div');
+            const labelText = type === 'worker' ? '工務人員' : '採購人員';
+            const colorClass = type === 'worker' ? 'border-yellow-300 bg-yellow-50' : 'border-blue-300 bg-blue-50';
+
+            div.className = `flex items-center gap-2 p-2 rounded border ${colorClass} person-row`;
+            div.dataset.type = type;
+
+            div.innerHTML = `
+                <span class="text-xs font-bold ${type === 'worker' ? 'text-yellow-800' : 'text-blue-800'}">${labelText}</span>
+                <select class="flex-1 border border-gray-300 rounded p-1 text-sm bg-white person-select">
+                    <option value="">請選擇</option>
+                    ${salesPersons.map(s => `<option value="${s}">${s}</option>`).join('')}
+                </select>
+                <button onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 px-1">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            `;
+            container.appendChild(div);
         }
     </script>
 </body>
