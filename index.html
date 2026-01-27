@@ -15,60 +15,116 @@
             background-color: #f3f4f6;
         }
     </style>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-2xl overflow-hidden max-w-md w-full">
-        <div class="bg-blue-900 p-8 text-center text-white">
-            <h1 class="text-3xl font-bold tracking-wider mb-2">工程管理系統</h1>
-            <p class="text-blue-200 text-sm">健益工程有限公司</p>
+<body class="bg-gradient-to-br from-slate-100 to-gray-200 min-h-screen flex items-center justify-center p-4 relative">
+    <!-- LIFF Profile 區域 -->
+    <div id="liff-profile"
+        class="hidden absolute top-4 right-4 flex items-center gap-3 bg-white/90 backdrop-blur-sm p-2 pr-4 rounded-full shadow-md border border-white/50 z-50">
+        <img id="liff-picture" src="" alt="Profile" class="w-8 h-8 rounded-full border border-gray-200">
+        <div class="flex flex-col items-start leading-none">
+            <span id="liff-name" class="text-sm font-bold text-gray-700">Loading...</span>
+            <span class="text-[10px] text-green-600 font-medium">LINE Login</span>
+        </div>
+    </div>
+
+    <div
+        class="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden max-w-md w-full border border-white/50">
+        <div class="bg-gradient-to-r from-blue-900 to-slate-800 p-10 text-center text-white relative overflow-hidden">
+            <div
+                class="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10">
+            </div>
+            <h1 class="text-3xl font-bold tracking-wider mb-2 relative z-10">工程管理系統</h1>
+            <p class="text-blue-200 text-sm tracking-widest relative z-10">健益工程有限公司</p>
         </div>
 
-        <div class="p-8 grid gap-4">
+        <div class="p-8 grid gap-5">
             <a href="quotation.html"
-                class="flex items-center p-4 border-2 border-blue-100 rounded-xl hover:bg-blue-50 transition group">
+                class="flex items-center p-4 bg-white border border-blue-50 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group">
                 <div
-                    class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition">
-                    <i class="fa-solid fa-file-invoice-dollar text-xl"></i>
+                    class="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300 shadow-inner">
+                    <i class="fa-solid fa-file-invoice-dollar text-2xl"></i>
                 </div>
-                <div class="ml-4">
-                    <h3 class="text-lg font-bold text-gray-800">報價系統</h3>
-                    <p class="text-xs text-gray-500">客戶報價單</p>
+                <div class="ml-5">
+                    <h3 class="text-lg font-bold text-gray-800 group-hover:text-blue-700 transition-colors">報價系統</h3>
+                    <p class="text-xs text-gray-400 font-medium">客戶報價單與請款</p>
                 </div>
-                <i class="fa-solid fa-chevron-right ml-auto text-gray-300 group-hover:text-blue-500"></i>
+                <i
+                    class="fa-solid fa-chevron-right ml-auto text-gray-300 group-hover:text-blue-500 transition-colors"></i>
             </a>
 
             <a href="cost.html"
-                class="flex items-center p-4 border-2 border-green-100 rounded-xl hover:bg-green-50 transition group">
+                class="flex items-center p-4 bg-white border border-green-50 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group">
                 <div
-                    class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 group-hover:bg-green-600 group-hover:text-white transition">
-                    <i class="fa-solid fa-calculator text-xl"></i>
+                    class="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center text-green-600 group-hover:bg-green-600 group-hover:text-white transition-colors duration-300 shadow-inner">
+                    <i class="fa-solid fa-calculator text-2xl"></i>
                 </div>
-                <div class="ml-4">
-                    <h3 class="text-lg font-bold text-gray-800">成本系統</h3>
-                    <p class="text-xs text-gray-500">工料成本分析</p>
+                <div class="ml-5">
+                    <h3 class="text-lg font-bold text-gray-800 group-hover:text-green-700 transition-colors">成本系統</h3>
+                    <p class="text-xs text-gray-400 font-medium">工料分析與支出</p>
                 </div>
-                <i class="fa-solid fa-chevron-right ml-auto text-gray-300 group-hover:text-green-500"></i>
+                <i
+                    class="fa-solid fa-chevron-right ml-auto text-gray-300 group-hover:text-green-500 transition-colors"></i>
             </a>
 
             <a href="accounting.html"
-                class="flex items-center p-4 border-2 border-orange-100 rounded-xl hover:bg-orange-50 transition group">
+                class="flex items-center p-4 bg-white border border-orange-50 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 group">
                 <div
-                    class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition">
-                    <i class="fa-solid fa-coins text-xl"></i>
+                    class="w-14 h-14 rounded-full bg-orange-50 flex items-center justify-center text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-colors duration-300 shadow-inner">
+                    <i class="fa-solid fa-coins text-2xl"></i>
                 </div>
-                <div class="ml-4">
-                    <h3 class="text-lg font-bold text-gray-800">會計系統</h3>
-                    <p class="text-xs text-gray-500">請款與帳務</p>
+                <div class="ml-5">
+                    <h3 class="text-lg font-bold text-gray-800 group-hover:text-orange-700 transition-colors">會計系統</h3>
+                    <p class="text-xs text-gray-400 font-medium">各項帳務紀錄</p>
                 </div>
-                <i class="fa-solid fa-chevron-right ml-auto text-gray-300 group-hover:text-orange-500"></i>
+                <i
+                    class="fa-solid fa-chevron-right ml-auto text-gray-300 group-hover:text-orange-500 transition-colors"></i>
             </a>
         </div>
 
-        <div class="p-4 bg-gray-50 text-center text-[10px] text-gray-400 border-t">
-            © 2026 健益工程有限公司 · 系統管理版本 2.0
+        <div class="p-6 bg-gray-50/50 text-center border-t border-gray-100">
+            <p class="text-[10px] text-gray-400 font-medium tracking-wide">
+                © 2026 健益工程有限公司 · 系統管理版本 2.1
+            </p>
         </div>
     </div>
+
+    <script>
+        const LIFF_ID = '2008974069-Ecojk6W1'; // 已設定
+
+        window.onload = function () {
+            initializeLiff();
+        };
+
+        async function initializeLiff() {
+            if (LIFF_ID === 'YOUR_LIFF_ID') {
+                console.warn('LIFF ID 未設定');
+                return;
+            }
+            try {
+                await liff.init({ liffId: LIFF_ID });
+                if (liff.isLoggedIn()) {
+                    const profile = await liff.getProfile();
+                    displayProfile(profile);
+                } else {
+                    liff.login();
+                }
+            } catch (error) {
+                console.error('LIFF Init Error:', error);
+            }
+        }
+
+        function displayProfile(profile) {
+            const container = document.getElementById('liff-profile');
+            const pic = document.getElementById('liff-picture');
+            const name = document.getElementById('liff-name');
+
+            if (profile.pictureUrl) pic.src = profile.pictureUrl;
+            name.innerText = profile.displayName;
+            container.classList.remove('hidden');
+        }
+    </script>
 </body>
 
 </html>
