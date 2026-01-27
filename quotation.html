@@ -30,6 +30,11 @@
             text-align: center;
         }
 
+        /* [更新] 讓預覽 canvas 內的文字水平置中 (表格除外) */
+        .preview-canvas>div.flex-1.text-center {
+            text-align: center !important;
+        }
+
         .doc-title {
             font-size: 16pt;
             font-weight: bold;
@@ -145,69 +150,90 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- 客戶基本資料 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div class="md:col-span-2 bg-blue-50 p-3 rounded-md border border-blue-100">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        客戶名稱 <span class="text-xs text-blue-500 font-normal ml-2">(可輸入統編8碼自動帶入)</span>
-                    </label>
-                    <div class="flex gap-2 mb-2 items-center">
-                        <div class="w-1/3 relative">
-                            <input type="text" id="taxId" class="w-full border border-gray-300 rounded-md p-2 text-sm"
-                                placeholder="統編(選填)" oninput="checkTaxId(this)">
-                            <span id="tax-warning"
-                                class="hidden absolute top-full left-0 text-[10px] text-red-500 font-bold">請輸入8碼數字</span>
-                        </div>
-                        <button onclick="lookupCompany()"
-                            class="bg-blue-600 text-white px-3 py-1 rounded-md text-xs h-9">查詢</button>
-                        <input type="text" id="customer" class="flex-1 border border-gray-300 rounded-md p-2"
-                            placeholder="輸入客戶名稱">
-                    </div>
-                </div>
-                <div><label class="block text-sm font-medium text-gray-700 mb-1">客戶聯絡人</label><input type="text"
-                        id="contactPerson" class="w-full border border-gray-300 rounded-md p-2 text-sm"></div>
-                <div><label class="block text-sm font-medium text-gray-700 mb-1">客戶聯絡電話</label><input type="text"
-                        id="contactPhone" class="w-full border border-gray-300 rounded-md p-2 text-sm"></div>
-                <div class="md:col-span-2"><label
-                        class="block text-sm font-medium text-gray-700 mb-1">工程/專案名稱</label><input type="text"
-                        id="projectName" class="w-full border border-gray-300 rounded-md p-2 text-sm"></div>
-                <div><label class="block text-sm font-medium text-gray-700 mb-1">日期</label><input type="date"
-                        id="quoteDate" class="w-full border border-gray-300 rounded-md p-2 text-sm"></div>
+        <!-- 測試連線與成交狀態 -->
+        <div class="flex justify-between items-center mb-2 px-1">
+            <div>
+                <input type="checkbox" id="dealClosed"
+                    class="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                <label for="dealClosed"
+                    class="ml-2 text-sm font-bold text-red-600 bg-red-100 px-2 py-1 rounded border border-red-200">
+                    <i class="fa-solid fa-handshake mr-1"></i> 已成交 (勾選後允許被其他系統讀取)
+                </label>
             </div>
-
-            <!-- 明細內容 -->
-            <h3 class="text-md font-bold text-gray-700 mb-2">明細內容</h3>
-            <div id="items-container" class="space-y-3 mb-4"></div>
-            <div class="flex gap-3 mb-6">
-                <button onclick="addRow('category')"
-                    class="flex-1 py-2 px-4 border border-gray-300 bg-gray-50 text-gray-700 font-bold rounded hover:bg-gray-100">+
-                    大項次</button>
-                <button onclick="addRow('item')"
-                    class="flex-1 py-2 px-4 border border-blue-300 bg-blue-50 text-blue-700 font-bold rounded hover:bg-blue-100">+
-                    細項</button>
-            </div>
-
-            <!-- 額外費用 -->
-            <div class="mb-4 bg-yellow-50 p-4 rounded border border-yellow-200">
-                <label class="block text-sm font-bold text-gray-700 mb-2">額外費用</label>
-                <div id="fees-container" class="space-y-2 mb-3"></div>
-                <button onclick="addFeeRow()"
-                    class="text-sm bg-white border border-yellow-400 text-yellow-700 px-3 py-1 rounded hover:bg-yellow-100">+
-                    新增費用</button>
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">備註說明</label>
-                <textarea id="footerNote" class="w-full border border-gray-300 rounded-md p-2 text-sm h-20"
-                    placeholder="例如：報價有效期、付款條件..."></textarea>
-            </div>
-
-            <button onclick="generatePreview('工程報價單')"
-                class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-blue-700 transition">
-                預覽並確認內容
+            <button onclick="testConnection()"
+                class="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded border border-gray-300">
+                <i class="fa-solid fa-plug mr-1"></i> 測試系統連線
             </button>
         </div>
+
+        <!-- 客戶基本資料 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div class="md:col-span-2 bg-blue-50 p-3 rounded-md border border-blue-100">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    客戶名稱 <span class="text-xs text-blue-500 font-normal ml-2">(可輸入統編8碼自動帶入)</span>
+                </label>
+                <div class="flex gap-2 mb-2 items-center">
+                    <div class="w-1/3 relative">
+                        <input type="text" id="taxId" class="w-full border border-gray-300 rounded-md p-2 text-sm"
+                            placeholder="統編(選填)" oninput="checkTaxId(this)">
+                        <span id="tax-warning"
+                            class="hidden absolute top-full left-0 text-[10px] text-red-500 font-bold">請輸入8碼數字</span>
+                    </div>
+                    <button onclick="lookupCompany()"
+                        class="bg-blue-600 text-white px-3 py-1 rounded-md text-xs h-9">查詢</button>
+                    <input type="text" id="customer" class="flex-1 border border-gray-300 rounded-md p-2"
+                        placeholder="輸入客戶名稱">
+                </div>
+            </div>
+            <div><label class="block text-sm font-medium text-gray-700 mb-1">客戶聯絡人</label><input type="text"
+                    id="contactPerson" class="w-full border border-gray-300 rounded-md p-2 text-sm"></div>
+            <div><label class="block text-sm font-medium text-gray-700 mb-1">客戶聯絡電話 (自動加分隔線)</label><input type="text"
+                    id="contactPhone" class="w-full border border-gray-300 rounded-md p-2 text-sm"
+                    oninput="formatPhone(this)" placeholder="09xx-xxx-xxx"></div>
+            <!-- [新增] 傳真欄位 -->
+            <div><label class="block text-sm font-medium text-gray-700 mb-1">客戶傳真</label><input type="text"
+                    id="customerFax" class="w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="傳真號碼">
+            </div>
+            <div class="md:col-span-2"><label class="block text-sm font-medium text-gray-700 mb-1">工程/專案名稱</label><input
+                    type="text" id="projectName" class="w-full border border-gray-300 rounded-md p-2 text-sm"></div>
+            <div><label class="block text-sm font-medium text-gray-700 mb-1">日期</label><input type="date" id="quoteDate"
+                    class="w-full border border-gray-300 rounded-md p-2 text-sm"></div>
+        </div>
+
+        <!-- 明細內容 -->
+        <h3 class="text-md font-bold text-gray-700 mb-2">明細內容</h3>
+        <div id="items-container" class="space-y-3 mb-4"></div>
+        <div class="flex gap-3 mb-6">
+            <button onclick="addRow('category')"
+                class="flex-1 py-2 px-4 border border-gray-300 bg-gray-50 text-gray-700 font-bold rounded hover:bg-gray-100">+
+                大項次</button>
+            <button onclick="addRow('item')"
+                class="flex-1 py-2 px-4 border border-blue-300 bg-blue-50 text-blue-700 font-bold rounded hover:bg-blue-100">+
+                細項</button>
+        </div>
+
+        <!-- 額外費用 -->
+        <div class="mb-4 bg-yellow-50 p-4 rounded border border-yellow-200">
+            <label class="block text-sm font-bold text-gray-700 mb-2">額外費用</label>
+            <div id="fees-container" class="space-y-2 mb-3"></div>
+            <button onclick="addFeeRow()"
+                class="text-sm bg-white border border-yellow-400 text-yellow-700 px-3 py-1 rounded hover:bg-yellow-100">+
+                新增費用</button>
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">備註說明</label>
+            <textarea id="footerNote" class="w-full border border-gray-300 rounded-md p-2 text-sm h-20"
+                placeholder="例如：報價有效期、付款條件..."></textarea>
+        </div>
+
+        <button onclick="generatePreview('工程報價單')"
+            class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-blue-700 transition">
+            預覽並確認內容
+        </button>
+    </div>
     </div>
 
     <!-- 預覽視窗 -->
@@ -250,6 +276,11 @@
             const dateInput = document.getElementById('quoteDate');
             if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
             fetchConfig();
+
+            // 手機欄位也加上自動格式化
+            const sm = document.getElementById('salesMobile');
+            if (sm) sm.addEventListener('input', function () { formatPhone(this); });
+
             // 預設不新增行，讓使用者自己點，或維持預設
             if (document.querySelectorAll('.item-row').length === 0) {
                 addRow('category');
@@ -304,6 +335,23 @@
 
             const uList = document.getElementById('unit-list');
             if (uList) uList.innerHTML = unitOptions.map(u => `<option value="${u}">`).join('');
+
+            // [修正] 更新所有現有的單位選單
+            document.querySelectorAll('.input-unit-select').forEach(sel => {
+                const cur = sel.value;
+                const isCustom = (cur === 'custom');
+
+                sel.innerHTML = `<option value="">單位</option>` +
+                    unitOptions.map(u => `<option value="${u}">${u}</option>`).join('') +
+                    `<option value="custom">+ 其他</option>`;
+
+                // 嘗試恢復選取
+                if (unitOptions.includes(cur)) {
+                    sel.value = cur;
+                } else if (isCustom) {
+                    sel.value = 'custom';
+                }
+            });
         }
 
         function populateHistory() {
@@ -555,7 +603,8 @@
             canvas.innerHTML = `
         <div class="flex justify-between items-start mb-4">
             <div class="w-1/4">
-                <img src="${LOGO_URL}" style="height: 60px; object-fit: contain;">
+                <!-- [更新] LOGO size restricted -->
+                <img src="${LOGO_URL}" style="max-height: 80px; max-width: 100%; object-fit: contain;">
             </div>
             <div class="flex-1 text-center">
                 <div class="company-title text-3xl mb-1 text-blue-900 font-bold">健益工程有限公司</div>
@@ -685,6 +734,11 @@
                 salesMobile: document.getElementById('salesMobile').value,
                 originId: currentOriginId,
                 lineUser: lineUser,
+
+                // [新增] 傳真與狀態
+                fax: document.getElementById('customerFax').value,
+                status: document.getElementById('dealClosed').checked ? 'closed' : 'open',
+
                 items: items,
                 fees: fees,
                 note: document.getElementById('footerNote').value,
@@ -788,6 +842,10 @@
                     document.getElementById('footerNote').value = data.note || "";
                     if (data.taxId) document.getElementById('taxId').value = data.taxId;
 
+                    // [新增] 載入傳真與狀態
+                    document.getElementById('customerFax').value = data.fax || (p && p.fax) || "";
+                    document.getElementById('dealClosed').checked = (data.status === 'closed' || (p && p.status === 'closed'));
+
                     // 清空現有項目
                     const container = document.getElementById('items-container');
                     container.innerHTML = '';
@@ -845,6 +903,50 @@
                 }
             } else {
                 alert("此單據無詳細紀錄，僅載入基本資料。");
+            }
+        }
+        function formatPhone(input) {
+            let val = input.value.replace(/\D/g, '');
+            if (val.length > 10) val = val.substring(0, 10);
+
+            if (val.length === 10 && val.startsWith('09')) {
+                // 手機 09xx-xxx-xxx
+                input.value = `${val.substring(0, 4)}-${val.substring(4, 7)}-${val.substring(7)}`;
+            } else if (val.length > 0 && val.startsWith('0')) {
+                // 市話 (簡易規則: 0x-xxxxxxx or 0xx-xxxxxx)
+                if (val.length === 9 || val.length === 10) {
+                    // 猜測區碼 2碼 (02, 03...)
+                    if (val.length === 10 && (val.startsWith('04') || val.startsWith('07') || val.startsWith('02'))) {
+                        input.value = `${val.substring(0, 2)}-${val.substring(2)}`; // 02-xxxxxxxx
+                    } else {
+                        // 簡單加在第3or4位後
+                        if (val.length > 3) input.value = val; // 暫不強制市話複雜格式，主要處理手機
+                    }
+                } else {
+                    input.value = val;
+                }
+            } else {
+                input.value = val;
+            }
+        }
+
+        async function testConnection() {
+            const btn = event.target.closest('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 測試中...';
+            btn.disabled = true;
+            try {
+                const start = Date.now();
+                const res = await fetch(GAS_URL + "?action=ping"); // assumes doGet handles random params or just ignoring return default
+                // 其實 doGet 目前回傳 config，所以任何 GET 都可以通
+                const json = await res.json();
+                const time = Date.now() - start;
+                alert(`連線成功！\n耗時: ${time}ms\n回應: OK`);
+            } catch (e) {
+                alert(`連線失敗！\n錯誤: ${e}`);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         }
     </script>

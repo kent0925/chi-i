@@ -207,8 +207,17 @@
 
         function fillProjectSelect() {
             const sel = document.getElementById('projectSelect');
+            // [更新] 過濾：只顯示「已成交」或「Closed」的專案
+            const activeProjects = projectList.filter(p => p.status === 'closed' || p.status === '已成交');
+
+            // 若完全沒有已成交專案，顯示提示
+            if (activeProjects.length === 0 && projectList.length > 0) {
+                sel.innerHTML = '<option value="">-- 無已成交專案 --</option>';
+                return;
+            }
+
             sel.innerHTML = '<option value="">-- 請選擇專案 --</option>' +
-                projectList.map(p => {
+                activeProjects.map(p => {
                     const label = `${p.date} ${p.customer} (${p.project})`;
                     return `<option value="${p.id}">${label}</option>`;
                 }).join('');
