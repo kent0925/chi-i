@@ -9,12 +9,38 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        blue: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        },
+                        slate: {
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Noto Sans TC', 'sans-serif'],
+                        serif: ['Noto Serif TC', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap');
 
         body {
             font-family: 'Noto Sans TC', sans-serif;
-            background-color: #f3f4f6;
+            background-color: #f8fafc;
         }
 
         .preview-canvas {
@@ -30,7 +56,6 @@
             text-align: center;
         }
 
-        /* [更新] 讓預覽 canvas 內的文字水平置中 (表格除外) */
         .preview-canvas>div.flex-1.text-center {
             text-align: center !important;
         }
@@ -74,218 +99,361 @@
             width: 120px;
             padding-right: 4px;
         }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Mobile Optimization: Prevent iOS Zoom */
+        @media (max-width: 768px) {
+
+            input,
+            select,
+            textarea {
+                font-size: 16px !important;
+            }
+        }
     </style>
 </head>
 
-<body class="bg-gradient-to-br from-slate-100 to-gray-200 min-h-screen p-4 md:p-8 font-sans text-gray-700">
-    <div
-        class="max-w-5xl mx-auto bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-white/50">
+<body class="bg-slate-50 min-h-screen pb-32">
+
+    <!-- Header Background -->
+    <div class="fixed top-0 left-0 w-full h-64 bg-gradient-to-br from-blue-900 via-slate-800 to-gray-900 -z-10"></div>
+
+    <div class="max-w-6xl mx-auto px-4 pt-6">
+
+        <!-- Header Card -->
         <div
-            class="bg-gradient-to-r from-blue-900 to-slate-800 p-6 text-white flex justify-between items-center shadow-md relative overflow-hidden">
-            <div
-                class="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none">
+            class="bg-white/10 backdrop-blur-md rounded-2xl p-6 text-white shadow-xl border border-white/20 mb-8 flex flex-col md:flex-row justify-between items-center gap-4 relative overflow-hidden">
+            <!-- Decorative Pattern -->
+            <div class="absolute -top-10 -right-10 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl pointer-events-none">
             </div>
-            <div class="flex items-center gap-4 relative z-10">
-                <div class="bg-white/10 p-2 rounded-lg backdrop-blur-sm">
-                    <i class="fa-solid fa-file-invoice-dollar text-2xl"></i>
+
+            <div class="flex items-center gap-5 z-10">
+                <div class="bg-white/20 p-4 rounded-2xl shadow-inner backdrop-blur-md border border-white/10">
+                    <i class="fa-solid fa-file-invoice-dollar text-3xl text-blue-100"></i>
                 </div>
                 <div>
-                    <h1 class="text-2xl font-bold tracking-wide">工程報價系統</h1>
-                    <p class="text-xs text-blue-200">建置與管理客戶報價</p>
+                    <h1 class="text-3xl font-bold tracking-wide text-white drop-shadow-sm">工程報價系統</h1>
+                    <p class="text-blue-100/80 text-sm font-medium mt-1">Quotation Management System</p>
                 </div>
             </div>
 
-            <div class="flex items-center gap-3 relative z-10">
+            <div class="flex items-center gap-3 z-10">
                 <!-- LIFF Profile -->
                 <div id="liff-profile"
-                    class="hidden flex items-center gap-2 bg-white/10 p-1.5 pr-3 rounded-full backdrop-blur-sm border border-white/20">
-                    <img id="liff-picture" src="" alt="Profile" class="w-8 h-8 rounded-full border border-white/50">
-                    <div class="flex flex-col">
-                        <span id="liff-name" class="text-xs font-bold text-white">Loading</span>
-                    </div>
+                    class="hidden flex items-center gap-3 bg-black/20 py-2 px-4 rounded-full border border-white/10 backdrop-blur-sm">
+                    <img id="liff-picture" src="" alt="Profile"
+                        class="w-8 h-8 rounded-full border-2 border-white/30 shadow-sm">
+                    <span id="liff-name" class="text-sm font-bold text-white tracking-wide">User</span>
                 </div>
 
                 <button onclick="location.href='index.html'"
-                    class="text-sm bg-white/10 border border-white/20 px-4 py-2 rounded-full hover:bg-white/20 transition-all flex items-center gap-2 backdrop-blur-sm shadow-sm group">
+                    class="group bg-white/10 hover:bg-white/20 text-white text-sm py-2 px-5 rounded-full border border-white/30 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
                     <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
-                    返回主選單
+                    <span>返回主選單</span>
                 </button>
             </div>
         </div>
 
-        <div class="p-6">
-            <!-- 來源資料 (修改模式) -->
-            <div class="mb-4 bg-blue-50 p-3 rounded border border-blue-200 flex flex-wrap items-center gap-4">
-                <div>
-                    <label class="font-bold text-blue-900 text-sm mr-2">修改歷史單據：</label>
-                    <select id="historySelect" onchange="loadQuoteForEdit(this.value)"
-                        class="border border-blue-300 rounded p-1 text-sm w-64">
-                        <option value="">-- 建立新單據 --</option>
-                    </select>
+        <!-- Main Content -->
+        <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100 mb-8">
+
+            <!-- Control Bar (History & Status) -->
+            <div
+                class="p-6 border-b border-gray-100 bg-blue-50/30 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                    <div class="relative flex-1 md:flex-none md:w-80">
+                        <span class="absolute left-3 top-2.5 text-blue-800"><i
+                                class="fa-solid fa-clock-rotate-left"></i></span>
+                        <select id="historySelect" onchange="loadQuoteForEdit(this.value)"
+                            class="w-full pl-9 bg-white border border-blue-200 rounded-xl py-2 text-sm text-blue-900 shadow-sm focus:ring-2 focus:ring-blue-500 font-bold cursor-pointer">
+                            <option value="">-- 建立新單據 --</option>
+                        </select>
+                    </div>
                     <span id="edit-mode-badge"
-                        class="hidden bg-red-500 text-white text-xs px-2 py-1 rounded ml-2">修改模式</span>
-                </div>
-                <!-- [移動] 已成交選項調整至修改歷史單據同排右側 -->
-                <div class="flex items-center gap-4">
-                    <!-- [新增] 追加選項 (於已成交前方) -->
-                    <div class="flex items-center">
-                        <input type="checkbox" id="isAddition"
-                            class="w-5 h-5 text-purple-600 rounded border-gray-300 focus:ring-purple-500">
-                        <label for="isAddition"
-                            class="ml-2 text-sm font-bold text-purple-600 bg-purple-100 px-2 py-1 rounded border border-purple-200">
-                            <i class="fa-solid fa-plus-circle mr-1"></i> 追加
-                        </label>
-                    </div>
-                    <div class="flex items-center">
-                        <input type="checkbox" id="dealClosed" onchange="updateAdditionState()"
-                            class="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
-                        <label for="dealClosed"
-                            class="ml-2 text-sm font-bold text-red-600 bg-red-100 px-2 py-1 rounded border border-red-200">
-                            <i class="fa-solid fa-handshake mr-1"></i> 已成交
-                        </label>
-                    </div>
+                        class="hidden bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-bold border border-red-200 animate-pulse">
+                        <i class="fa-solid fa-pen-to-square mr-1"></i> 修改模式
+                    </span>
                 </div>
 
-                <!-- 業務與內部資訊 -->
-                <div class="mb-4 bg-gray-100 p-3 rounded border border-gray-300">
-                    <h3 class="text-xs font-bold text-gray-500 mb-2 border-b pb-1">業務與內控資訊</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="flex items-center gap-4">
+                    <!-- Addition Checkbox -->
+                    <label
+                        class="group flex items-center gap-2 cursor-pointer bg-purple-50 hover:bg-purple-100 px-4 py-2 rounded-lg border border-purple-200 transition-colors"
+                        title="僅限載入已成交之原始報價單後使用">
+                        <div class="relative flex items-center">
+                            <input type="checkbox" id="isAddition" class="peer sr-only">
+                            <div
+                                class="w-5 h-5 bg-white border-2 border-purple-300 rounded peer-checked:bg-purple-600 peer-checked:border-purple-600 transition-all">
+                            </div>
+                            <i
+                                class="fa-solid fa-check text-white text-[10px] absolute left-1 top-1 opacity-0 peer-checked:opacity-100 transition-opacity"></i>
+                        </div>
+                        <span class="text-sm font-bold text-purple-700 select-none"><i
+                                class="fa-solid fa-plus-circle mr-1"></i> 追加單</span>
+                    </label>
+
+                    <!-- Deal Closed Checkbox -->
+                    <label
+                        class="group flex items-center gap-2 cursor-pointer bg-red-50 hover:bg-red-100 px-4 py-2 rounded-lg border border-red-200 transition-colors">
+                        <div class="relative flex items-center">
+                            <input type="checkbox" id="dealClosed" onchange="updateAdditionState()"
+                                class="peer sr-only">
+                            <div
+                                class="w-5 h-5 bg-white border-2 border-red-300 rounded peer-checked:bg-red-600 peer-checked:border-red-600 transition-all">
+                            </div>
+                            <i
+                                class="fa-solid fa-check text-white text-[10px] absolute left-1 top-1 opacity-0 peer-checked:opacity-100 transition-opacity"></i>
+                        </div>
+                        <span class="text-sm font-bold text-red-700 select-none"><i
+                                class="fa-solid fa-handshake mr-1"></i> 已成交</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="p-8">
+                <!-- Internal Info Grid -->
+                <div class="bg-gray-50 rounded-2xl p-5 mb-8 border border-gray-100">
+                    <h3
+                        class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">
+                        業務與內控資訊</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
-                            <label class="block text-xs font-bold text-gray-600 mb-1">專案ID (內控/臨時碼)</label>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">專案 ID</label>
                             <input type="text" id="internalProjectId"
-                                class="w-full border border-gray-300 rounded p-1 text-sm bg-gray-100 text-gray-400 italic font-bold"
+                                class="w-full bg-gray-100 border border-gray-200 rounded-lg p-2.5 text-sm text-gray-400 font-mono italic"
                                 value="(存檔後自動產生)" readonly>
-                            <span class="text-[10px] text-gray-400 block mt-0.5">格式：年份+日期+序號</span>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-600 mb-1">業務人員</label>
-                            <select id="salesPerson" class="w-full border border-gray-300 rounded p-1 text-sm bg-white"
+                            <label class="block text-xs font-bold text-blue-800 mb-1">業務人員</label>
+                            <select id="salesPerson"
+                                class="w-full border border-gray-200 rounded-lg p-2.5 text-sm font-bold text-blue-900 focus:ring-2 focus:ring-blue-500 bg-white"
                                 onchange="saveConfig('sales', this.value)">
                                 <option value="">-- 請選擇 --</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-600 mb-1">業務手機</label>
+                            <label class="block text-xs font-bold text-blue-800 mb-1">業務手機</label>
                             <input type="text" id="salesMobile"
-                                class="w-full border border-gray-300 rounded p-1 text-sm" placeholder="09xx-xxx-xxx">
+                                class="w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500"
+                                placeholder="09xx-xxx-xxx">
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- 測試連線 (已成交已移至上方) -->
-            <!-- 測試連線 (移除) -->
-            <div class="hidden flex justify-end items-center mb-2 px-1">
-            </div>
+                <!-- Customer Info -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <span class="w-1 h-6 bg-blue-500 rounded-full"></span>
+                        客戶與專案資料
+                    </h3>
 
-            <!-- 客戶基本資料 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div class="md:col-span-2 bg-blue-50 p-3 rounded-md border border-blue-100">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        客戶名稱 <span class="text-xs text-blue-500 font-normal ml-2">(可輸入統編8碼自動帶入)</span>
-                    </label>
-                    <div class="flex gap-2 mb-2 items-center">
-                        <div class="w-1/3 relative">
-                            <input type="text" id="taxId" class="w-full border border-gray-300 rounded-md p-2 text-sm"
-                                placeholder="統編(選填)" oninput="checkTaxId(this)">
-                            <span id="tax-warning"
-                                class="hidden absolute top-full left-0 text-[10px] text-red-500 font-bold">請輸入8碼數字</span>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Left Column -->
+                        <div class="space-y-4">
+                            <div>
+                                <label class="flex justify-between text-xs font-bold text-gray-500 mb-1">
+                                    <span>客戶名稱</span>
+                                    <span class="text-blue-500 font-normal">可輸入統編8碼</span>
+                                </label>
+                                <div class="flex gap-2">
+                                    <div class="w-32 relative">
+                                        <input type="text" id="taxId"
+                                            class="w-full border border-gray-300 rounded-lg p-2.5 text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all font-mono"
+                                            placeholder="統編" oninput="checkTaxId(this)" maxlength="8">
+                                        <span id="tax-warning"
+                                            class="hidden absolute -bottom-4 left-0 text-[10px] text-red-500 font-bold whitespace-nowrap">需為8碼數字</span>
+                                    </div>
+                                    <div class="flex-1 relative">
+                                        <input type="text" id="customer"
+                                            class="w-full border border-gray-300 rounded-lg p-2.5 text-sm font-bold text-gray-800 focus:ring-2 focus:ring-blue-500 pl-2"
+                                            placeholder="輸入客戶名稱">
+                                        <button onclick="lookupCompany()"
+                                            class="absolute right-1 top-1 bottom-1 px-3 bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-bold rounded-md transition-colors">查詢</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">工程/專案名稱</label>
+                                <input type="text" id="projectName"
+                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 font-bold"
+                                    placeholder="例如：辦公室裝修工程">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">報價單日期</label>
+                                <input type="date" id="quoteDate"
+                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                            </div>
                         </div>
-                        <button onclick="lookupCompany()"
-                            class="bg-blue-600 text-white px-3 py-1 rounded-md text-xs h-9">查詢</button>
-                        <input type="text" id="customer" class="flex-1 border border-gray-300 rounded-md p-2"
-                            placeholder="輸入客戶名稱">
+
+                        <!-- Right Column -->
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">客戶聯絡人</label>
+                                <input type="text" id="contactPerson"
+                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500"
+                                    placeholder="聯絡窗口姓名">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 mb-1">客戶手機</label>
+                                    <input type="text" id="contactPhone"
+                                        class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500"
+                                        oninput="formatPhone(this)" placeholder="09xx-xxx-xxx">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 mb-1">客戶市話</label>
+                                    <input type="text" id="customerTel"
+                                        class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500"
+                                        oninput="formatPhone(this)" placeholder="02-xxxxxxx">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 mb-1">客戶傳真</label>
+                                <input type="text" id="customerFax" oninput="formatPhone(this)"
+                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500"
+                                    placeholder="傳真號碼">
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div><label class="block text-sm font-medium text-gray-700 mb-1">客戶聯絡人</label><input type="text"
-                        id="contactPerson" class="w-full border border-gray-300 rounded-md p-2 text-sm"></div>
-                <!-- [新增] 傳真與市話欄位 -->
-                <!-- 調整：聯絡電話(手機) 與 客戶市話 並排 -->
-                <div><label class="block text-sm font-medium text-gray-700 mb-1">客戶手機 (自動加分隔線)</label><input type="text"
-                        id="contactPhone" class="w-full border border-gray-300 rounded-md p-2 text-sm"
-                        oninput="formatPhone(this)" placeholder="09xx-xxx-xxx"></div>
-                <div><label class="block text-sm font-medium text-gray-700 mb-1">客戶市話 (自動加分隔線)</label><input type="text"
-                        id="customerTel" class="w-full border border-gray-300 rounded-md p-2 text-sm"
-                        oninput="formatPhone(this)" placeholder="02-xxxxxxx"></div>
-                <div><label class="block text-sm font-medium text-gray-700 mb-1">客戶傳真 (自動加分隔線)</label><input type="text"
-                        id="customerFax" oninput="formatPhone(this)"
-                        class="w-full border border-gray-300 rounded-md p-2 text-sm" placeholder="傳真號碼">
+
+                <!-- Items Section -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                            <span
+                                class="bg-blue-100 text-blue-700 w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-sm"><i
+                                    class="fa-solid fa-list-ol"></i></span>
+                            報價明細
+                        </h3>
+                    </div>
+
+                    <div id="items-container" class="space-y-3 mb-6">
+                        <!-- Items Loaded Here -->
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button onclick="addRow('category')"
+                            class="flex-1 py-3 px-4 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 text-gray-600 font-bold hover:bg-white hover:border-gray-400 hover:shadow-sm transition-all flex justify-center items-center gap-2">
+                            <i class="fa-solid fa-folder-tree"></i> 新增大項次
+                        </button>
+                        <button onclick="addRow('item')"
+                            class="flex-1 py-3 px-4 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50 text-blue-700 font-bold hover:bg-white hover:border-blue-400 hover:shadow-sm transition-all flex justify-center items-center gap-2">
+                            <i class="fa-solid fa-plus"></i> 新增細項
+                        </button>
+                    </div>
                 </div>
-                <div class="md:col-span-2"><label
-                        class="block text-sm font-medium text-gray-700 mb-1">工程/專案名稱</label><input type="text"
-                        id="projectName" class="w-full border border-gray-300 rounded-md p-2 text-sm"></div>
-                <div><label class="block text-sm font-medium text-gray-700 mb-1">日期</label><input type="date"
-                        id="quoteDate" class="w-full border border-gray-300 rounded-md p-2 text-sm"></div>
-            </div>
 
-            <!-- 明細內容 -->
-            <h3 class="text-md font-bold text-gray-700 mb-2">明細內容</h3>
-            <div id="items-container" class="space-y-3 mb-4"></div>
-            <div class="flex gap-3 mb-6">
-                <button onclick="addRow('category')"
-                    class="flex-1 py-2 px-4 border border-gray-300 bg-gray-50 text-gray-700 font-bold rounded hover:bg-gray-100">+
-                    大項次</button>
-                <button onclick="addRow('item')"
-                    class="flex-1 py-2 px-4 border border-blue-300 bg-blue-50 text-blue-700 font-bold rounded hover:bg-blue-100">+
-                    細項</button>
-            </div>
+                <!-- Footer Two columns -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <!-- Note -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-2">備註說明</label>
+                        <textarea id="footerNote"
+                            class="w-full border border-gray-200 rounded-xl p-4 text-sm h-32 focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white transition-colors resize-none"
+                            placeholder="請輸入報價備註事項..."></textarea>
+                    </div>
 
-            <!-- 額外費用 -->
-            <div class="mb-4 bg-yellow-50 p-4 rounded border border-yellow-200">
-                <label class="block text-sm font-bold text-gray-700 mb-2">額外費用</label>
-                <div id="fees-container" class="space-y-2 mb-3"></div>
-                <button onclick="addFeeRow()"
-                    class="text-sm bg-white border border-yellow-400 text-yellow-700 px-3 py-1 rounded hover:bg-yellow-100">+
-                    新增費用</button>
-            </div>
+                    <!-- Fees -->
+                    <div class="bg-yellow-50/50 p-6 rounded-2xl border border-yellow-100">
+                        <div class="flex justify-between items-center mb-4">
+                            <label class="text-sm font-bold text-yellow-800"><i class="fa-solid fa-coins mr-1"></i>
+                                額外費用</label>
+                            <button onclick="addFeeRow()"
+                                class="text-xs bg-white border border-yellow-300 text-yellow-700 px-3 py-1.5 rounded-lg hover:bg-yellow-50 font-bold shadow-sm">
+                                <i class="fa-solid fa-plus"></i> 新增
+                            </button>
+                        </div>
+                        <div id="fees-container" class="space-y-3 mb-2"></div>
+                        <div class="text-xs text-yellow-600/60 text-right mt-2">* 總金額將自動於預覽頁面計算 *</div>
+                    </div>
+                </div>
 
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">備註說明</label>
-                <textarea id="footerNote" class="w-full border border-gray-300 rounded-md p-2 text-sm h-20"
-                    placeholder="例如：報價有效期、付款條件..."></textarea>
-            </div>
+                <div class="h-20"></div> <!-- Spacer -->
 
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Sticky Footer -->
+    <div
+        class="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] z-40">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-gray-500 text-xs hidden md:block">
+                * 點擊右側預覽按鈕確認最終報價單內容
+            </div>
             <button onclick="generatePreview('工程報價單')"
-                class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-blue-700 transition">
-                預覽並確認內容
+                class="w-full md:w-auto bg-blue-700 hover:bg-blue-800 text-white px-8 py-3 rounded-xl font-bold text-sm shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
+                <span>預覽報價單</span>
+                <i class="fa-solid fa-arrow-right"></i>
             </button>
         </div>
     </div>
 
-    <!-- 預覽視窗 -->
-    <div id="preview-modal"
-        class="hidden fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center z-50 overflow-y-auto p-4">
-        <div class="bg-white rounded shadow-xl max-w-[230mm] w-full overflow-hidden flex flex-col max-h-[95vh]">
-            <div class="overflow-y-auto flex-1 bg-gray-500 p-4 flex justify-center">
-                <div id="quotation-canvas"
-                    class="preview-canvas bg-white p-12 w-full max-w-[210mm] min-h-[297mm] shadow-lg relative">
-                    <!-- 預覽內容由 JS 填充 -->
+
+    <!-- Preview Modal -->
+    <div id="preview-modal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+        <div class="fixed inset-0 bg-gray-900/75 backdrop-blur-sm transition-opacity"
+            onclick="document.getElementById('preview-modal').classList.add('hidden')"></div>
+        <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
+            <div
+                class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 w-full max-w-[240mm] flex flex-col max-h-[90vh]">
+                <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-gray-900"><i
+                            class="fa-solid fa-file-contract mr-2 text-blue-600"></i>報價單預覽</h3>
+                    <button onclick="document.getElementById('preview-modal').classList.add('hidden')"
+                        class="text-gray-400 hover:text-gray-600">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
                 </div>
-            </div>
-            <div class="p-4 bg-gray-50 flex gap-4 border-t z-50">
-                <button onclick="document.getElementById('preview-modal').classList.add('hidden')"
-                    class="flex-1 py-2 bg-gray-200 text-gray-800 rounded font-bold hover:bg-gray-300">返回修改</button>
-                <button onclick="submitData()"
-                    class="flex-1 py-2 bg-blue-600 text-white rounded font-bold shadow hover:bg-blue-700">確認儲存並產生圖檔</button>
+                <div class="flex-1 overflow-y-auto bg-gray-500 p-6 flex justify-center">
+                    <div id="quotation-canvas"
+                        class="preview-canvas bg-white p-12 w-full max-w-[210mm] min-h-[297mm] shadow-lg relative">
+                    </div>
+                </div>
+                <div class="bg-white px-6 py-4 border-t border-gray-200 flex gap-3 justify-end">
+                    <button onclick="document.getElementById('preview-modal').classList.add('hidden')"
+                        class="px-5 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-700 font-bold hover:bg-gray-50">返回修改</button>
+                    <button onclick="submitData()"
+                        class="px-5 py-2.5 rounded-lg bg-blue-600 text-white font-bold shadow hover:bg-blue-700 flex items-center gap-2"><i
+                            class="fa-solid fa-cloud-arrow-up"></i> 確認儲存並產生圖檔</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- 共用 Datalists -->
+    <!-- Datalists -->
     <datalist id="sales-list"></datalist>
     <datalist id="unit-list"></datalist>
 
     <script>
         const LIFF_ID = '2008974069-Ecojk6W1';
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbxrXo9AcczzlIazBPTqxZij7CVAcqcXtbbpGJMKQ4RoEFRp8JsTtjLZw1R6xZwwvnnt/exec';
+        const LOGO_URL = 'https://kent0925.github.io/chi-i/unnamed.png';
+
         let salesPersons = [];
         let unitOptions = [];
         let projectList = [];
         let currentOriginId = null;
         let lineUser = null;
-
-        // Logo URL (請使用者自行替換為真實 Logo URL，需注意 CORS)
-        const LOGO_URL = 'https://kent0925.github.io/chi-i/unnamed.png';
 
         window.onload = function () {
             initializeLiff();
@@ -293,11 +461,9 @@
             if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
             fetchConfig();
 
-            // 手機欄位也加上自動格式化
             const sm = document.getElementById('salesMobile');
             if (sm) sm.addEventListener('input', function () { formatPhone(this); });
 
-            // 預設不新增行，讓使用者自己點，或維持預設
             if (document.querySelectorAll('.item-row').length === 0) {
                 addRow('category');
                 addRow('item');
@@ -313,6 +479,7 @@
                     const pBlock = document.getElementById('liff-profile');
                     if (pBlock) {
                         pBlock.classList.remove('hidden');
+                        pBlock.classList.add('flex');
                         document.getElementById('liff-picture').src = profile.pictureUrl;
                         document.getElementById('liff-name').innerText = profile.displayName;
                     }
@@ -339,7 +506,6 @@
 
         function renderLists() {
             const sList = document.getElementById('sales-list');
-
             if (sList) sList.innerHTML = salesPersons.map(s => `<option value="${s}">`).join('');
 
             const sSelect = document.getElementById('salesPerson');
@@ -350,12 +516,9 @@
                 if (cur) sSelect.value = cur;
             }
 
-            // Sales Person Input does not need innerHTML options loop anymore (it uses datalist)
-
             const uList = document.getElementById('unit-list');
             if (uList) uList.innerHTML = unitOptions.map(u => `<option value="${u}">`).join('');
 
-            // [修正] 更新所有現有的單位選單
             document.querySelectorAll('.input-unit-select').forEach(sel => {
                 const cur = sel.value;
                 const isCustom = (cur === 'custom');
@@ -364,7 +527,6 @@
                     unitOptions.map(u => `<option value="${u}">${u}</option>`).join('') +
                     `<option value="custom">+ 其他</option>`;
 
-                // 嘗試恢復選取
                 if (unitOptions.includes(cur)) {
                     sel.value = cur;
                 } else if (isCustom) {
@@ -385,10 +547,8 @@
 
         function addRow(type) {
             const container = document.getElementById('items-container');
-
-            // 防呆：檢查最後一項是否已填寫 (僅檢查 item 類型，category 不強制)
             const lastRow = container.querySelector('.item-row:last-child');
-            if (lastRow && !lastRow.classList.contains('bg-gray-100')) { // 判斷是否為細項 (Category有 bg-gray-100)
+            if (lastRow && lastRow.dataset.type === 'item') {
                 const nameVal = lastRow.querySelector('.input-name').value;
                 if (!nameVal.trim()) {
                     alert("請先完成上方細項內容後再新增！");
@@ -398,41 +558,52 @@
 
             const id = Date.now() + Math.random().toString(36).substr(2, 5);
             const div = document.createElement('div');
-            // Category: 灰色背景; Item: 白色背景
             const isCat = (type === 'category');
-            div.className = "flex gap-2 items-center item-row p-2 rounded " + (isCat ? "bg-gray-100 border-l-4 border-gray-400 params-category" : "bg-white border border-gray-100 shadow-sm params-item");
+
+            div.className = "flex gap-2 items-center item-row p-3 rounded-xl shadow-sm transition-all " +
+                (isCat ? "bg-slate-100 border-l-4 border-slate-500 mb-2 mt-4" : "bg-white border border-gray-100 hover:shadow-md");
+
             div.id = 'row-' + id;
             div.dataset.type = type;
 
             if (isCat) {
                 div.innerHTML = `
-    <div class="font-bold text-gray-400 px-2">●</div>
-    <input type="text" class="input-category flex-1 border-b border-gray-300 bg-transparent p-1 font-bold outline-none"
-        placeholder="大項次名稱 (例如: 一、拆除工程)">
-    <button onclick="this.parentElement.remove()" class="text-gray-300 hover:text-red-500 px-2"><i
-            class="fa-solid fa-trash-can"></i></button>
+                    <div class="text-slate-400 px-2"><i class="fa-solid fa-layer-group"></i></div>
+                    <input type="text" class="input-category flex-1 bg-transparent p-2 font-bold text-slate-800 outline-none border-b-2 border-transparent focus:border-slate-300 transition-colors placeholder-slate-400"
+                        placeholder="請輸入大項次名稱 (例如: 一、拆除工程)">
+                    <button onclick="this.parentElement.remove()" class="w-8 h-8 rounded-full hover:bg-red-100 text-gray-300 hover:text-red-500 flex items-center justify-center transition-colors">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
     `;
             } else {
                 div.innerHTML = `
-    <div class="w-8 text-center text-xs text-gray-300 item-seq"></div>
-    <input type="text" class="input-name flex-[3] border border-gray-300 rounded p-1 text-sm" placeholder="細項描述">
-    <input type="number" class="input-qty w-16 border border-gray-300 rounded p-1 text-sm text-center" placeholder="數量"
-        value="1">
-    <div class="w-20">
-        <select onchange="handleUnitChange(this)"
-            class="input-unit-select w-full border border-gray-300 rounded p-1 text-xs">
-            <option value="">單位</option>
-            ${unitOptions.map(u => `<option value="${u}">${u}</option>`).join('')}
-            <option value="custom">+ 其他</option>
-        </select>
-        <input type="text" onblur="checkNewUnit(this)"
-            class="input-unit-custom hidden w-full border border-gray-300 rounded p-1 text-xs" placeholder="新單位">
+    <div class="w-8 text-center text-xs text-gray-300 font-bold item-seq"></div>
+    <div class="flex-1 grid grid-cols-1 md:grid-cols-12 gap-2">
+        <div class="md:col-span-5">
+             <input type="text" class="input-name w-full border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="細項描述">
+        </div>
+        <div class="md:col-span-4 grid grid-cols-3 gap-2">
+            <input type="number" class="input-qty border border-gray-200 rounded-lg p-2 text-sm text-center focus:ring-2 focus:ring-blue-500 outline-none" placeholder="數量" value="1">
+            <div class="relative">
+                <select onchange="handleUnitChange(this)"
+                    class="input-unit-select w-full border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white">
+                    <option value="">單位</option>
+                    ${unitOptions.map(u => `<option value="${u}">${u}</option>`).join('')}
+                    <option value="custom text-blue-600 font-bold">+ 自訂</option>
+                </select>
+                <input type="text" onblur="checkNewUnit(this)"
+                    class="input-unit-custom hidden w-full border border-blue-300 rounded-lg p-2 text-xs bg-blue-50 focus:bg-white transition-all" placeholder="新單位">
+            </div>
+            <input type="number" onchange="checkPrice(this)"
+                 class="input-price border border-gray-200 rounded-lg p-2 text-sm text-right focus:ring-2 focus:ring-blue-500 outline-none font-mono" placeholder="單價">
+        </div>
+        <div class="md:col-span-3">
+             <input type="text" class="input-remark w-full border border-gray-200 rounded-lg p-2 text-xs text-gray-500 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="備註">
+        </div>
     </div>
-    <input type="number" onchange="checkPrice(this)"
-        class="input-price flex-[1.5] border border-gray-300 rounded p-1 text-sm text-right" placeholder="單價">
-    <input type="text" class="input-remark flex-[2] border border-gray-300 rounded p-1 text-xs" placeholder="備註">
-    <button onclick="this.parentElement.remove(); reindexItems();" class="text-gray-300 hover:text-red-500 px-2"><i
-            class="fa-solid fa-trash-can"></i></button>
+    <button onclick="this.parentElement.remove(); reindexItems();" class="w-10 h-10 md:w-8 md:h-8 rounded-full hover:bg-red-100 text-gray-300 hover:text-red-500 flex items-center justify-center transition-colors ml-1 md:ml-2 flex-shrink-0">
+        <i class="fa-solid fa-trash-can"></i>
+    </button>
     `;
             }
             container.appendChild(div);
@@ -458,7 +629,6 @@
             }
         }
 
-        // 新增單位檢查
         function checkNewUnit(input) {
             const val = input.value.trim();
             if (val && !unitOptions.includes(val)) {
@@ -468,7 +638,6 @@
             }
         }
 
-        // 負數金額檢查
         function checkPrice(input) {
             const val = parseFloat(input.value);
             if (val < 0) {
@@ -485,15 +654,18 @@
         function addFeeRow() {
             const container = document.getElementById('fees-container');
             const div = document.createElement('div');
-            div.className = "flex gap-2 fee-row";
+            div.className = "flex gap-2 fee-row items-center bg-white p-2 rounded-lg border border-yellow-200";
             div.innerHTML = `
-                <input type="text" class="fee-name flex-1 border border-gray-300 rounded p-1 text-sm" placeholder="費用項目 (例如：管理費)">
-                <select class="fee-type border border-gray-300 rounded p-1 text-sm">
+                <span class="text-yellow-600 px-2"><i class="fa-solid fa-tag"></i></span>
+                <input type="text" class="fee-name flex-1 border-none bg-transparent p-1 text-sm focus:ring-0 font-bold text-gray-700 placeholder-gray-300" placeholder="項目名稱">
+                <select class="fee-type border border-gray-200 bg-gray-50 rounded-md p-1 text-xs focus:ring-0">
                     <option value="fixed">固定金額($)</option>
                     <option value="percent">百分比(%)</option>
                 </select>
-                <input type="number" class="fee-value w-24 border border-gray-300 rounded p-1 text-sm" placeholder="數值" min="0" oninput="if(this.value<0)this.value=0">
-                <button onclick="this.parentElement.remove()" class="text-red-400 px-2">×</button>
+                <input type="number" class="fee-value w-20 border border-gray-200 rounded-md p-1 text-sm text-right focus:ring-1 focus:ring-yellow-400" placeholder="0" min="0">
+                <button onclick="this.parentElement.remove()" class="w-6 h-6 rounded-full hover:bg-red-100 text-gray-300 hover:text-red-500 flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-times"></i>
+                </button>
             `;
             container.appendChild(div);
         }
@@ -502,7 +674,9 @@
             const taxId = document.getElementById('taxId').value;
             if (taxId.length !== 8) return alert("請輸入8碼統編");
             const btn = event.target;
-            btn.innerText = "查詢中...";
+            const originalText = btn.innerText;
+            btn.innerText = "查詢中";
+            btn.disabled = true;
             try {
                 const res = await fetch(`${GAS_URL}?action=lookup&taxId=${taxId}`);
                 const data = await res.json();
@@ -513,8 +687,10 @@
                 }
             } catch (e) {
                 alert("連線失敗或超過查詢量限制。");
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
             }
-            btn.innerText = "查詢";
         }
 
         function saveConfig(type, val) {
@@ -522,10 +698,8 @@
         }
 
         function saveToBackend(type, val) {
-            // Optimistic update
             if (type === 'sales' && !salesPersons.includes(val)) salesPersons.push(val);
             if (type === 'unit' && !unitOptions.includes(val)) unitOptions.push(val);
-            // Re-render immediately
             renderLists();
 
             fetch(GAS_URL, {
@@ -548,9 +722,8 @@
 
             const canvas = document.getElementById('quotation-canvas');
             let itemsHtml = '';
-            let subtotal = 0; // 全報價小記 (不含稅費)
+            let subtotal = 0;
 
-            // 先將 items 分群處理大項次小計邏輯
             let currentCategoryName = '';
             let currentCategoryTotal = 0;
             let currentCategoryItems = [];
@@ -558,9 +731,9 @@
 
             const renderCategoryRow = (name, total) => {
                 const displayName = toChineseIndex(catIndex++) + "、" + name;
-                return `<tr class="bg-gray-50 border-t-2 border-gray-400">
-            <td colspan="5" class="font-bold text-left pl-4">${displayName}</td>
-            <td class="font-bold text-right pr-2">小計：${total.toLocaleString()}</td>
+                return `<tr class="bg-gray-100 border-t-2 border-gray-400">
+            <td colspan="5" class="font-bold text-left pl-4 py-1">${displayName}</td>
+            <td class="font-bold text-right pr-2 py-1">小計：${total.toLocaleString()}</td>
             <td></td>
         </tr>`;
             };
@@ -568,13 +741,13 @@
             const renderItemRow = (item, idx) => {
                 const total = item.qty * item.price;
                 return `<tr>
-            <td class="text-center">${idx}</td>
-            <td>${item.name}</td>
-            <td class="text-center">${item.unit}</td>
-            <td class="text-center">${item.qty}</td>
-            <td class="text-right">${item.price.toLocaleString()}</td>
-            <td class="text-right">${total.toLocaleString()}</td>
-            <td class="text-xs text-gray-500">${item.remark || ''}</td>
+            <td class="text-center py-1">${idx}</td>
+            <td class="py-1 pl-2">${item.name}</td>
+            <td class="text-center py-1">${item.unit}</td>
+            <td class="text-center py-1">${item.qty}</td>
+            <td class="text-right py-1 pr-2">${item.price.toLocaleString()}</td>
+            <td class="text-right py-1 pr-2">${total.toLocaleString()}</td>
+            <td class="text-xs text-gray-500 py-1 pl-1">${item.remark || ''}</td>
         </tr>`;
             };
 
@@ -616,44 +789,39 @@
             });
 
             const grandTotal = subtotal + feesTotal;
-            const clientDisplay = data.customer + (data.taxId ? ` <span
-            class="text-sm font-normal text-gray-600">(${data.taxId})</span>` : '');
+            const clientDisplay = data.customer + (data.taxId ? ` (${data.taxId})` : '');
 
             canvas.innerHTML = `
         <div class="flex justify-between items-start mb-4">
             <div class="w-1/4">
-                <!-- [更新] LOGO size restricted -->
                 <img src="${LOGO_URL}" style="max-height: 80px; max-width: 100%; object-fit: contain;">
             </div>
             <div class="flex-1 text-center relative">
                 <div class="company-title text-3xl mb-1 text-blue-900 font-bold">健益工程有限公司</div>
-                <div
-                    class="doc-title text-xl text-gray-600 font-bold tracking-widest border-b-2 border-gray-400 inline-block px-4 pb-1 mb-2">
+                <div class="doc-title text-xl text-gray-600 font-bold tracking-widest border-b-2 border-gray-400 inline-block px-4 pb-1 mb-2">
                     ${title}</div>
             </div>
-            <div class="w-1/4"></div>
+            <div class="w-1/4 text-right">
+                 <div class="text-xs text-gray-500">日期：${data.date}</div>
+            </div>
         </div>
         
-        <div class="flex justify-end mb-1">
-             <div class="font-bold text-lg text-gray-600 border-b-2 border-gray-400 inline-block leading-none pb-1">${data.date}</div>
-        </div>
-
-        </table>
-
         <table class="info-table mb-4 w-full text-sm border-collapse">
             <tr>
                 <td class="w-24 bg-gray-100 font-bold text-center border p-2">客戶名稱</td>
-                <td class="w-[40%] border p-2">${clientDisplay}</td>
+                <td class="w-[40%] border p-2 font-bold">${clientDisplay}</td>
                 <td class="w-24 bg-gray-100 font-bold text-center border p-2">聯絡人</td>
                 <td class="border p-2">${data.contactPerson}</td>
             </tr>
             <tr>
                 <td class="bg-gray-100 font-bold text-center border p-2">工程名稱</td>
-                <td class="border p-2">${data.projectName}</td>
+                <td class="border p-2 font-bold">${data.projectName}</td>
                 <td class="bg-gray-100 font-bold text-center border p-2">聯絡電話</td>
                 <td class="border p-2">
-                    <div><span class="text-xs text-gray-500">手機：</span>${data.contactPhone}</div>
-                    ${data.tel ? `<div><span class="text-xs text-gray-500">市話：</span>${data.tel}</div>` : ''}
+                    <div class="flex gap-4">
+                        <span>手機：${data.contactPhone}</span>
+                        ${data.tel ? `<span>市話：${data.tel}</span>` : ''}
+                    </div>
                 </td>
             </tr>
         </table>
@@ -675,12 +843,8 @@
 
         <div class="flex justify-between items-end p-2 mt-auto">
             <div class="text-sm text-gray-600">
-                <div class="mb-1"><i class="fa-solid fa-user-tie mr-1"></i>業務專員：<span
-                        class="font-underline font-bold text-black border-b border-black">${data.salesPerson ||
-                '-'}</span></div>
-                <div><i class="fa-solid fa-mobile-screen mr-1"></i>聯絡電話：<span
-                        class="font-underline font-bold text-black border-b border-black">${data.salesMobile ||
-                '-'}</span></div>
+                <div class="mb-1">業務專員：<span class="font-bold text-black border-b border-black px-2">${data.salesPerson || '-'}</span></div>
+                <div>聯絡電話：<span class="font-bold text-black border-b border-black px-2">${data.salesMobile || '-'}</span></div>
                 <div class="mt-2 text-xs text-gray-400">本報價單有效期限為 15 天，逾期請重新詢價。</div>
             </div>
 
@@ -692,16 +856,16 @@
                 ${feesHtml}
                 <div class="flex justify-between border-t-2 border-black font-bold text-lg mt-1 pt-1">
                     <div class="text-blue-900">總計:</div>
-                    <div class="text-blue-900">${grandTotal.toLocaleString()}</div>
+                    <div class="text-blue-900 text-xl">${grandTotal.toLocaleString()}</div>
                 </div>
                 <div class="mt-2 text-right border-t border-gray-300 pt-1 text-sm text-gray-500">
-                    新台幣：<span class="font-bold underline text-md text-black">${toChineseAmt(grandTotal)}</span>
+                    新台幣：<span class="font-bold underline text-md text-black px-1">${toChineseAmt(grandTotal)}</span>
                 </div>
             </div>
         </div>
 
         <div class="mt-4 border-t border-gray-200 pt-2 text-xs text-gray-500">
-            <div>備註：</div>
+            <div class="font-bold mb-1">備註：</div>
             <div class="pl-4 whitespace-pre-wrap font-mono">${data.note}</div>
         </div>
         `;
@@ -760,19 +924,15 @@
                 salesMobile: document.getElementById('salesMobile').value,
                 originId: currentOriginId,
                 lineUser: lineUser,
-
-                // [新增] 傳真與狀態、市話
                 fax: document.getElementById('customerFax').value,
                 tel: document.getElementById('customerTel').value,
                 status: document.getElementById('dealClosed').checked ? 'closed' : 'open',
-                isAddition: document.getElementById('isAddition').checked, // [新增]
-
+                isAddition: document.getElementById('isAddition').checked,
                 items: items,
                 fees: fees,
                 note: document.getElementById('footerNote').value,
-                // 新增計算欄位
                 subtotalNoTax: subtotal,
-                taxAmount: 0, // 目前無稅金計算邏輯，預設為0
+                taxAmount: 0,
                 grandTotal: grandTotal
             };
         }
@@ -780,12 +940,12 @@
         async function submitData() {
             const data = collectData();
             const canvas = document.getElementById('quotation-canvas');
-            const bitmap = await html2canvas(canvas, { scale: 2, useCORS: true });
+            const bitmap = await html2canvas(canvas, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
             data.image = bitmap.toDataURL('image/jpeg', 0.8);
 
             const btn = document.querySelector('#preview-modal button:last-child');
-            const originalText = btn.innerText;
-            btn.innerText = "上傳中...";
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 上傳中...';
             btn.disabled = true;
 
             try {
@@ -804,7 +964,7 @@
             } catch (e) {
                 alert("儲存失敗 (可能是網路問題): " + e.toString());
             } finally {
-                btn.innerText = originalText;
+                btn.innerHTML = originalText;
                 btn.disabled = false;
             }
         }
@@ -845,66 +1005,38 @@
 
         function loadQuoteForEdit(id) {
             if (!id) {
-                // 如果是切換回「建立新單據」，則重整頁面
                 location.reload();
                 return;
             }
-            // Use loose equality (==) in case ID is number vs string
             const p = projectList.find(x => x.id == id);
             if (!p) {
                 alert("找不到該單據資料，請稍後再試。");
                 return;
             }
-            if (id === "") {
-                // 回復到新建模式
-                currentOriginId = null;
-                lineUser = null; // Reset line user
-                document.getElementById('edit-mode-badge').classList.add('hidden');
-                document.getElementById('customer').value = "";
-                document.getElementById('projectName').value = "";
-                document.getElementById('quoteDate').value = "";
-                document.getElementById('contactPerson').value = "";
-                document.getElementById('contactPhone').value = "";
-                document.getElementById('salesMobile').value = "";
-                document.getElementById('footerNote').value = "";
-                document.getElementById('taxId').value = "";
 
-                document.getElementById('internalProjectId').value = "(存檔後自動產生)";
-                const sSelect = document.getElementById('salesPerson');
-                if (sSelect) sSelect.value = "";
-
-                // Reset Addition State
-                document.getElementById('isAddition').checked = false;
-                document.getElementById('isAddition').disabled = true;
-
-                return;
-            }
-
-            // 載入基本資料
+            // Populate Fields
             currentOriginId = p.id.split('-').slice(0, 2).join('-');
             document.getElementById('edit-mode-badge').classList.remove('hidden');
+            document.getElementById('edit-mode-badge').classList.add('inline-flex');
+
             document.getElementById('customer').value = p.customer || "";
             document.getElementById('projectName').value = p.project || "";
             document.getElementById('quoteDate').value = p.date || "";
             if (p.sales) document.getElementById('salesPerson').value = p.sales;
 
-            // 載入詳細/歷史資料
             if (p.json) {
                 try {
                     const data = JSON.parse(p.json);
-
                     document.getElementById('contactPerson').value = data.contactPerson || "";
                     document.getElementById('contactPhone').value = data.contactPhone || "";
                     document.getElementById('salesMobile').value = data.salesMobile || "";
                     document.getElementById('footerNote').value = data.note || "";
                     if (data.taxId) document.getElementById('taxId').value = data.taxId;
-
-                    // [新增] 載入傳真與狀態、市話
                     document.getElementById('customerFax').value = data.fax || (p && p.fax) || "";
                     document.getElementById('customerTel').value = data.tel || "";
                     document.getElementById('dealClosed').checked = (data.status === 'closed' || (p && p.status === 'closed'));
+                    document.getElementById('internalProjectId').value = p.id;
 
-                    // 清空現有項目
                     const container = document.getElementById('items-container');
                     container.innerHTML = '';
 
@@ -920,12 +1052,10 @@
                                 row.querySelector('.input-price').value = item.price;
                                 row.querySelector('.input-remark').value = item.remark || "";
 
-                                // 單位處理
                                 const safeUnit = item.unit || "";
                                 const uSel = row.querySelector('.input-unit-select');
                                 const uCustom = row.querySelector('.input-unit-custom');
 
-                                // 檢查單位是否在清單中
                                 let exists = false;
                                 Array.from(uSel.options).forEach(opt => {
                                     if (opt.value === safeUnit) exists = true;
@@ -942,7 +1072,6 @@
                         });
                     }
 
-                    // 清空並載入費用
                     const feesContainer = document.getElementById('fees-container');
                     feesContainer.innerHTML = '';
                     if (data.fees && data.fees.length > 0) {
@@ -960,9 +1089,8 @@
                     alert("載入細項失敗，JSON格式錯誤: " + e.message);
                 }
             } else {
-                alert("此單據無詳細紀錄(JSON為空)，僅載入基本資料。請確認後端 GAS 是否已更新並部署(需發布新版本)。");
+                alert("此單據無詳細紀錄(JSON為空)，僅載入基本資料。");
             }
-            // Update Addition Checkbox State
             updateAdditionState();
         }
 
@@ -971,19 +1099,12 @@
             if (val.length > 10) val = val.substring(0, 10);
 
             if (val.length === 10 && val.startsWith('09')) {
-                // 手機 09xx-xxx-xxx
                 input.value = `${val.substring(0, 4)}-${val.substring(4, 7)}-${val.substring(7)}`;
             } else if (val.length > 0 && val.startsWith('0')) {
-                // 市話 (簡易規則: 0x-xxxxxxx or 0xx-xxxxxx)
-                if (val.length === 9 || val.length === 10) {
-                    // 猜測區碼 2碼 (02, 03...)
-                    if (val.length === 10 && (val.startsWith('04') || val.startsWith('07') || val.startsWith('02'))) {
-                        input.value = `${val.substring(0, 2)}-${val.substring(2)}`; // 02-xxxxxxxx
-                    } else {
-                        // 簡單加在第3or4位後
-                        if (val.length > 3) input.value = val; // 暫不強制市話複雜格式，主要處理手機
-                    }
-                } else {
+                if (val.length === 10 && (val.startsWith('04') || val.startsWith('07') || val.startsWith('02'))) {
+                    input.value = `${val.substring(0, 2)}-${val.substring(2)}`;
+                } else if (val.length > 3) {
+                    // Default simple format, maybe improve later
                     input.value = val;
                 }
             } else {
@@ -991,34 +1112,9 @@
             }
         }
 
-        async function testConnection() {
-            const btn = event.target.closest('button');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 測試中...';
-            btn.disabled = true;
-            try {
-                const start = Date.now();
-                const res = await fetch(GAS_URL + "?action=ping"); // assumes doGet handles random params or just ignoring return default
-                // 其實 doGet 目前回傳 config，所以任何 GET 都可以通
-                const json = await res.json();
-                const time = Date.now() - start;
-                alert(`連線成功！\n耗時: ${time}ms\n回應: OK`);
-            } catch (e) {
-                alert(`連線失敗！\n錯誤: ${e}`);
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
-        }
-        // [新增] 檢查追加單選項狀態
         function updateAdditionState() {
             const chk = document.getElementById('isAddition');
             const dealClosed = document.getElementById('dealClosed').checked;
-
-            // 規則：只有「原始報價單」且「已成交」時，才可勾選「追加」
-            // 原始報價單 ID 格式: Q-YYYYMMDDxxxx (無英文字尾)
-            // 追加單 ID 格式: Q-YYYYMMDDxxxxA
-            // 若 currentOriginId 為空 (新單)，不開放
 
             if (!currentOriginId) {
                 chk.disabled = true;
@@ -1027,11 +1123,6 @@
                 return;
             }
 
-            // 檢查 ID 是否為原始單
-            // OriginId 通常為 Q-202301010001
-            // 若是追加單 Q-202301010001A
-            const isOriginal = /^[Q-]?\d{8,}\d{3,4}$/.test(currentOriginId) || /^[Q-]?\d{12}$/.test(currentOriginId);
-            // 寬鬆一點：只要沒有 A-Z 結尾
             const hasLetterSuffix = /[A-Z]$/.test(currentOriginId);
 
             if (!hasLetterSuffix && dealClosed) {
@@ -1040,7 +1131,7 @@
             } else {
                 chk.disabled = true;
                 chk.checked = false;
-                if (hasLetterSuffix) chk.parentElement.title = "此單據已是追加單，無法再追加 (請編輯內容視為修訂)";
+                if (hasLetterSuffix) chk.parentElement.title = "此單據已是追加單，無法再追加";
                 else if (!dealClosed) chk.parentElement.title = "需先將原始單據標記為「已成交」才可製作追加單";
             }
         }
