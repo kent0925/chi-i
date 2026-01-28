@@ -849,7 +849,7 @@
                     <img src="${LOGO_URL}" style="max-height: 100px; max-width: 100%; object-fit: contain;">
                 </div>
                 <div class="flex-1 text-center relative">
-                    <div class="company-title text-3xl mb-1 text-blue-900 font-bold tracking-wide">健益工程有限公司</div>
+                    <div class="company-title text-3xl mb-1 text-blue-900 font-bold tracking-wide whitespace-nowrap">健益工程有限公司</div>
                     <div class="doc-title text-xl text-gray-600 font-bold tracking-[0.5em] border-b-2 border-gray-400 inline-block px-6 pb-1">
                         ${title}</div>
                 </div>
@@ -870,7 +870,7 @@
                     <td class="border border-gray-300 p-2 font-bold align-middle text-lg">${data.projectName}</td>
                     <td class="bg-gray-100 font-bold text-center border border-gray-300 p-2 align-middle text-gray-700">聯絡電話</td>
                     <td class="border border-gray-300 p-2 align-middle">
-                        <div class="flex gap-4 items-center">
+                        <div class="flex flex-col gap-1 items-start">
                             <span>手機：${data.contactPhone}</span>
                             ${data.tel ? `<span>市話：${data.tel}</span>` : ''}
                         </div>
