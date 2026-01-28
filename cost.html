@@ -1083,9 +1083,9 @@
 
             const payload = {
                 type: 'cost',
-                projectId: document.getElementById('projectSelect').value,
+                project: document.getElementById('projectSelect').value, // Use combined string for subfolder logic
                 customer: document.getElementById('customer').value,
-                projectName: document.getElementById('projectName').value,
+                projectName: document.getElementById('projectName').value, // Keep original for backend save to sheet if needed
                 salesPerson: document.getElementById('costSalesPerson').value,
                 salesMobile: document.getElementById('costSalesPerson').dataset.mobile || "",
                 worker: getPersons('worker'),

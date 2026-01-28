@@ -16,18 +16,34 @@
             font-family: 'Noto Sans TC', sans-serif;
             background-color: #f3f4f6;
         }
+
+        .tab-btn.active {
+            background-color: white;
+            color: #ea580c;
+            /* orange-600 */
+            border-bottom: 2px solid #ea580c;
+        }
+
+        .tab-btn {
+            color: #6b7280;
+            /* gray-500 */
+            border-bottom: 2px solid transparent;
+        }
     </style>
 </head>
 
 <body class="bg-gradient-to-br from-slate-100 to-gray-200 min-h-screen p-4 md:p-8 font-sans text-gray-700">
     <div
         class="max-w-5xl mx-auto bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-white/50">
+
+        <!-- Header -->
         <div
-            class="bg-gradient-to-r from-orange-700 to-amber-700 p-6 text-white flex justify-between items-center shadow-md relative overflow-hidden">
+            class="bg-gradient-to-r from-orange-700 to-amber-700 p-6 text-white flex flex-col md:flex-row justify-between items-center shadow-md relative overflow-hidden gap-4">
             <div
                 class="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 pointer-events-none">
             </div>
-            <div class="flex items-center gap-4 relative z-10">
+
+            <div class="flex items-center gap-4 relative z-10 w-full md:w-auto">
                 <div class="bg-white/10 p-2 rounded-lg backdrop-blur-sm">
                     <i class="fa-solid fa-coins text-2xl"></i>
                 </div>
@@ -37,166 +53,693 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-3 relative z-10">
-                <!-- LIFF Profile -->
-                <div id="liff-profile"
-                    class="hidden flex items-center gap-2 bg-white/10 p-1.5 pr-3 rounded-full backdrop-blur-sm border border-white/20">
-                    <img id="liff-picture" src="" alt="Profile" class="w-8 h-8 rounded-full border border-white/50">
-                    <div class="flex flex-col">
-                        <span id="liff-name" class="text-xs font-bold text-white">Loading</span>
-                    </div>
-                </div>
+            <!-- Tab Navigation -->
+            <div class="flex space-x-1 relative z-10 bg-black/20 p-1 rounded-lg">
+                <button onclick="switchTab('receivable')" id="t-receivable"
+                    class="px-4 py-2 text-sm font-bold rounded-md transition-all bg-white text-orange-700 shadow-sm">
+                    客戶應收
+                </button>
+                <button onclick="switchTab('payable')" id="t-payable"
+                    class="px-4 py-2 text-sm font-bold rounded-md transition-all text-white/70 hover:bg-white/10">
+                    廠商應付
+                </button>
+                <button onclick="switchTab('bonus')" id="t-bonus"
+                    class="px-4 py-2 text-sm font-bold rounded-md transition-all text-white/70 hover:bg-white/10">
+                    獎金分配
+                </button>
+            </div>
 
+            <div class="flex items-center gap-3 relative z-10 hidden md:flex">
                 <button onclick="location.href='index.html'"
-                    class="text-sm bg-white/10 border border-white/20 px-4 py-2 rounded-full hover:bg-white/20 transition-all flex items-center gap-2 backdrop-blur-sm shadow-sm group">
-                    <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
-                    返回主選單
+                    class="text-sm bg-white/10 border border-white/20 px-3 py-1.5 rounded-full hover:bg-white/20 transition-all flex items-center gap-2 backdrop-blur-sm shadow-sm group">
+                    <i class="fa-solid fa-arrow-left"></i>
                 </button>
             </div>
         </div>
 
-        <div class="p-6">
-            <!-- 客戶/摘要 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div class="md:col-span-2 bg-orange-50 p-3 rounded-md border border-orange-100">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        對象名稱 <span class="text-xs text-orange-500 font-normal ml-2">(可輸入統編8碼自動帶入)</span>
-                    </label>
-                    <div class="flex gap-2 mb-2 items-center">
-                        <div class="w-1/3 relative">
-                            <input type="text" id="taxId" class="w-full border border-gray-300 rounded-md p-2 text-sm"
-                                placeholder="統編(選填)" oninput="checkTaxId(this)">
-                        </div>
-                        <button onclick="lookupCompany()"
-                            class="bg-orange-600 text-white px-3 py-1 rounded-md text-xs h-9">查詢</button>
-                        <input type="text" id="customer" class="flex-1 border border-gray-300 rounded-md p-2"
-                            placeholder="輸入名稱">
+        <div class="p-6" id="main-content">
+
+            <!-- Global Info (Project Selection) -->
+            <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">選擇專案/工程</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="projectSelect"
+                            class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" list="project-list"
+                            placeholder="輸入或選擇專案..." onchange="loadProjectInfo(this.value)">
+                        <datalist id="project-list"></datalist>
+                        <button onclick="loadProjectInfo(document.getElementById('projectSelect').value)"
+                            class="bg-gray-100 text-gray-600 px-3 rounded-lg border border-gray-200 hover:bg-gray-200"><i
+                                class="fa-solid fa-rotate"></i></button>
                     </div>
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">帳務說明/摘要</label>
-                    <input type="text" id="summary" class="w-full border border-gray-300 rounded-md p-2 text-sm"
-                        placeholder="例如：11月份請款、辦公室雜支...">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">日期</label>
-                    <input type="date" id="accDate" class="w-full border border-gray-300 rounded-md p-2 text-sm">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">金額</label>
-                    <input type="number" id="accAmount" class="w-full border border-gray-300 rounded-md p-2 text-sm"
-                        placeholder="0">
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">單編ID (內控碼)</label>
-                    <input type="text" id="internalId"
-                        class="w-full border border-gray-300 rounded p-2 text-sm bg-gray-100 text-gray-400 italic"
-                        value="(存檔後自動產生)" readonly>
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">備註</label>
-                    <textarea id="accNote" class="w-full border border-gray-300 rounded-md p-2 text-sm h-20"
-                        placeholder="額外註記..."></textarea>
+                    <input type="date" id="accDate" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm">
                 </div>
             </div>
 
+            <hr class="border-gray-100 mb-6">
+
+            <!-- SECTION: RECEIVABLE (客戶應收) -->
+            <div id="sec-receivable" class="space-y-6">
+                <div class="bg-orange-50 p-4 rounded-xl border border-orange-100">
+                    <h3 class="font-bold text-orange-800 mb-3 flex items-center gap-2"><i
+                            class="fa-solid fa-file-invoice-dollar"></i> 應收帳款資訊</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="bg-white p-3 rounded-lg shadow-sm border border-orange-200">
+                            <span class="text-xs text-gray-500 block">專案應收總額 (含追加)</span>
+                            <span class="text-xl font-bold text-gray-800" id="rec-total">$0</span>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg shadow-sm border border-emerald-200">
+                            <span class="text-xs text-gray-500 block">已收金額</span>
+                            <span class="text-xl font-bold text-emerald-600" id="rec-total-paid">$0</span>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg shadow-sm border border-red-200">
+                            <span class="text-xs text-gray-500 block">未收餘額</span>
+                            <span class="text-xl font-bold text-red-600" id="rec-balance">$0</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">本次收款方式</label>
+                        <div class="flex gap-4">
+                            <label
+                                class="flex items-center cursor-pointer bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm hover:border-orange-400 has-[:checked]:border-orange-500 has-[:checked]:ring-1 has-[:checked]:ring-orange-500">
+                                <input type="radio" name="recMethod" value="remit"
+                                    class="text-orange-600 focus:ring-orange-500" checked onchange="toggleRecMethod()">
+                                <span class="ml-2 font-bold text-sm">銀行匯款</span>
+                            </label>
+                            <label
+                                class="flex items-center cursor-pointer bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm hover:border-orange-400 has-[:checked]:border-orange-500 has-[:checked]:ring-1 has-[:checked]:ring-orange-500">
+                                <input type="radio" name="recMethod" value="check"
+                                    class="text-orange-600 focus:ring-orange-500" onchange="toggleRecMethod()">
+                                <span class="ml-2 font-bold text-sm">票據 (支票/客票)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Remittance Form -->
+                    <div id="rec-remit-block" class="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">匯款銀行 (輸入代碼)</label>
+                            <div class="relative">
+                                <input type="text" id="rec-bank-code"
+                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="代碼"
+                                    oninput="lookupBank(this, 'rec-bank-name')">
+                                <span class="absolute right-3 top-2.5 text-gray-400 text-xs" id="rec-bank-name"></span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">匯款戶名</label>
+                            <input type="text" id="rec-acc-name"
+                                class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="戶名">
+                        </div>
+                    </div>
+
+                    <!-- Check Form -->
+                    <div id="rec-check-block" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">票據號碼</label>
+                            <input type="text" id="rec-check-no"
+                                class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="Check No.">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">兌現日期</label>
+                            <div class="flex gap-2">
+                                <input type="date" id="rec-check-date"
+                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm">
+                                <button onclick="addToCalendar()"
+                                    class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-blue-700 whitespace-nowrap"
+                                    title="加入行事曆 (+1天)"><i class="fa-regular fa-calendar-plus"></i></button>
+                            </div>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-gray-500 mb-1">存入銀行 (輸入代碼)</label>
+                            <div class="relative">
+                                <input type="text" id="rec-deposit-bank"
+                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="代碼"
+                                    oninput="lookupBank(this, 'rec-deposit-bank-name')">
+                                <span class="absolute right-3 top-2.5 text-gray-400 text-xs"
+                                    id="rec-deposit-bank-name"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">本次收款金額</label>
+                        <input type="number" id="rec-amount"
+                            class="w-full border border-orange-200 rounded-lg p-3 text-lg font-bold text-orange-600 focus:ring-2 focus:ring-orange-500"
+                            placeholder="0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: PAYABLE (廠商應付) -->
+            <div id="sec-payable" class="hidden space-y-6">
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2"><i
+                            class="fa-solid fa-money-bill-transfer"></i> 應付帳款資訊</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">廠商名稱</label>
+                            <input type="text" id="pay-vendor"
+                                class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" list="vendor-list"
+                                placeholder="選擇或輸入廠商">
+                            <datalist id="vendor-list"></datalist>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">匯款日期</label>
+                            <input type="date" id="pay-date"
+                                class="w-full border border-gray-300 rounded-lg p-2.5 text-sm">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">匯款銀行 (代碼)</label>
+                            <div class="relative">
+                                <input type="text" id="pay-bank-code"
+                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="代碼"
+                                    oninput="lookupBank(this, 'pay-bank-name')">
+                                <span class="absolute right-3 top-2.5 text-gray-400 text-xs" id="pay-bank-name"></span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">銀行帳號</label>
+                            <input type="text" id="pay-acc-no"
+                                class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="帳號">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">戶名</label>
+                            <input type="text" id="pay-acc-name"
+                                class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="戶名">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-gray-500 mb-1">參照成本發票 (比對)</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="pay-inv-no"
+                                class="flex-1 border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="輸入發票號碼..."
+                                onblur="validateInvoice()">
+                            <button onclick="validateInvoice()"
+                                class="bg-gray-100 px-3 rounded-lg text-sm border hover:bg-gray-200">檢查</button>
+                        </div>
+                        <div id="inv-validation-msg" class="mt-1 text-xs h-5"></div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 mb-1">本次付款金額</label>
+                        <input type="number" id="pay-amount"
+                            class="w-full border border-blue-200 rounded-lg p-3 text-lg font-bold text-blue-600 focus:ring-2 focus:ring-blue-500"
+                            placeholder="0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: BONUS (獎金分配) -->
+            <div id="sec-bonus" class="hidden space-y-6">
+                <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-200">
+                    <h3 class="font-bold text-yellow-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-gift"></i>
+                        專案利潤分配試算</h3>
+
+                    <!-- Rule Description -->
+                    <div class="bg-yellow-100 p-3 rounded-lg text-xs text-yellow-800 mb-4 space-y-1">
+                        <p class="font-bold">分配規則：</p>
+                        <p>1. 業務 25%、工務 25%、採購 15%、公司保留 35%。</p>
+                        <p>2. 若無工務，其比例由其他三方均分；若無採購，由其他三方均分。</p>
+                        <p>3. 若無工務且無採購 (僅業務)，則業務 50%、公司 50%。</p>
+                        <p>4. 各組獲利依該組人數平均分配。</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 text-center">
+                        <div class="bg-white p-3 rounded-lg border border-yellow-100">
+                            <span class="text-xs text-gray-500 block">專案應收未稅</span>
+                            <span class="text-lg font-bold text-gray-800" id="bonus-rec">$0</span>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-yellow-100">
+                            <span class="text-xs text-gray-500 block">專案應付未稅</span>
+                            <span class="text-lg font-bold text-gray-800" id="bonus-pay">$0</span>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-yellow-300 ring-2 ring-yellow-100">
+                            <span class="text-xs text-gray-500 block">專案毛利 (未稅)</span>
+                            <span class="text-xl font-bold text-yellow-600" id="bonus-profit">$0</span>
+                        </div>
+                    </div>
+
+                    <!-- Company Share Display -->
+                    <div class="mb-4 bg-white/50 p-2 rounded-lg text-center">
+                        <span class="text-xs font-bold text-gray-500">公司獲利分配: </span>
+                        <span class="text-sm font-bold text-gray-700" id="bonus-company-share">0%</span>
+                        <span class="text-sm font-bold text-yellow-700 ml-2" id="bonus-company-amt">$0</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Sales -->
+                        <div class="bg-white p-3 rounded-xl border border-blue-100 relative">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="text-xs font-bold text-blue-600 uppercase">業務人員</label>
+                                <span class="text-[10px] text-gray-400" id="share-pct-sales">25%</span>
+                            </div>
+                            <div id="list-sales" class="space-y-2"></div>
+                            <button onclick="addPersonRow('sales')"
+                                class="w-full mt-2 py-1 text-center text-xs text-blue-400 hover:bg-blue-50 rounded border border-dashed border-blue-200"><i
+                                    class="fa-solid fa-plus mr-1"></i>新增業務</button>
+                            <div class="mt-2 pt-2 border-t border-gray-100 text-right">
+                                <span class="text-xs text-gray-400">每人: </span>
+                                <span class="text-sm font-bold text-blue-600" id="per-sales">$0</span>
+                            </div>
+                        </div>
+
+                        <!-- Worker -->
+                        <div class="bg-white p-3 rounded-xl border border-emerald-100 relative">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="text-xs font-bold text-emerald-600 uppercase">工務人員</label>
+                                <span class="text-[10px] text-gray-400" id="share-pct-worker">25%</span>
+                            </div>
+                            <div id="list-worker" class="space-y-2"></div>
+                            <button onclick="addPersonRow('worker')"
+                                class="w-full mt-2 py-1 text-center text-xs text-emerald-400 hover:bg-emerald-50 rounded border border-dashed border-emerald-200"><i
+                                    class="fa-solid fa-plus mr-1"></i>新增工務</button>
+                            <div class="mt-2 pt-2 border-t border-gray-100 text-right">
+                                <span class="text-xs text-gray-400">每人: </span>
+                                <span class="text-sm font-bold text-emerald-600" id="per-worker">$0</span>
+                            </div>
+                        </div>
+
+                        <!-- Buyer -->
+                        <div class="bg-white p-3 rounded-xl border border-purple-100 relative">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="text-xs font-bold text-purple-600 uppercase">採購人員</label>
+                                <span class="text-[10px] text-gray-400" id="share-pct-buyer">15%</span>
+                            </div>
+                            <div id="list-buyer" class="space-y-2"></div>
+                            <button onclick="addPersonRow('buyer')"
+                                class="w-full mt-2 py-1 text-center text-xs text-purple-400 hover:bg-purple-50 rounded border border-dashed border-purple-200"><i
+                                    class="fa-solid fa-plus mr-1"></i>新增採購</button>
+                            <div class="mt-2 pt-2 border-t border-gray-100 text-right">
+                                <span class="text-xs text-gray-400">每人: </span>
+                                <span class="text-sm font-bold text-purple-600" id="per-buyer">$0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">備註 / 說明</label>
+                <textarea id="accNote" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm h-20"
+                    placeholder="輸入備註..."></textarea>
+            </div>
+
             <button onclick="submitAccData()"
-                class="w-full bg-orange-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-orange-700 transition">
-                儲存帳務紀錄
+                class="w-full mt-6 bg-gradient-to-r from-orange-600 to-amber-600 text-white font-bold py-4 rounded-xl shadow-lg hover:from-orange-700 hover:to-amber-700 transition transform active:scale-95">
+                <i class="fa-solid fa-cloud-arrow-up mr-2"></i>儲存單據
             </button>
         </div>
     </div>
 
-    <script>
-        const LIFF_ID = '2008974069-Ecojk6W1'; // 已設定
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxrXo9AcczzlIazBPTqxZij7CVAcqcXtbbpGJMKQ4RoEFRp8JsTtjLZw1R6xZwwvnnt/exec'; // 已修正
-        let lineUser = null;
+    <!-- Hidden Canvas for Screenshot -->
+    <div id="acc-canvas-container" class="fixed -left-[2000px] top-0 bg-white p-8 w-[800px]">
+        <!-- Will be populated dynamically -->
+    </div>
 
-        window.onload = function () {
+    <script>
+        const LIFF_ID = '2008974069-Ecojk6W1';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxrXo9AcczzlIazBPTqxZij7CVAcqcXtbbpGJMKQ4RoEFRp8JsTtjLZw1R6xZwwvnnt/exec';
+        let lineUser = null;
+        let currentTab = 'receivable';
+        let bankList = [];
+        let projectFinancials = null;
+        let selectedCustomer = "";
+
+        window.onload = async function () {
             initializeLiff();
             document.getElementById('accDate').value = new Date().toISOString().split('T')[0];
+
+            // Populate Projects
+            try {
+                const res = await fetch(GAS_URL);
+                const config = await res.json();
+                const list = document.getElementById('project-list');
+                if (config.projectList) {
+                    config.projectList.forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p;
+                        list.appendChild(opt);
+                    });
+                }
+            } catch (e) { console.error("Load projects error", e); }
+
+            await loadBanks();
+            document.getElementById('projectSelect').focus();
         };
 
+        function switchTab(tab) {
+            currentTab = tab;
+            // UI Update
+            ['receivable', 'payable', 'bonus'].forEach(t => {
+                const btn = document.getElementById('t-' + t);
+                const sec = document.getElementById('sec-' + t);
+
+                if (t === tab) {
+                    btn.classList.add('bg-white', 'text-orange-700', 'shadow-sm');
+                    btn.classList.remove('text-white/70', 'hover:bg-white/10');
+                    sec.classList.remove('hidden');
+                } else {
+                    btn.classList.remove('bg-white', 'text-orange-700', 'shadow-sm');
+                    btn.classList.add('text-white/70', 'hover:bg-white/10');
+                    sec.classList.add('hidden');
+                }
+            });
+        }
+
+        function toggleRecMethod() {
+            const method = document.querySelector('input[name="recMethod"]:checked').value;
+            if (method === 'remit') {
+                document.getElementById('rec-remit-block').classList.remove('hidden');
+                document.getElementById('rec-check-block').classList.add('hidden');
+            } else {
+                document.getElementById('rec-remit-block').classList.add('hidden');
+                document.getElementById('rec-check-block').classList.remove('hidden');
+            }
+        }
+
+        async function loadBanks() {
+            try {
+                const res = await fetch(`${GAS_URL}?action=getBanks`);
+                bankList = await res.json();
+            } catch (e) { console.error("Banks load error", e); }
+        }
+
+        function lookupBank(input, outputId) {
+            const code = input.value;
+            const bank = bankList.find(b => b.code === code);
+            const output = document.getElementById(outputId);
+            if (bank) {
+                output.innerText = bank.name;
+                output.classList.remove('text-red-500');
+                output.classList.add('text-gray-400');
+            } else {
+                output.innerText = "查無";
+                output.classList.add('text-red-500');
+            }
+        }
+
+        async function loadProjectInfo(pid) {
+            if (!pid) return;
+            // Show Loading?
+            try {
+                const res = await fetch(`${GAS_URL}?action=getProjectFinancials&projectId=${encodeURIComponent(pid)}`);
+                const data = await res.json();
+                projectFinancials = data;
+                selectedCustomer = data.customer || "";
+
+                // Update UI
+                // Receivable
+                document.getElementById('rec-total').innerText = '$' + (data.receivable || 0).toLocaleString();
+                // Balance calc would need paid history, currently simulating
+                document.getElementById('rec-total-paid').innerText = '$0';
+                document.getElementById('rec-balance').innerText = '$' + (data.receivable || 0).toLocaleString();
+
+                // Bonus
+                document.getElementById('bonus-rec').innerText = (data.receivable || 0).toLocaleString();
+                document.getElementById('bonus-pay').innerText = (data.payable || 0).toLocaleString();
+                const gross = (data.receivable || 0) - (data.payable || 0);
+                document.getElementById('bonus-profit').innerText = gross.toLocaleString();
+
+                // Clear and add sales
+                document.getElementById('list-sales').innerHTML = "";
+                document.getElementById('list-worker').innerHTML = "";
+                document.getElementById('list-buyer').innerHTML = "";
+                if (data.sales) addPersonRow('sales', data.sales);
+
+                calcBonus();
+
+            } catch (e) { console.error("Fin data error", e); }
+        }
+
+        function validateInvoice() {
+            const no = document.getElementById('pay-inv-no').value;
+            const msg = document.getElementById('inv-validation-msg');
+            if (!projectFinancials || !projectFinancials.invoices) {
+                msg.innerText = "無專案資料可比對";
+                return;
+            }
+
+            const inv = projectFinancials.invoices.find(i => i.no === no);
+            if (inv) {
+                msg.innerHTML = `<span class='text-emerald-600 font-bold'><i class='fa-solid fa-check'></i> 驗證成功: ${inv.vendor} $${inv.amount}</span> <a href='${inv.url}' target='_blank' class='text-blue-500 underline ml-2'>查看</a>`;
+            } else {
+                msg.innerHTML = `<span class='text-red-500 font-bold'><i class='fa-solid fa-xmark'></i> 查無此發票於成本紀錄</span>`;
+            }
+        }
+
+        function addPersonRow(type, name = "") {
+            const list = document.getElementById('list-' + type);
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-2';
+            div.innerHTML = `
+                <input type="text" class="flex-1 border border-gray-300 rounded-lg p-1.5 text-sm bonus-p-${type}" placeholder="姓名" value="${name}" oninput="calcBonus()">
+                <button onclick="this.parentElement.remove();calcBonus()" class="text-gray-400 hover:text-red-600 px-1"><i class="fa-solid fa-times"></i></button>
+            `;
+            list.appendChild(div);
+            calcBonus();
+        }
+
+        function calcBonus() {
+            const grossText = document.getElementById('bonus-profit').innerText.replace(/,/g, '');
+            const gross = parseFloat(grossText) || 0;
+
+            // Counts
+            const cSales = document.querySelectorAll('.bonus-p-sales').length;
+            const cWorker = document.querySelectorAll('.bonus-p-worker').length;
+            const cBuyer = document.querySelectorAll('.bonus-p-buyer').length;
+
+            // Base Ratios (Rule 1)
+            // Sales 25%, Worker 25%, Buyer 15%, Company 10% + 25%(保留) = 35%
+            let rSales = 25;
+            let rWorker = 25;
+            let rBuyer = 15;
+            let rCompany = 35;
+
+            const hasSales = cSales > 0;
+            const hasWorker = cWorker > 0;
+            const hasBuyer = cBuyer > 0;
+
+            // Rule 3: Only Sales (No Worker AND No Buyer) -> 50/50
+            if (!hasWorker && !hasBuyer) {
+                rSales = 50;
+                rWorker = 0;
+                rBuyer = 0;
+                rCompany = 50;
+            } else {
+                // Rule 2 & 4: Distribute missing shares evenly
+                let extraForSales = 0;
+                let extraForWorker = 0;
+                let extraForBuyer = 0;
+                let extraForCompany = 0;
+
+                // Case: No Worker (-25%)
+                if (!hasWorker) {
+                    const pool = 25;
+                    rWorker = 0;
+                    const recipients = [];
+                    if (hasSales) recipients.push('sales');
+                    if (hasBuyer) recipients.push('buyer');
+                    recipients.push('company'); // Company always exists
+
+                    const chunk = pool / recipients.length;
+                    if (recipients.includes('sales')) extraForSales += chunk;
+                    if (recipients.includes('buyer')) extraForBuyer += chunk;
+                    extraForCompany += chunk;
+                }
+
+                // Case: No Buyer (-15%)
+                if (!hasBuyer) {
+                    const pool = 15;
+                    rBuyer = 0;
+                    const recipients = [];
+                    if (hasSales) recipients.push('sales');
+                    if (hasWorker && cWorker > 0) recipients.push('worker');
+                    recipients.push('company');
+
+                    const chunk = pool / recipients.length;
+                    if (recipients.includes('sales')) extraForSales += chunk;
+                    if (recipients.includes('worker')) extraForWorker += chunk;
+                    extraForCompany += chunk;
+                }
+
+                rSales += extraForSales;
+                rWorker += extraForWorker;
+                rBuyer += extraForBuyer;
+                rCompany += extraForCompany;
+            }
+
+            // Update Display Percentages
+            document.getElementById('share-pct-sales').innerText = rSales.toFixed(1) + '%';
+            document.getElementById('share-pct-worker').innerText = rWorker.toFixed(1) + '%';
+            document.getElementById('share-pct-buyer').innerText = rBuyer.toFixed(1) + '%';
+            document.getElementById('bonus-company-share').innerText = rCompany.toFixed(1) + '%';
+
+            // Calculate Amounts
+            const amtSales = Math.floor(gross * (rSales / 100));
+            const amtWorker = Math.floor(gross * (rWorker / 100));
+            const amtBuyer = Math.floor(gross * (rBuyer / 100));
+            const amtCompany = Math.floor(gross * (rCompany / 100));
+
+            document.getElementById('bonus-company-amt').innerText = '$' + amtCompany.toLocaleString();
+
+            // Per Person (Rule 4)
+            const perSales = cSales > 0 ? Math.floor(amtSales / cSales) : 0;
+            const perWorker = cWorker > 0 ? Math.floor(amtWorker / cWorker) : 0;
+            const perBuyer = cBuyer > 0 ? Math.floor(amtBuyer / cBuyer) : 0;
+
+            document.getElementById('per-sales').innerText = '$' + perSales.toLocaleString();
+            document.getElementById('per-worker').innerText = '$' + perWorker.toLocaleString();
+            document.getElementById('per-buyer').innerText = '$' + perBuyer.toLocaleString();
+        }
+
+        function addToCalendar() {
+            const d = document.getElementById('rec-check-date').value;
+            if (!d) return alert("請先輸入兌現日期");
+
+            const dateObj = new Date(d);
+            dateObj.setDate(dateObj.getDate() + 1); // +1 Day
+            const nextDay = dateObj.toISOString().split('T')[0].replace(/-/g, '');
+
+            const title = "票據兌現提醒: " + document.getElementById('projectSelect').value;
+            const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${nextDay}/${nextDay}`;
+            window.open(url, '_blank');
+        }
+
         async function initializeLiff() {
-            if (LIFF_ID === 'YOUR_LIFF_ID') return console.warn('LIFF ID 未設定');
+            if (LIFF_ID === 'YOUR_LIFF_ID') return;
             try {
                 await liff.init({ liffId: LIFF_ID });
                 if (liff.isLoggedIn()) {
                     const profile = await liff.getProfile();
                     lineUser = profile;
-                    document.getElementById('liff-profile').classList.remove('hidden');
-                    document.getElementById('liff-picture').src = profile.pictureUrl;
-                    document.getElementById('liff-name').innerText = profile.displayName;
-                } else {
-                    liff.login();
-                }
-            } catch (e) {
-                console.error('LIFF Init Error', e);
-            }
-        }
-
-        async function lookupCompany() {
-            const taxId = document.getElementById('taxId').value;
-            if (taxId.length !== 8) return alert("請輸入8碼統編");
-            try {
-                const res = await fetch(`${GAS_URL}?action=lookup&taxId=${taxId}`);
-                const data = await res.json();
-                if (data.name) {
-                    document.getElementById('customer').value = data.name;
-                } else if (data.error) {
-                    console.warn("統編查詢提示:", data.error);
-                }
-            } catch (e) {
-                console.error("統編查詢失敗:", e);
-            }
-        }
-
-        function checkTaxId(input) {
-            input.value = input.value.replace(/\D/g, '');
+                } else { liff.login(); }
+            } catch (e) { }
         }
 
         async function submitAccData() {
-            const data = {
+            // Validate basic
+            const project = document.getElementById('projectSelect').value;
+            if (!project) return alert("請選擇專案");
+
+            // Build Data
+            const baseData = {
                 type: 'accounting',
+                accType: currentTab,
                 date: document.getElementById('accDate').value,
-                customer: document.getElementById('customer').value,
-                project: document.getElementById('summary').value,
-                grandTotal: parseFloat(document.getElementById('accAmount').value) || 0,
-                note: document.getElementById('accNote').value
+                project: project,
+                note: document.getElementById('accNote').value,
+                lineUser: lineUser
             };
 
-            const btn = document.querySelector('button[onclick="submitAccData()"]');
-            btn.innerText = "處理中...";
-            btn.disabled = true;
+            if (currentTab === 'receivable') {
+                const method = document.querySelector('input[name="recMethod"]:checked').value;
+                baseData.customer = selectedCustomer || "專案收款";
+                baseData.grandTotal = document.getElementById('rec-amount').value;
+                baseData.subType = method;
+                if (method === 'remit') {
+                    baseData.bankCode = document.getElementById('rec-bank-code').value;
+                    baseData.accName = document.getElementById('rec-acc-name').value;
+                } else {
+                    baseData.checkNo = document.getElementById('rec-check-no').value;
+                    baseData.cashDate = document.getElementById('rec-check-date').value;
+                    baseData.bankCode = document.getElementById('rec-deposit-bank').value;
+                }
+            } else if (currentTab === 'payable') {
+                baseData.customer = document.getElementById('pay-vendor').value; // Vendor
+                baseData.grandTotal = document.getElementById('pay-amount').value;
+                baseData.bankCode = document.getElementById('pay-bank-code').value;
+                baseData.bankAcc = document.getElementById('pay-acc-no').value;
+                baseData.accName = document.getElementById('pay-acc-name').value;
+                baseData.targetInvNo = document.getElementById('pay-inv-no').value;
+            } else if (currentTab === 'bonus') {
+                baseData.customer = "內部";
+                const profitText = document.getElementById('bonus-profit').innerText.replace(/,/g, '');
+                baseData.grandTotal = parseFloat(profitText) || 0;
 
-            // Generate Image
-            try {
-                const captureElement = document.querySelector('.max-w-5xl'); // Capture the main card
-                const canvas = await html2canvas(captureElement, { scale: 1.5, useCORS: true, backgroundColor: '#f3f4f6' }); // Match bg color
-                data.image = canvas.toDataURL('image/jpeg', 0.8);
-            } catch (err) {
-                console.error("Image generation failed", err);
-                // Proceed without image if failed, or maybe alert? User requested image feature, so warning is good.
-                // data.image will be undefined, backend handles it gracefully (just skips save).
+                // Collect detailed list
+                const salesList = Array.from(document.querySelectorAll('.bonus-p-sales')).map(i => i.value).filter(v => v).join(',');
+                const workerList = Array.from(document.querySelectorAll('.bonus-p-worker')).map(i => i.value).filter(v => v).join(',');
+                const buyerList = Array.from(document.querySelectorAll('.bonus-p-buyer')).map(i => i.value).filter(v => v).join(',');
+                const companyAmt = document.getElementById('bonus-company-amt').innerText;
+                const profit = document.getElementById('bonus-profit').innerText;
+
+                baseData.note += ` [利潤:${profit}] 公司:${companyAmt} 業務:${salesList} 工務:${workerList} 採購:${buyerList}`;
             }
 
-            // const btn = document.querySelector('button[onclick="submitAccData()"]'); // Removed duplicate
-            btn.innerText = "儲存中...";
-            btn.disabled = true;
+            // Generate Screenshot
+            // We can render a nice card in #acc-canvas-container and snap it
+            await generateScreenshot(baseData);
 
+            // Submit
             try {
                 const res = await fetch(GAS_URL, {
                     method: 'POST',
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(baseData),
+                    mode: 'no-cors'
                 });
-                const result = await res.json();
-                if (result.status === 'success') {
-                    alert("儲存成功！單號: " + result.id);
-                    location.reload();
-                } else { alert("失敗: " + result.message); }
-            } catch (e) { alert("錯誤: " + e.toString()); }
-            btn.innerText = "儲存帳務紀錄";
-            btn.disabled = false;
+                alert("儲存成功");
+                location.reload();
+            } catch (e) { alert("Error: " + e); }
+        }
+
+        async function generateScreenshot(data) {
+            const div = document.getElementById('acc-canvas-container');
+            div.innerHTML = `
+                <div class="border-2 border-gray-800 p-8 rounded-xl bg-white relative overflow-hidden">
+                    <div class="flex justify-between items-end border-b-2 border-gray-800 pb-4 mb-6">
+                        <div>
+                            <h1 class="text-3xl font-black text-gray-900 tracking-wider">會計憑證</h1>
+                            <p class="text-gray-500 font-bold mt-1">${data.project}</p>
+                        </div>
+                        <div class="text-right">
+                             <div class="text-sm font-bold text-gray-400">DATE</div>
+                             <div class="text-xl font-bold font-mono">${data.date}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4 mb-8">
+                        <div class="flex justify-between">
+                            <span class="text-gray-500 font-bold">類別</span>
+                            <span class="font-bold text-lg">${data.accType.toUpperCase()}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500 font-bold">對象/項目</span>
+                            <span class="font-bold text-lg">${data.customer}</span>
+                        </div>
+                        ${data.bankCode ? `
+                        <div class="flex justify-between">
+                             <span class="text-gray-500 font-bold">銀行代碼</span>
+                             <span class="font-mono font-bold">${data.bankCode}</span>
+                        </div>` : ''}
+                        ${data.checkNo ? `
+                        <div class="flex justify-between">
+                             <span class="text-gray-500 font-bold">票據號碼</span>
+                             <span class="font-mono font-bold">${data.checkNo}</span>
+                        </div>` : ''}
+                         <div class="flex justify-between pt-4 border-t border-dashed border-gray-300">
+                             <span class="text-gray-900 font-bold text-xl">交易金額</span>
+                             <span class="font-mono font-black text-3xl text-gray-900">$${parseInt(data.grandTotal || 0).toLocaleString()}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="text-xs text-center text-gray-400 font-mono tracking-widest mt-8">
+                        GENERATED BY ERP SYSTEM
+                    </div>
+                </div>
+             `;
+
+            const canvas = await html2canvas(div, { scale: 2 });
+            data.image = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
         }
     </script>
 </body>
