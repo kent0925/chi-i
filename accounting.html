@@ -371,9 +371,6 @@
                                 <span class="text-[10px] text-gray-400" id="share-pct-sales">25%</span>
                             </div>
                             <div id="list-sales" class="space-y-2"></div>
-                            <button onclick="addPersonRow('sales')"
-                                class="w-full mt-2 py-1 text-center text-xs text-blue-400 hover:bg-blue-50 rounded border border-dashed border-blue-200"><i
-                                    class="fa-solid fa-plus mr-1"></i>新增業務</button>
                             <div class="mt-2 pt-2 border-t border-gray-100 text-right">
                                 <span class="text-xs text-gray-400">每人: </span>
                                 <span class="text-sm font-bold text-blue-600" id="per-sales">$0</span>
@@ -387,9 +384,6 @@
                                 <span class="text-[10px] text-gray-400" id="share-pct-worker">25%</span>
                             </div>
                             <div id="list-worker" class="space-y-2"></div>
-                            <button onclick="addPersonRow('worker')"
-                                class="w-full mt-2 py-1 text-center text-xs text-emerald-400 hover:bg-emerald-50 rounded border border-dashed border-emerald-200"><i
-                                    class="fa-solid fa-plus mr-1"></i>新增工務</button>
                             <div class="mt-2 pt-2 border-t border-gray-100 text-right">
                                 <span class="text-xs text-gray-400">每人: </span>
                                 <span class="text-sm font-bold text-emerald-600" id="per-worker">$0</span>
@@ -403,9 +397,6 @@
                                 <span class="text-[10px] text-gray-400" id="share-pct-buyer">15%</span>
                             </div>
                             <div id="list-buyer" class="space-y-2"></div>
-                            <button onclick="addPersonRow('buyer')"
-                                class="w-full mt-2 py-1 text-center text-xs text-purple-400 hover:bg-purple-50 rounded border border-dashed border-purple-200"><i
-                                    class="fa-solid fa-plus mr-1"></i>新增採購</button>
                             <div class="mt-2 pt-2 border-t border-gray-100 text-right">
                                 <span class="text-xs text-gray-400">每人: </span>
                                 <span class="text-sm font-bold text-purple-600" id="per-buyer">$0</span>
@@ -452,10 +443,8 @@
         window.onload = async function () {
             initializeLiff();
             document.getElementById('accDate').value = new Date().toISOString().split('T')[0];
-
-            // Populate Projects
             try {
-                const res = await fetch(GAS_URL);
+                const res = await fetch(`${GAS_URL}?action=getProjectList`);
                 const config = await res.json();
                 const list = document.getElementById('project-list');
                 if (config.projectList) {
@@ -467,6 +456,7 @@
                 }
             } catch (e) { console.error("Load projects error", e); }
 
+            // Ensure banks are loaded
             await loadBanks();
             document.getElementById('projectSelect').focus();
         };
@@ -500,12 +490,26 @@
         async function loadBanks() {
             try {
                 const res = await fetch(`${GAS_URL}?action=getBanks`);
-                bankList = await res.json();
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    bankList = data;
+                    console.log(`Loaded ${bankList.length} banks`);
+                }
             } catch (e) { console.error("Banks load error", e); }
         }
 
         function lookupBank(input, outputId) {
-            const code = input.value;
+            let code = input.value.trim();
+            if (!code) {
+                document.getElementById(outputId).innerText = "";
+                return;
+            }
+
+            // 自動補零到三位
+            if (code.length > 0 && code.length < 3) {
+                code = code.padStart(3, '0');
+            }
+
             const bank = bankList.find(b => b.code === code);
             const output = document.getElementById(outputId);
             if (bank) {
@@ -513,7 +517,7 @@
                 output.classList.remove('text-red-500');
                 output.classList.add('text-gray-400');
             } else {
-                output.innerText = "查無";
+                output.innerText = bankList.length === 0 ? "載入中..." : "查無";
                 output.classList.add('text-red-500');
             }
         }
@@ -548,9 +552,6 @@
                 if (data.sales) addPersonRow('sales', data.sales);
                 if (data.workers) data.workers.forEach(p => addPersonRow('worker', p));
                 if (data.buyers) data.buyers.forEach(p => addPersonRow('buyer', p));
-
-                // Hide "Add" buttons to lock list (Strictly from project)
-                document.querySelectorAll('#sec-bonus button[onclick^="addPersonRow"]').forEach(btn => btn.classList.add('hidden'));
 
                 // Populate Vendor Select
                 const payVendor = document.getElementById('pay-vendor');
