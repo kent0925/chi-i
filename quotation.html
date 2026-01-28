@@ -446,14 +446,17 @@
                         <i class="fa-solid fa-xmark text-xl"></i>
                     </button>
                 </div>
-                <div class="flex-1 overflow-y-auto bg-gray-500 p-6 flex justify-center">
-                    <div id="quotation-canvas"
-                        class="preview-canvas bg-white p-12 w-full max-w-[210mm] min-h-[297mm] shadow-lg relative">
+                <div class="flex-1 overflow-auto bg-gray-500 p-6 flex justify-center items-start">
+                    <div id="quotation-canvas" class="preview-canvas bg-white p-12 shadow-lg relative shrink-0"
+                        style="width: 210mm; min-height: 297mm;">
                     </div>
                 </div>
                 <div class="bg-white px-6 py-4 border-t border-gray-200 flex gap-3 justify-end">
                     <button onclick="document.getElementById('preview-modal').classList.add('hidden')"
                         class="px-5 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-700 font-bold hover:bg-gray-50">返回修改</button>
+                    <button onclick="testDownloadImage()"
+                        class="px-5 py-2.5 rounded-lg border border-purple-300 bg-purple-50 text-purple-700 font-bold hover:bg-purple-100"><i
+                            class="fa-solid fa-image mr-1"></i> 測試圖檔</button>
                     <button onclick="submitData()"
                         class="px-5 py-2.5 rounded-lg bg-blue-600 text-white font-bold shadow hover:bg-blue-700 flex items-center gap-2"><i
                             class="fa-solid fa-cloud-arrow-up"></i> 確認儲存並產生圖檔</button>
@@ -974,11 +977,49 @@
             };
         }
 
+
+
+        async function testDownloadImage() {
+            const canvas = document.getElementById('quotation-canvas');
+            // Use closest button if event.target is icon
+            const btn = event.target.closest('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 產生中...';
+            btn.disabled = true;
+
+            try {
+                const bitmap = await html2canvas(canvas, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+                const dataUrl = bitmap.toDataURL('image/jpeg', 0.8);
+
+                const data = collectData();
+                const link = document.createElement('a');
+                link.href = dataUrl;
+                link.download = `[測試]_${data.date}_${data.customer}_${data.project}.jpg`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (e) {
+                alert("圖片產生失敗: " + e);
+                console.error(e);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
         async function submitData() {
             const data = collectData();
             const canvas = document.getElementById('quotation-canvas');
             const bitmap = await html2canvas(canvas, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
             data.image = bitmap.toDataURL('image/jpeg', 0.8);
+
+            // [New] Auto Download Image
+            const link = document.createElement('a');
+            link.href = data.image;
+            link.download = `${data.date}_${data.customer}_${data.project}_報價單.jpg`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
 
             const btn = document.querySelector('#preview-modal button:last-child');
             const originalText = btn.innerHTML;

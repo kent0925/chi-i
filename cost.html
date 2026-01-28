@@ -329,9 +329,9 @@
                     </button>
                 </div>
 
-                <div class="flex-1 overflow-y-auto bg-gray-100 p-6 flex justify-center">
-                    <div id="cost-canvas"
-                        class="preview-canvas bg-white p-12 w-full max-w-[210mm] min-h-[148mm] shadow-lg relative mx-auto">
+                <div class="flex-1 overflow-auto bg-gray-100 p-6 flex justify-center items-start">
+                    <div id="cost-canvas" class="preview-canvas bg-white p-12 shadow-lg relative mx-auto shrink-0"
+                        style="width: 210mm; min-height: 297mm;">
                         <!-- Preview Content Injected Here -->
                     </div>
                 </div>
@@ -341,6 +341,9 @@
                         class="px-5 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-700 font-bold hover:bg-gray-50 transition-colors">
                         返回修改
                     </button>
+                    <button onclick="testDownloadImage()"
+                        class="px-5 py-2.5 rounded-lg border border-purple-300 bg-purple-50 text-purple-700 font-bold hover:bg-purple-100 transition-colors"><i
+                            class="fa-solid fa-image mr-1"></i> 測試圖檔</button>
                     <button onclick="executeSubmission()"
                         class="px-5 py-2.5 rounded-lg bg-emerald-600 text-white font-bold shadow hover:bg-emerald-700 transition-colors flex items-center gap-2">
                         <i class="fa-solid fa-check"></i> 確認上傳
@@ -856,6 +859,37 @@
             document.getElementById('preview-modal').classList.remove('hidden');
         }
 
+
+
+        async function testDownloadImage() {
+            const btn = event.target.closest('button');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> 處理中...';
+            btn.disabled = true;
+
+            const canvasBlock = document.getElementById('cost-canvas');
+            try {
+                const canvas = await html2canvas(canvasBlock, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+                const summaryBase64 = canvas.toDataURL('image/jpeg', 0.8);
+
+                const dDate = new Date().toISOString().split('T')[0];
+                const dName = document.getElementById('projectName').value || "工程成本分析";
+
+                const dLink = document.createElement('a');
+                dLink.href = summaryBase64;
+                dLink.download = `[測試]_${dDate}_${dName}_成本表.jpg`;
+                document.body.appendChild(dLink);
+                dLink.click();
+                document.body.removeChild(dLink);
+            } catch (e) {
+                console.error("Canvas Error", e);
+                alert("產生失敗: " + e);
+            } finally {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }
+        }
+
         async function executeSubmission() {
             const btn = document.querySelector('#preview-modal button:last-child');
             const originalContent = btn.innerHTML;
@@ -868,6 +902,16 @@
             try {
                 const canvas = await html2canvas(canvasBlock, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
                 summaryBase64 = canvas.toDataURL('image/jpeg', 0.8);
+
+                // [New] Auto Download Image
+                const dDate = new Date().toISOString().split('T')[0];
+                const dName = document.getElementById('projectName').value || "工程成本分析";
+                const dLink = document.createElement('a');
+                dLink.href = summaryBase64;
+                dLink.download = `${dDate}_${dName}_成本表.jpg`;
+                document.body.appendChild(dLink);
+                dLink.click();
+                document.body.removeChild(dLink);
             } catch (e) {
                 console.error("Canvas Error", e);
             }
