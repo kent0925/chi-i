@@ -101,7 +101,7 @@
 ##### 3.3 獎金分配
 
 - 自動載入專案人員（業務、工務、採購）
-- 顯示應收、應付、毛利
+- 顯示應收、應付、毛利 (皆為未稅金額)
 - 自動計算分配比例與金額
 
 **分配規則**：
@@ -367,8 +367,10 @@
 {
   "customer": "ABC公司",
   "sales": "王小明",
-  "receivable": 100000,
-  "payable": 50000,
+  "receivable": 105000,
+  "receivableNoTax": 100000,
+  "payable": 52500,
+  "payableNoTax": 50000,
   "invoices": [...],
   "vendors": ["廠商A"],
   "workers": ["李大華"],

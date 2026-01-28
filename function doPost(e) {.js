@@ -144,6 +144,7 @@ function doGet(e) {
         var quoteSheet = ss.getSheetByName("報價紀錄");
         var quoteData = quoteSheet ? quoteSheet.getDataRange().getValues() : [];
         var totalReceivable = 0;
+        var totalReceivableNoTax = 0;
         var paidAmount = 0;
         var customerName = "";
         var salesPerson = "";
@@ -156,7 +157,8 @@ function doGet(e) {
             var row = quoteData[i];
             // Match Project Name (Col F, Index 5)
             if (row[5] === projectId) {
-                totalReceivable += parseFloat(row[11] || 0);
+                totalReceivableNoTax += parseFloat(row[11] || 0);
+                totalReceivable += parseFloat(row[13] || 0);  // 含稅總額
                 customerName = row[4];
                 salesPerson = row[7] || "";
             }
@@ -166,6 +168,7 @@ function doGet(e) {
         var costSheet = ss.getSheetByName("成本紀錄");
         var costData = costSheet ? costSheet.getDataRange().getValues() : [];
         var totalPayable = 0;
+        var totalPayableNoTax = 0;
         var invoices = [];
         var vendors = [];
         var workers = [];
@@ -181,7 +184,8 @@ function doGet(e) {
         for (var i = 1; i < costData.length; i++) {
             var row = costData[i];
             if (row[4] === projectId) {
-                totalPayable += parseFloat(row[12] || 0);
+                totalPayableNoTax += parseFloat(row[12] || 0);
+                totalPayable += parseFloat(row[14] || 0);  // 含稅總額
 
                 // Collect Vendor
                 var vName = row[5];
@@ -211,7 +215,9 @@ function doGet(e) {
             customer: customerName,
             sales: salesPerson,
             receivable: totalReceivable,
+            receivableNoTax: totalReceivableNoTax,
             payable: totalPayable,
+            payableNoTax: totalPayableNoTax,
             invoices: invoices,
             vendors: vendors,
             workers: workers,
