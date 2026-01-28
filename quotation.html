@@ -760,6 +760,7 @@
 
         function generatePreview() {
             const data = collectData();
+            const title = data.isAddition ? "追加報價單" : "報價單";
             if (!data.customer || !data.project) return alert("客戶與專案名稱為必填");
 
             const canvas = document.getElementById('quotation-canvas');
