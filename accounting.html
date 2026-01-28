@@ -136,11 +136,18 @@
                                     class="text-orange-600 focus:ring-orange-500" onchange="toggleRecMethod()">
                                 <span class="ml-2 font-bold text-sm">票據 (支票/客票)</span>
                             </label>
+                            <label
+                                class="flex items-center cursor-pointer bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm hover:border-orange-400 has-[:checked]:border-orange-500 has-[:checked]:ring-1 has-[:checked]:ring-orange-500">
+                                <input type="radio" name="recMethod" value="cash"
+                                    class="text-orange-600 focus:ring-orange-500" onchange="toggleRecMethod()">
+                                <span class="ml-2 font-bold text-sm">現金收款</span>
+                            </label>
                         </div>
                     </div>
 
                     <!-- Remittance Form -->
-                    <div id="rec-remit-block" class="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
+                    <div id="rec-remit-block"
+                        class="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in fields-container">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 mb-1">匯款銀行 (輸入代碼)</label>
                             <div class="relative">
@@ -151,21 +158,44 @@
                             </div>
                         </div>
                         <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">匯款日期</label>
+                            <input type="date" id="rec-remit-date"
+                                class="w-full border border-gray-300 rounded-lg p-2.5 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">匯款帳號 (後五碼或全號)</label>
+                            <input type="text" id="rec-bank-acc"
+                                class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="帳號">
+                        </div>
+                        <div>
                             <label class="block text-xs font-bold text-gray-500 mb-1">匯款戶名</label>
                             <input type="text" id="rec-acc-name"
                                 class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="戶名">
                         </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-gray-500 mb-1">本次收款金額</label>
+                            <input type="number" id="rec-amount-remit" min="0" step="1"
+                                class="w-full border border-orange-200 rounded-lg p-3 text-lg font-bold text-orange-600 focus:ring-2 focus:ring-orange-500"
+                                placeholder="0">
+                        </div>
+                        <div class="md:col-span-2 flex justify-end">
+                            <button onclick="submitAccData()"
+                                class="bg-orange-600 text-white px-8 py-2.5 rounded-xl font-bold shadow-lg hover:bg-orange-700 transition-all flex items-center gap-2 btn-submit">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> 提交收款紀錄
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Check Form -->
-                    <div id="rec-check-block" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
+                    <div id="rec-check-block"
+                        class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in fields-container">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 mb-1">票據號碼</label>
                             <input type="text" id="rec-check-no"
                                 class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="Check No.">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-500 mb-1">兌現日期</label>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">預計兌現日期</label>
                             <div class="flex gap-2">
                                 <input type="date" id="rec-check-date"
                                     class="w-full border border-gray-300 rounded-lg p-2.5 text-sm">
@@ -174,7 +204,7 @@
                                     title="加入行事曆 (+1天)"><i class="fa-regular fa-calendar-plus"></i></button>
                             </div>
                         </div>
-                        <div class="md:col-span-2">
+                        <div>
                             <label class="block text-xs font-bold text-gray-500 mb-1">存入銀行 (輸入代碼)</label>
                             <div class="relative">
                                 <input type="text" id="rec-deposit-bank"
@@ -184,14 +214,52 @@
                                     id="rec-deposit-bank-name"></span>
                             </div>
                         </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">存入銀行帳號</label>
+                            <input type="text" id="rec-deposit-acc"
+                                class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="帳號">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-gray-500 mb-1">本次收款金額</label>
+                            <input type="number" id="rec-amount-check" min="0" step="1"
+                                class="w-full border border-orange-200 rounded-lg p-3 text-lg font-bold text-orange-600 focus:ring-2 focus:ring-orange-500"
+                                placeholder="0">
+                        </div>
+                        <div class="md:col-span-2 flex justify-end">
+                            <button onclick="submitAccData()"
+                                class="bg-orange-600 text-white px-8 py-2.5 rounded-xl font-bold shadow-lg hover:bg-orange-700 transition-all flex items-center gap-2 btn-submit">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> 提交收款紀錄
+                            </button>
+                        </div>
                     </div>
 
-                    <div class="mt-4">
-                        <label class="block text-xs font-bold text-gray-500 mb-1">本次收款金額</label>
-                        <input type="number" id="rec-amount"
-                            class="w-full border border-orange-200 rounded-lg p-3 text-lg font-bold text-orange-600 focus:ring-2 focus:ring-orange-500"
-                            placeholder="0">
+                    <!-- Cash Form -->
+                    <div id="rec-cash-block"
+                        class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in fields-container">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">收款人</label>
+                            <input type="text" id="rec-cash-receiver"
+                                class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="姓名">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">收款日期</label>
+                            <input type="date" id="rec-cash-date"
+                                class="w-full border border-gray-300 rounded-lg p-2.5 text-sm">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-gray-500 mb-1">本次收款金額</label>
+                            <input type="number" id="rec-amount-cash" min="0" step="1"
+                                class="w-full border border-orange-200 rounded-lg p-3 text-lg font-bold text-orange-600 focus:ring-2 focus:ring-orange-500"
+                                placeholder="0">
+                        </div>
+                        <div class="md:col-span-2 flex justify-end">
+                            <button onclick="submitAccData()"
+                                class="bg-orange-600 text-white px-8 py-2.5 rounded-xl font-bold shadow-lg hover:bg-orange-700 transition-all flex items-center gap-2 btn-submit">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> 提交收款紀錄
+                            </button>
+                        </div>
                     </div>
+
                 </div>
             </div>
 
@@ -204,10 +272,9 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 mb-1">廠商名稱</label>
-                            <input type="text" id="pay-vendor"
-                                class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" list="vendor-list"
-                                placeholder="選擇或輸入廠商">
-                            <datalist id="vendor-list"></datalist>
+                            <select id="pay-vendor" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm">
+                                <option value="">選擇廠商...</option>
+                            </select>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-500 mb-1">匯款日期</label>
@@ -250,11 +317,11 @@
                         <div id="inv-validation-msg" class="mt-1 text-xs h-5"></div>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 mb-1">本次付款金額</label>
-                        <input type="number" id="pay-amount"
-                            class="w-full border border-blue-200 rounded-lg p-3 text-lg font-bold text-blue-600 focus:ring-2 focus:ring-blue-500"
-                            placeholder="0">
+                    <div class="mt-4 flex justify-end fields-container">
+                        <button onclick="submitAccData()"
+                            class="bg-gray-700 text-white px-8 py-2.5 rounded-xl font-bold shadow-lg hover:bg-gray-800 transition-all flex items-center gap-2 btn-submit">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> 提交付款紀錄
+                        </button>
                     </div>
                 </div>
             </div>
@@ -345,6 +412,13 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="mt-6 flex justify-end fields-container">
+                        <button onclick="submitAccData()"
+                            class="bg-amber-700 text-white px-8 py-2.5 rounded-xl font-bold shadow-lg hover:bg-amber-800 transition-all flex items-center gap-2 btn-submit">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> 提交獎金分配
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -418,13 +492,9 @@
 
         function toggleRecMethod() {
             const method = document.querySelector('input[name="recMethod"]:checked').value;
-            if (method === 'remit') {
-                document.getElementById('rec-remit-block').classList.remove('hidden');
-                document.getElementById('rec-check-block').classList.add('hidden');
-            } else {
-                document.getElementById('rec-remit-block').classList.add('hidden');
-                document.getElementById('rec-check-block').classList.remove('hidden');
-            }
+            document.getElementById('rec-remit-block').classList.toggle('hidden', method !== 'remit');
+            document.getElementById('rec-check-block').classList.toggle('hidden', method !== 'check');
+            document.getElementById('rec-cash-block').classList.toggle('hidden', method !== 'cash');
         }
 
         async function loadBanks() {
@@ -470,11 +540,28 @@
                 const gross = (data.receivable || 0) - (data.payable || 0);
                 document.getElementById('bonus-profit').innerText = gross.toLocaleString();
 
-                // Clear and add sales
+                // Clear and add personnel from project data
                 document.getElementById('list-sales').innerHTML = "";
                 document.getElementById('list-worker').innerHTML = "";
                 document.getElementById('list-buyer').innerHTML = "";
+
                 if (data.sales) addPersonRow('sales', data.sales);
+                if (data.workers) data.workers.forEach(p => addPersonRow('worker', p));
+                if (data.buyers) data.buyers.forEach(p => addPersonRow('buyer', p));
+
+                // Hide "Add" buttons to lock list (Strictly from project)
+                document.querySelectorAll('#sec-bonus button[onclick^="addPersonRow"]').forEach(btn => btn.classList.add('hidden'));
+
+                // Populate Vendor Select
+                const payVendor = document.getElementById('pay-vendor');
+                payVendor.innerHTML = '<option value="">選擇廠商...</option>';
+                if (data.vendors) {
+                    data.vendors.forEach(v => {
+                        const opt = document.createElement('option');
+                        opt.value = opt.textContent = v;
+                        payVendor.appendChild(opt);
+                    });
+                }
 
                 calcBonus();
 
@@ -502,8 +589,7 @@
             const div = document.createElement('div');
             div.className = 'flex items-center gap-2';
             div.innerHTML = `
-                <input type="text" class="flex-1 border border-gray-300 rounded-lg p-1.5 text-sm bonus-p-${type}" placeholder="姓名" value="${name}" oninput="calcBonus()">
-                <button onclick="this.parentElement.remove();calcBonus()" class="text-gray-400 hover:text-red-600 px-1"><i class="fa-solid fa-times"></i></button>
+                <input type="text" class="flex-1 border border-gray-300 rounded-lg p-1.5 text-sm bonus-p-${type}" placeholder="姓名" value="${name}" oninput="calcBonus()" readonly>
             `;
             list.appendChild(div);
             calcBonus();
@@ -627,11 +713,9 @@
         }
 
         async function submitAccData() {
-            // Validate basic
             const project = document.getElementById('projectSelect').value;
             if (!project) return alert("請選擇專案");
 
-            // Build Data
             const baseData = {
                 type: 'accounting',
                 accType: currentTab,
@@ -644,18 +728,27 @@
             if (currentTab === 'receivable') {
                 const method = document.querySelector('input[name="recMethod"]:checked').value;
                 baseData.customer = selectedCustomer || "專案收款";
-                baseData.grandTotal = document.getElementById('rec-amount').value;
                 baseData.subType = method;
+
                 if (method === 'remit') {
+                    baseData.grandTotal = document.getElementById('rec-amount-remit').value;
+                    baseData.remitDate = document.getElementById('rec-remit-date').value;
+                    baseData.bankAcc = document.getElementById('rec-bank-acc').value;
                     baseData.bankCode = document.getElementById('rec-bank-code').value;
                     baseData.accName = document.getElementById('rec-acc-name').value;
-                } else {
+                } else if (method === 'check') {
+                    baseData.grandTotal = document.getElementById('rec-amount-check').value;
                     baseData.checkNo = document.getElementById('rec-check-no').value;
                     baseData.cashDate = document.getElementById('rec-check-date').value;
                     baseData.bankCode = document.getElementById('rec-deposit-bank').value;
+                    baseData.depositAcc = document.getElementById('rec-deposit-acc').value;
+                } else { // cash
+                    baseData.grandTotal = document.getElementById('rec-amount-cash').value;
+                    baseData.receiver = document.getElementById('rec-cash-receiver').value;
+                    baseData.cashDate = document.getElementById('rec-cash-date').value;
                 }
             } else if (currentTab === 'payable') {
-                baseData.customer = document.getElementById('pay-vendor').value; // Vendor
+                baseData.customer = document.getElementById('pay-vendor').value;
                 baseData.grandTotal = document.getElementById('pay-amount').value;
                 baseData.bankCode = document.getElementById('pay-bank-code').value;
                 baseData.bankAcc = document.getElementById('pay-acc-no').value;
@@ -666,30 +759,51 @@
                 const profitText = document.getElementById('bonus-profit').innerText.replace(/,/g, '');
                 baseData.grandTotal = parseFloat(profitText) || 0;
 
-                // Collect detailed list
-                const salesList = Array.from(document.querySelectorAll('.bonus-p-sales')).map(i => i.value).filter(v => v).join(',');
-                const workerList = Array.from(document.querySelectorAll('.bonus-p-worker')).map(i => i.value).filter(v => v).join(',');
-                const buyerList = Array.from(document.querySelectorAll('.bonus-p-buyer')).map(i => i.value).filter(v => v).join(',');
+                const salesList = Array.from(document.querySelectorAll('.bonus-p-sales')).map(i => i.value).join(',');
+                const workerList = Array.from(document.querySelectorAll('.bonus-p-worker')).map(i => i.value).join(',');
+                const buyerList = Array.from(document.querySelectorAll('.bonus-p-buyer')).map(i => i.value).join(',');
                 const companyAmt = document.getElementById('bonus-company-amt').innerText;
-                const profit = document.getElementById('bonus-profit').innerText;
+                const profitTextDisplay = document.getElementById('bonus-profit').innerText;
 
-                baseData.note += ` [利潤:${profit}] 公司:${companyAmt} 業務:${salesList} 工務:${workerList} 採購:${buyerList}`;
+                baseData.note += ` [利潤:${profitTextDisplay}] 公司:${companyAmt} 業務:${salesList} 工務:${workerList} 採購:${buyerList}`;
             }
 
-            // Generate Screenshot
-            // We can render a nice card in #acc-canvas-container and snap it
+            if (parseFloat(baseData.grandTotal || 0) < 0) return alert("金額不得為負數");
+            if (!baseData.grandTotal || baseData.grandTotal == 0) return alert("請輸入有效金額");
+
+            const confirmMsg = `確定提交${baseData.accType === 'receivable' ? '收款' : (baseData.accType === 'payable' ? '付款' : '獎金')}紀錄？\n金額: $${parseFloat(baseData.grandTotal).toLocaleString()}`;
+            if (!confirm(confirmMsg)) return;
+
             await generateScreenshot(baseData);
 
-            // Submit
             try {
-                const res = await fetch(GAS_URL, {
+                await fetch(GAS_URL, {
                     method: 'POST',
                     body: JSON.stringify(baseData),
                     mode: 'no-cors'
                 });
-                alert("儲存成功");
-                location.reload();
+                alert("儲存成功，本筆資料已鎖定。");
+                lockCurrentSection();
             } catch (e) { alert("Error: " + e); }
+        }
+
+        function lockCurrentSection() {
+            let container = null;
+            if (currentTab === 'receivable') {
+                const method = document.querySelector('input[name="recMethod"]:checked').value;
+                container = document.getElementById(`rec-${method}-block`);
+            } else if (currentTab === 'payable') {
+                container = document.querySelector('#sec-payable > div');
+            } else {
+                container = document.querySelector('#sec-bonus > div');
+            }
+
+            if (container) {
+                container.querySelectorAll('input, select, button, textarea').forEach(el => el.disabled = true);
+                container.classList.add('opacity-50', 'pointer-events-none');
+            }
+            document.getElementById('projectSelect').disabled = true;
+            document.getElementById('accNote').disabled = true;
         }
 
         async function generateScreenshot(data) {

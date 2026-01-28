@@ -81,6 +81,24 @@
                 <i
                     class="fa-solid fa-chevron-right ml-auto text-gray-300 group-hover:text-orange-500 transition-colors"></i>
             </a>
+
+            <!-- SECTION: DASHBOARD -->
+            <div class="mt-4">
+                <div class="flex items-center justify-between mb-3 px-2">
+                    <h2 class="text-sm font-bold text-gray-500 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line"></i> 專案財務概況
+                    </h2>
+                    <button onclick="loadFinancialDashboard()" class="text-xs text-blue-500 hover:underline">更新</button>
+                </div>
+
+                <div id="dashboard-container" class="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+                    <div
+                        class="text-center py-10 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                        <i class="fa-solid fa-spinner fa-spin mb-2"></i>
+                        <p class="text-[10px]">載入數據中...</p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="p-6 bg-gray-50/50 text-center border-t border-gray-100">
@@ -113,6 +131,8 @@
             } catch (error) {
                 console.error('LIFF Init Error:', error);
             }
+            // 載入儀表板數據
+            loadFinancialDashboard();
         }
 
         function displayProfile(profile) {
@@ -123,6 +143,74 @@
             if (profile.pictureUrl) pic.src = profile.pictureUrl;
             name.innerText = profile.displayName;
             container.classList.remove('hidden');
+        }
+
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxrXo9AcczzlIazBPTqxZij7CVAcqcXtbbpGJMKQ4RoEFRp8JsTtjLZw1R6xZwwvnnt/exec';
+
+        async function loadFinancialDashboard() {
+            const container = document.getElementById('dashboard-container');
+            try {
+                const res = await fetch(`${GAS_URL}?action=getGlobalFinancials`);
+                const data = await res.json();
+                renderDashboard(data);
+            } catch (e) {
+                container.innerHTML = `<div class="text-center py-4 text-red-400 text-[10px]">載入失敗: ${e}</div>`;
+            }
+        }
+
+        function renderDashboard(projects) {
+            const container = document.getElementById('dashboard-container');
+            if (!projects || projects.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-gray-400 text-xs">尚無進行中的專案數據</div>`;
+                return;
+            }
+
+            container.innerHTML = projects.map(p => {
+                // 毛利計算使用未稅小計 (Net Profit)
+                const profit = p.recNoTax - p.payNoTax;
+                const profitMargin = p.recNoTax > 0 ? (profit / p.recNoTax * 100).toFixed(1) : 0;
+
+                // 收付進度使用總額 (Gross progress includes Tax)
+                const recProgress = p.recGrand > 0 ? Math.min(100, (p.received / p.recGrand * 100)) : 0;
+                const payProgress = p.payGrand > 0 ? Math.min(100, (p.paid / p.payGrand * 100)) : 0;
+
+                const isPositive = profit >= 0;
+
+                return `
+                    <div class="bg-white p-4 rounded-xl shadow-sm border ${isPositive ? 'border-emerald-50' : 'border-red-50'} hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="text-sm font-bold text-gray-700 truncate max-w-[180px]">${p.name}</h4>
+                            <div class="text-right">
+                                <span class="text-[10px] font-bold ${isPositive ? 'text-emerald-500' : 'text-red-500'}">毛利 ${profitMargin}%</span>
+                                <div class="text-xs font-black text-gray-800">$${Math.round(profit).toLocaleString()}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-2 text-[10px]">
+                            <!-- 收款進度 -->
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-gray-400">收款進度</span>
+                                    <span class="text-gray-600 font-bold">${Math.round(recProgress)}% ($${Math.round(p.received).toLocaleString()})</span>
+                                </div>
+                                <div class="w-full bg-gray-100 rounded-full h-1">
+                                    <div class="bg-blue-500 h-1 rounded-full" style="width: ${recProgress}%"></div>
+                                </div>
+                            </div>
+                            <!-- 付款進度 -->
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-gray-400">付款進度</span>
+                                    <span class="text-gray-600 font-bold">${Math.round(payProgress)}% ($${Math.round(p.paid).toLocaleString()})</span>
+                                </div>
+                                <div class="w-full bg-gray-100 rounded-full h-1">
+                                    <div class="bg-orange-400 h-1 rounded-full" style="width: ${payProgress}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
     </script>
 </body>
