@@ -488,7 +488,9 @@
         let unitOptions = [];
         let projectList = [];
         let currentOriginId = null;
+
         let lineUser = null;
+        let isSubmitting = false;
 
         window.onload = function () {
             initializeLiff();
@@ -1056,6 +1058,12 @@
         }
 
         async function submitData() {
+            if (isSubmitting) {
+                alert("正在上傳中，請勿重複點擊");
+                return;
+            }
+            isSubmitting = true;
+
             const data = collectData();
             const canvas = document.getElementById('quotation-canvas');
             const bitmap = await html2canvas(canvas, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
@@ -1088,6 +1096,7 @@
                     alert("儲存失敗: " + result.message);
                 }
             } catch (e) {
+                isSubmitting = false;
                 alert("儲存失敗 (可能是網路問題): " + e.toString());
             } finally {
                 btn.innerHTML = originalText;

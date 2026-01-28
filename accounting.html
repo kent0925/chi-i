@@ -498,7 +498,8 @@
                 const config = await res.json();
                 const select = document.getElementById('projectSelect');
                 if (config.projects) {
-                    config.projects.forEach(p => {
+                    const closedProjects = config.projects.filter(p => p.status === 'closed' || p.status === '已成交');
+                    closedProjects.forEach(p => {
                         const opt = document.createElement('option');
                         opt.value = p.project;
                         opt.textContent = p.project;
@@ -621,9 +622,9 @@
                 document.getElementById('rec-balance').innerText = '$' + (data.receivable || 0).toLocaleString();
 
                 // Bonus
-                document.getElementById('bonus-rec').innerText = (data.receivable || 0).toLocaleString();
-                document.getElementById('bonus-pay').innerText = (data.payable || 0).toLocaleString();
-                const gross = (data.receivable || 0) - (data.payable || 0);
+                document.getElementById('bonus-rec').innerText = (data.receivableNoTax || 0).toLocaleString();
+                document.getElementById('bonus-pay').innerText = (data.payableNoTax || 0).toLocaleString();
+                const gross = (data.receivableNoTax || 0) - (data.payableNoTax || 0);
                 document.getElementById('bonus-profit').innerText = gross.toLocaleString();
 
                 // Clear and add personnel from project data
