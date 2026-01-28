@@ -419,28 +419,6 @@
 
 ---
 
-## 系統配置
-
-### LIFF ID
-
-```javascript
-const LIFF_ID = '2008974069-Ecojk6W1';
-```
-
-### GAS URL
-
-```javascript
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxrXo9AcczzlIazBPTqxZij7CVAcqcXtbbpGJMKQ4RoEFRp8JsTtjLZw1R6xZwwvnnt/exec';
-```
-
-### Google Drive 資料夾 ID
-
-- **報價圖片**: `1Iy_gXTgPfKxmDpjqgWwZxhDNJqNGJqzn`
-- **成本圖片**: `1Iy_gXTgPfKxmDpjqgWwZxhDNJqNGJqzn`
-- **發票圖片**: `1Iy_gXTgPfKxmDpjqgWwZxhDNJqNGJqzn`
-
----
-
 ## 常見問題
 
 ### Q1: 銀行代碼查詢顯示「查無」？
