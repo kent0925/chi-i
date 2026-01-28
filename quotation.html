@@ -208,10 +208,9 @@
         <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100 mb-8">
 
             <!-- Control Bar (History & Status) -->
-            <div
-                class="p-6 border-b border-gray-100 bg-blue-50/30 flex flex-col md:flex-row justify-between items-center gap-4">
-                <div class="flex items-center gap-3 w-full md:w-auto">
-                    <div class="relative flex-1 md:flex-none md:w-80">
+            <div class="p-4 md:p-6 border-b border-gray-100 bg-blue-50/30 flex flex-col gap-4">
+                <div class="flex items-center gap-3 w-full">
+                    <div class="relative flex-1">
                         <span class="absolute left-3 top-2.5 text-blue-800"><i
                                 class="fa-solid fa-clock-rotate-left"></i></span>
                         <select id="historySelect" onchange="loadQuoteForEdit(this.value)"
@@ -220,15 +219,15 @@
                         </select>
                     </div>
                     <span id="edit-mode-badge"
-                        class="hidden bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-bold border border-red-200 animate-pulse">
+                        class="hidden bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-bold border border-red-200 animate-pulse whitespace-nowrap">
                         <i class="fa-solid fa-pen-to-square mr-1"></i> 修改模式
                     </span>
                 </div>
 
-                <div class="flex items-center gap-4">
+                <div class="flex flex-wrap items-center gap-2 md:gap-4">
                     <!-- Addition Checkbox -->
                     <label
-                        class="group flex items-center gap-2 cursor-pointer bg-purple-50 hover:bg-purple-100 px-4 py-2 rounded-lg border border-purple-200 transition-colors"
+                        class="group flex items-center gap-2 cursor-pointer bg-purple-50 hover:bg-purple-100 px-3 md:px-4 py-2 rounded-lg border border-purple-200 transition-colors flex-1 md:flex-none"
                         title="僅限載入已成交之原始報價單後使用">
                         <div class="relative flex items-center">
                             <input type="checkbox" id="isAddition" class="peer sr-only">
@@ -238,13 +237,13 @@
                             <i
                                 class="fa-solid fa-check text-white text-[10px] absolute left-1 top-1 opacity-0 peer-checked:opacity-100 transition-opacity"></i>
                         </div>
-                        <span class="text-sm font-bold text-purple-700 select-none"><i
+                        <span class="text-xs md:text-sm font-bold text-purple-700 select-none whitespace-nowrap"><i
                                 class="fa-solid fa-plus-circle mr-1"></i> 追加單</span>
                     </label>
 
                     <!-- Deal Closed Checkbox -->
                     <label
-                        class="group flex items-center gap-2 cursor-pointer bg-red-50 hover:bg-red-100 px-4 py-2 rounded-lg border border-red-200 transition-colors">
+                        class="group flex items-center gap-2 cursor-pointer bg-red-50 hover:bg-red-100 px-3 md:px-4 py-2 rounded-lg border border-red-200 transition-colors flex-1 md:flex-none">
                         <div class="relative flex items-center">
                             <input type="checkbox" id="dealClosed" onchange="updateAdditionState()"
                                 class="peer sr-only">
@@ -254,13 +253,13 @@
                             <i
                                 class="fa-solid fa-check text-white text-[10px] absolute left-1 top-1 opacity-0 peer-checked:opacity-100 transition-opacity"></i>
                         </div>
-                        <span class="text-sm font-bold text-red-700 select-none"><i
+                        <span class="text-xs md:text-sm font-bold text-red-700 select-none whitespace-nowrap"><i
                                 class="fa-solid fa-handshake mr-1"></i> 已成交</span>
                     </label>
                 </div>
             </div>
 
-            <div class="p-8">
+            <div class="p-4 md:p-8">
                 <!-- Internal Info Grid -->
                 <div class="bg-gray-50 rounded-2xl p-5 mb-8 border border-gray-100">
                     <h3
