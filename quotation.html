@@ -265,8 +265,7 @@
                         <div>
                             <label class="block text-xs font-bold text-blue-800 mb-1">業務人員</label>
                             <select id="salesPerson"
-                                class="w-full border border-gray-200 rounded-lg p-2.5 text-sm font-bold text-blue-900 focus:ring-2 focus:ring-blue-500 bg-white"
-                                onchange="saveConfig('sales', this.value)">
+                                class="w-full border border-gray-200 rounded-lg p-2.5 text-sm font-bold text-blue-900 focus:ring-2 focus:ring-blue-500 bg-white">
                                 <option value="">-- 請選擇 --</option>
                             </select>
                         </div>
@@ -739,7 +738,7 @@
         }
 
         function saveToBackend(type, val) {
-            if (type === 'sales' && !salesPersons.includes(val)) salesPersons.push(val);
+            // if (type === 'sales' && !salesPersons.includes(val)) salesPersons.push(val); // Disabled
             if (type === 'unit' && !unitOptions.includes(val)) unitOptions.push(val);
             renderLists();
 
