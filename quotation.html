@@ -447,8 +447,9 @@
                     </button>
                 </div>
                 <div class="flex-1 overflow-auto bg-gray-500 p-6 flex justify-center items-start">
-                    <div id="quotation-canvas" class="preview-canvas bg-white p-12 shadow-lg relative shrink-0"
-                        style="width: 210mm; min-height: 297mm;">
+                    <div id="quotation-canvas"
+                        class="preview-canvas bg-white p-12 shadow-lg relative shrink-0 flex flex-col justify-between"
+                        style="width: 210mm; min-height: 297mm; font-family: 'Microsoft JhengHei', '微軟正黑體', sans-serif;">
                     </div>
                 </div>
                 <div class="bg-white px-6 py-4 border-t border-gray-200 flex gap-3 justify-end">
@@ -756,7 +757,8 @@
             else warn.classList.add('hidden');
         }
 
-        async function generatePreview(title) {
+
+        function generatePreview() {
             const data = collectData();
             if (!data.customer || !data.project) return alert("客戶與專案名稱為必填");
 
@@ -771,23 +773,23 @@
 
             const renderCategoryRow = (name, total) => {
                 const displayName = toChineseIndex(catIndex++) + "、" + name;
-                return `<tr class="bg-gray-100 border-t-2 border-gray-400">
-            <td colspan="5" class="font-bold text-left pl-4 py-1">${displayName}</td>
-            <td class="font-bold text-right pr-2 py-1">小計：${total.toLocaleString()}</td>
-            <td></td>
+                return `<tr class="bg-gray-100 border-t-2 border-gray-600 border-b border-gray-400 text-gray-800">
+            <td colspan="5" class="font-bold text-left pl-4 py-2 align-middle text-sm">${displayName}</td>
+            <td class="font-bold text-right pr-2 py-2 align-middle text-sm">小計：${total.toLocaleString()}</td>
+            <td class="align-middle"></td>
         </tr>`;
             };
 
             const renderItemRow = (item, idx) => {
                 const total = item.qty * item.price;
-                return `<tr>
-            <td class="text-center py-1">${idx}</td>
-            <td class="py-1 pl-2">${item.name}</td>
-            <td class="text-center py-1">${item.unit}</td>
-            <td class="text-center py-1">${item.qty}</td>
-            <td class="text-right py-1 pr-2">${item.price.toLocaleString()}</td>
-            <td class="text-right py-1 pr-2">${total.toLocaleString()}</td>
-            <td class="text-xs text-gray-500 py-1 pl-1">${item.remark || ''}</td>
+                return `<tr class="border-b border-gray-200">
+            <td class="text-center py-2 align-middle">${idx}</td>
+            <td class="py-2 pl-2 align-middle font-medium">${item.name}</td>
+            <td class="text-center py-2 align-middle">${item.unit}</td>
+            <td class="text-center py-2 align-middle">${item.qty}</td>
+            <td class="text-right py-2 pr-2 align-middle font-mono">${item.price.toLocaleString()}</td>
+            <td class="text-right py-2 pr-2 align-middle font-mono">${total.toLocaleString()}</td>
+            <td class="text-xs text-gray-500 py-2 pl-1 align-middle">${item.remark || ''}</td>
         </tr>`;
             };
 
@@ -817,6 +819,11 @@
                 currentCategoryItems.forEach(i => itemsHtml += i);
             }
 
+            // [New] Append "Below Blank" row
+            itemsHtml += `<tr>
+                <td colspan="7" class="text-center text-gray-400 py-8 tracking-[0.5em] text-xs">*** 以 下 空 白 ***</td>
+            </tr>`;
+
             let feesHtml = '';
             let feesTotal = 0;
             data.fees.forEach(fee => {
@@ -824,89 +831,110 @@
                 feesTotal += amt;
                 feesHtml += `<div class="summary-row">
             <div class="summary-label">${fee.name}:</div>
-            <div class="summary-value">${amt.toLocaleString()}</div>
+            <div class="summary-value font-mono">${amt.toLocaleString()}</div>
         </div>`;
             });
 
-            const grandTotal = subtotal + feesTotal;
+            const untaxedTotal = subtotal + feesTotal;
+            const taxAmt = Math.round(untaxedTotal * 0.05);
+            const grandTotal = untaxedTotal + taxAmt;
+
             const clientDisplay = data.customer + (data.taxId ? ` (${data.taxId})` : '');
 
             canvas.innerHTML = `
-        <div class="flex justify-between items-start mb-4">
-            <div class="w-1/4">
-                <img src="${LOGO_URL}" style="max-height: 80px; max-width: 100%; object-fit: contain;">
+        <div class="flex-none">
+            <div class="flex justify-between items-center mb-6">
+                <div class="w-1/3">
+                    <img src="${LOGO_URL}" style="max-height: 100px; max-width: 100%; object-fit: contain;">
+                </div>
+                <div class="flex-1 text-center relative">
+                    <div class="company-title text-3xl mb-1 text-blue-900 font-bold tracking-wide">健益工程有限公司</div>
+                    <div class="doc-title text-xl text-gray-600 font-bold tracking-[0.5em] border-b-2 border-gray-400 inline-block px-6 pb-1">
+                        ${title}</div>
+                </div>
+                <div class="w-1/3 text-right">
+                     <div class="text-sm text-gray-500 font-mono">日期：${data.date}</div>
+                </div>
             </div>
-            <div class="flex-1 text-center relative">
-                <div class="company-title text-3xl mb-1 text-blue-900 font-bold">健益工程有限公司</div>
-                <div class="doc-title text-xl text-gray-600 font-bold tracking-widest border-b-2 border-gray-400 inline-block px-4 pb-1 mb-2">
-                    ${title}</div>
-            </div>
-            <div class="w-1/4 text-right">
-                 <div class="text-xs text-gray-500">日期：${data.date}</div>
-            </div>
-        </div>
-        
-        <table class="info-table mb-4 w-full text-sm border-collapse">
-            <tr>
-                <td class="w-24 bg-gray-100 font-bold text-center border p-2">客戶名稱</td>
-                <td class="w-[40%] border p-2 font-bold">${clientDisplay}</td>
-                <td class="w-24 bg-gray-100 font-bold text-center border p-2">聯絡人</td>
-                <td class="border p-2">${data.contactPerson}</td>
-            </tr>
-            <tr>
-                <td class="bg-gray-100 font-bold text-center border p-2">工程名稱</td>
-                <td class="border p-2 font-bold">${data.projectName}</td>
-                <td class="bg-gray-100 font-bold text-center border p-2">聯絡電話</td>
-                <td class="border p-2">
-                    <div class="flex gap-4">
-                        <span>手機：${data.contactPhone}</span>
-                        ${data.tel ? `<span>市話：${data.tel}</span>` : ''}
-                    </div>
-                </td>
-            </tr>
-        </table>
-
-        <table class="items-table mb-4 w-full text-sm border-collapse">
-            <thead class="bg-blue-800 text-white">
+            
+            <table class="info-table mb-4 w-full text-base border-collapse">
                 <tr>
-                    <th class="w-10 border p-1 text-center">項次</th>
-                    <th class="border p-1 text-left">項目名稱</th>
-                    <th class="w-16 border p-1 text-center">單位</th>
-                    <th class="w-16 border p-1 text-center">數量</th>
-                    <th class="w-24 border p-1 text-right">單價</th>
-                    <th class="w-24 border p-1 text-right">複價</th>
-                    <th class="w-32 border p-1 text-left">備註</th>
+                    <td class="w-24 bg-gray-100 font-bold text-center border border-gray-300 p-2 align-middle text-gray-700">客戶名稱</td>
+                    <td class="w-[40%] border border-gray-300 p-2 font-bold align-middle text-lg">${clientDisplay}</td>
+                    <td class="w-24 bg-gray-100 font-bold text-center border border-gray-300 p-2 align-middle text-gray-700">聯絡人</td>
+                    <td class="border border-gray-300 p-2 align-middle">${data.contactPerson}</td>
                 </tr>
-            </thead>
-            <tbody>${itemsHtml}</tbody>
-        </table>
+                <tr>
+                    <td class="bg-gray-100 font-bold text-center border border-gray-300 p-2 align-middle text-gray-700">工程名稱</td>
+                    <td class="border border-gray-300 p-2 font-bold align-middle text-lg">${data.projectName}</td>
+                    <td class="bg-gray-100 font-bold text-center border border-gray-300 p-2 align-middle text-gray-700">聯絡電話</td>
+                    <td class="border border-gray-300 p-2 align-middle">
+                        <div class="flex gap-4 items-center">
+                            <span>手機：${data.contactPhone}</span>
+                            ${data.tel ? `<span>市話：${data.tel}</span>` : ''}
+                        </div>
+                    </td>
+                </tr>
+            </table>
 
-        <div class="flex justify-between items-end p-2 mt-auto">
-            <div class="text-sm text-gray-600">
-                <div class="mb-1">業務專員：<span class="font-bold text-black border-b border-black px-2">${data.salesPerson || '-'}</span></div>
-                <div>聯絡電話：<span class="font-bold text-black border-b border-black px-2">${data.salesMobile || '-'}</span></div>
-                <div class="mt-2 text-xs text-gray-400">本報價單有效期限為 15 天，逾期請重新詢價。</div>
-            </div>
+            <style>
+                .items-table th, .items-table td { vertical-align: middle; }
+            </style>
 
-            <div class="w-1/3">
-                <div class="flex justify-between mb-1">
-                    <div class="font-bold text-gray-600">合計:</div>
-                    <div class="font-bold">${subtotal.toLocaleString()}</div>
-                </div>
-                ${feesHtml}
-                <div class="flex justify-between border-t-2 border-black font-bold text-lg mt-1 pt-1">
-                    <div class="text-blue-900">總計:</div>
-                    <div class="text-blue-900 text-xl">${grandTotal.toLocaleString()}</div>
-                </div>
-                <div class="mt-2 text-right border-t border-gray-300 pt-1 text-sm text-gray-500">
-                    新台幣：<span class="font-bold underline text-md text-black px-1">${toChineseAmt(grandTotal)}</span>
-                </div>
-            </div>
+            <table class="items-table w-full text-sm border-collapse border-b-2 border-blue-900">
+                <thead class="bg-blue-900 text-white">
+                    <tr>
+                        <th class="w-12 border border-blue-800 p-2 text-center align-middle">項次</th>
+                        <th class="border border-blue-800 p-2 text-left align-middle">項目名稱</th>
+                        <th class="w-16 border border-blue-800 p-2 text-center align-middle">單位</th>
+                        <th class="w-16 border border-blue-800 p-2 text-center align-middle">數量</th>
+                        <th class="w-28 border border-blue-800 p-2 text-right align-middle">單價</th>
+                        <th class="w-28 border border-blue-800 p-2 text-right align-middle">複價</th>
+                        <th class="w-40 border border-blue-800 p-2 text-left align-middle">備註</th>
+                    </tr>
+                </thead>
+                <tbody>${itemsHtml}</tbody>
+            </table>
         </div>
 
-        <div class="mt-4 border-t border-gray-200 pt-2 text-xs text-gray-500">
-            <div class="font-bold mb-1">備註：</div>
-            <div class="pl-4 whitespace-pre-wrap font-mono">${data.note}</div>
+        <div class="flex-1"></div>
+
+        <div class="flex-none mt-4">
+            <div class="flex justify-end mb-4">
+                <div class="w-1/3 min-w-[260px] space-y-1">
+                    <div class="flex justify-between text-base">
+                        <div class="font-bold text-gray-600">未稅合計:</div>
+                        <div class="font-bold font-mono tracking-wide">${untaxedTotal.toLocaleString()}</div>
+                    </div>
+                    ${feesHtml}
+                    <div class="flex justify-between text-base">
+                         <div class="font-bold text-gray-600">稅金金額 (5%):</div>
+                         <div class="font-bold font-mono tracking-wide">${taxAmt.toLocaleString()}</div>
+                    </div>
+                    <div class="flex justify-between border-t-2 border-black font-bold text-xl pt-1">
+                        <div class="text-blue-900">總計金額:</div>
+                        <div class="text-blue-900 font-mono tracking-wide text-2xl">$ ${grandTotal.toLocaleString()}</div>
+                    </div>
+                     <div class="mt-1 text-right text-sm text-gray-500">
+                        新台幣：<span class="font-bold underline text-base text-black px-1">${toChineseAmt(grandTotal)}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4 text-sm">
+                <div class="border border-black rounded p-3 relative bg-gray-50/50">
+                    <div class="font-bold mb-1 text-gray-800">備註事項：</div>
+                    <div class="pl-2 whitespace-pre-wrap font-mono text-gray-700 leading-relaxed tracking-wide">${data.note || "無"}</div>
+                </div>
+            </div>
+            
+            <div class="flex justify-between items-center text-sm font-bold text-gray-800 border-t-2 border-gray-300 pt-3">
+                <div class="flex gap-8">
+                    <div class="flex items-center gap-2">業務專員：<span class="text-black border-b border-black text-lg px-2 pb-0.5 min-w-[80px] text-center">${data.salesPerson || '-'}</span></div>
+                    <div class="flex items-center gap-2">聯絡電話：<span class="text-black border-b border-black text-lg px-2 pb-0.5 min-w-[120px] text-center">${data.salesMobile || '-'}</span></div>
+                </div>
+                <div class="text-xs text-gray-500 font-normal">本報價單有效期限為 15 天，逾期請重新詢價。</div>
+            </div>
         </div>
         `;
 
