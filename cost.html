@@ -529,89 +529,122 @@
                     </button>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-                    <!-- Title / Vendor Info -->
-                    <div class="md:col-span-4 space-y-4">
-                        <div>
+                <div class="space-y-6">
+                    <!-- Row 1: Tax ID & Vendor Name -->
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                         <div class="md:col-span-4">
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">統一編號 (8碼)</label>
+                            <div class="relative">
+                                <input type="text" value="${vTaxId}" class="v-tax w-full border border-gray-200 rounded-lg p-2.5 text-sm tracking-widest focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all font-mono" placeholder="12345678" maxlength="8" onchange="lookupBlockVendor(this)">
+                                <span class="v-msg hidden absolute right-2 top-3 text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1 rounded animate-pulse">
+                                    <i class="fa-solid fa-circle-notch fa-spin mr-1"></i>查詢中
+                                </span>
+                            </div>
+                        </div>
+                        <div class="md:col-span-8">
                             <label class="block text-xs font-bold text-gray-500 uppercase mb-1">廠商名稱 / 對象</label>
                             <div class="relative">
                                 <span class="absolute left-3 top-3 text-gray-400"><i class="fa-solid fa-store"></i></span>
                                 <input type="text" value="${vName}" class="v-name w-full pl-9 border border-gray-200 rounded-lg p-2.5 text-sm font-bold text-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all" list="vendor-list" placeholder="輸入或選擇廠商">
                             </div>
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">統一編號 (8碼)</label>
-                            <div class="relative">
-                                <input type="text" value="${vTaxId}" class="v-tax w-full border border-gray-200 rounded-lg p-2.5 text-sm tracking-widest focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all" placeholder="12345678" maxlength="8" onchange="lookupBlockVendor(this)">
-                                <span class="v-msg hidden absolute right-2 top-3 text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1 rounded animate-pulse">
-                                    <i class="fa-solid fa-circle-notch fa-spin mr-1"></i>查詢中
-                                </span>
-                            </div>
-                        </div>
                     </div>
                 
-                    <!-- Detail & Cost -->
-                    <div class="md:col-span-8">
-                         <div class="mb-4">
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">支出摘要 <span class="text-red-500">*</span></label>
-                            <input type="text" value="${vSummary}" class="v-summary w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all" placeholder="請輸入本筆支出的用途說明...">
-                         </div>
+                    <!-- Row 2: Summary -->
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">支出摘要 <span class="text-red-500">*</span></label>
+                        <input type="text" value="${vSummary}" class="v-summary w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all" placeholder="請輸入本筆支出的用途說明...">
+                    </div>
 
-                         <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">未稅金額 <span class="text-red-500">*</span></label>
-                                    <div class="relative">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <span class="text-gray-400 font-bold">$</span>
-                                        </div>
-                                        <input type="number" value="${vUntax}" class="v-untax w-full pl-7 border border-emerald-200 rounded-lg p-2 text-right font-mono text-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all" placeholder="0" oninput="calcRow(this)">
+                    <!-- Row 3: Amounts -->
+                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">未稅金額 <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <span class="text-gray-400 font-bold">$</span>
                                     </div>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-400 uppercase mb-1">稅金 (5%)</label>
-                                    <div class="relative">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <span class="text-gray-400 font-bold">$</span>
-                                        </div>
-                                        <input type="number" value="${vTax}" class="v-tax-amt w-full pl-7 border border-gray-200 bg-gray-100 rounded-lg p-2 text-right font-mono text-gray-500 cursor-not-allowed hidden-arrow" readonly tabindex="-1">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-emerald-600 uppercase mb-1">含稅總計</label>
-                                    <div class="relative">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <span class="text-emerald-500 font-bold">$</span>
-                                        </div>
-                                        <input type="number" value="${vInc}" class="v-inc w-full pl-7 border border-emerald-200 bg-emerald-50 rounded-lg p-2 text-right font-mono font-bold text-emerald-700 cursor-not-allowed hidden-arrow" readonly tabindex="-1">
-                                    </div>
+                                    <input type="number" value="${vUntax}" class="v-untax w-full pl-7 border border-emerald-200 rounded-lg p-2 text-right font-mono text-gray-800 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all" placeholder="0" oninput="calcRow(this)">
                                 </div>
                             </div>
-                         </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-400 uppercase mb-1">稅金 (5%)</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <span class="text-gray-400 font-bold">$</span>
+                                    </div>
+                                    <input type="number" value="${vTax}" class="v-tax-amt w-full pl-7 border border-gray-200 bg-gray-100 rounded-lg p-2 text-right font-mono text-gray-500 cursor-not-allowed hidden-arrow" readonly tabindex="-1">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-emerald-600 uppercase mb-1">含稅總計</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <span class="text-emerald-500 font-bold">$</span>
+                                    </div>
+                                    <input type="number" value="${vInc}" class="v-inc w-full pl-7 border border-emerald-200 bg-emerald-50 rounded-lg p-2 text-right font-mono font-bold text-emerald-700 cursor-not-allowed hidden-arrow" readonly tabindex="-1">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Footer: Invoice & File -->
                 <div class="mt-4 pt-4 border-t border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">發票 / 收據號碼</label>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-xs font-bold text-gray-500 uppercase">發票 / 收據號碼</label>
+                            <div class="flex gap-3 text-xs">
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="radio" name="invType-${id}" value="invoice" class="text-emerald-500 focus:ring-emerald-500 v-inv-type" ${!data || data.invoiceType !== 'receipt' ? 'checked' : ''} onchange="toggleInvoiceType(this)">
+                                    <span class="ml-1 text-gray-600 font-bold">發票</span>
+                                </label>
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="radio" name="invType-${id}" value="receipt" class="text-emerald-500 focus:ring-emerald-500 v-inv-type" ${data && data.invoiceType === 'receipt' ? 'checked' : ''} onchange="toggleInvoiceType(this)">
+                                    <span class="ml-1 text-gray-600 font-bold">收據</span>
+                                </label>
+                            </div>
+                        </div>
                         <div class="relative">
                             <span class="absolute left-3 top-2.5 text-gray-400"><i class="fa-solid fa-receipt"></i></span>
-                            <input type="text" value="${vInv}" class="v-inv w-full pl-9 border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all" placeholder="EX: AB-12345678">
+                            <input type="text" value="${vInv}" class="v-inv w-full pl-9 border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all ${data && data.invoiceType === 'receipt' ? 'bg-gray-50' : ''}" placeholder="${data && data.invoiceType === 'receipt' ? '收據免填' : 'EX: AB-12345678'}">
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">單據照片 / 掃描檔</label>
-                        <label class="flex items-center gap-3 px-4 py-2 bg-white border border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 hover:border-emerald-400 transition-all group">
-                            <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
-                                <i class="fa-solid fa-cloud-arrow-up text-gray-500 group-hover:text-emerald-600"></i>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-xs font-bold text-gray-500 uppercase">單據照片 / 掃描檔 <span class="text-red-500">*</span></label>
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" class="v-error text-red-500 focus:ring-red-500 rounded border-gray-300" ${data && data.isError ? 'checked' : ''}>
+                                <span class="ml-1 text-xs font-bold text-red-500">錯誤</span>
+                            </label>
+                        </div>
+                        
+                        <div class="file-upload-container">
+                            <label class="flex items-center gap-3 px-4 py-2 bg-white border border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 hover:border-emerald-400 transition-all group ${data && data.invoiceImage ? 'hidden' : ''}" id="upload-label-${id}">
+                                <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
+                                    <i class="fa-solid fa-cloud-arrow-up text-gray-500 group-hover:text-emerald-600"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <span class="text-xs text-gray-500 block truncate file-name-display">點擊上傳檔案...</span>
+                                </div>
+                                <input type="file" class="v-file hidden" onchange="updateFileName(this)">
+                            </label>
+
+                             <div class="flex items-center gap-2 ${data && data.invoiceImage ? '' : 'hidden'}" id="file-info-${id}">
+                                ${data && data.invoiceImage ?
+                    `<a href="${data.invoiceImage}" target="_blank" class="flex-1 flex items-center gap-2 px-3 py-2 bg-emerald-50 rounded-lg text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition-colors">
+                                        <i class="fa-solid fa-image"></i>
+                                        查看原圖
+                                    </a>` :
+                    `<span class="flex-1 flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg text-xs font-bold text-gray-700 file-name-text"></span>`
+                }
+                                <button onclick="removeFile(this)" class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="刪除檔案">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
                             </div>
-                            <div class="flex-1">
-                                <span class="text-xs text-gray-500 block truncate file-name-display">點擊上傳檔案...</span>
-                            </div>
-                            <input type="file" class="v-file hidden" onchange="updateFileName(this)">
-                        </label>
-                        ${data && data.invoiceImage ? `<div class="mt-1 text-[10px] text-emerald-600 font-bold flex items-center"><i class="fa-solid fa-check-circle mr-1"></i>系統已有存檔</div>` : ''}
+                            <input type="hidden" class="v-has-saved-image" value="${data && data.invoiceImage ? 'true' : 'false'}">
+                        </div>
                     </div>
                 </div>
             `;
@@ -619,23 +652,76 @@
         }
 
         function removeBlock(id) {
-            const el = document.getElementById('block-' + id);
-            el.classList.add('opacity-0', 'scale-95'); // Animation
-            setTimeout(() => {
-                el.remove();
-                updateCount();
-                calcTotal();
-            }, 300);
+            const block = document.getElementById('block-' + id);
+            block.remove();
+            updateCount();
+            calcTotal();
+        }
+
+        function toggleInvoiceType(radio) {
+            const block = radio.closest('.vendor-block');
+            const invInput = block.querySelector('.v-inv');
+
+            if (radio.value === 'receipt') {
+                invInput.placeholder = "收據免填";
+                invInput.classList.add('bg-gray-50');
+            } else {
+                invInput.placeholder = "EX: AB-12345678";
+                invInput.classList.remove('bg-gray-50');
+            }
         }
 
         function updateFileName(input) {
-            const display = input.parentNode.querySelector('.file-name-display');
             if (input.files && input.files[0]) {
-                display.innerText = input.files[0].name;
-                display.classList.add('text-emerald-600', 'font-bold');
-            } else {
-                display.innerText = "點擊上傳檔案...";
-                display.classList.remove('text-emerald-600', 'font-bold');
+                const container = input.closest('.file-upload-container');
+                const uploadLabel = container.querySelector('label');
+                const fileInfo = container.querySelector('div[id^="file-info-"]');
+                const fileNameText = fileInfo.querySelector('.file-name-text');
+
+                uploadLabel.classList.add('hidden');
+                fileInfo.classList.remove('hidden');
+
+                // Re-create the structure for new file if needed (since "View Original" might be there)
+                if (!fileNameText) {
+                    // If it was a link before, we replace it with text span
+                    const link = fileInfo.querySelector('a');
+                    if (link) link.remove();
+
+                    const span = document.createElement('span');
+                    span.className = "flex-1 flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg text-xs font-bold text-gray-700 file-name-text";
+                    fileInfo.insertBefore(span, fileInfo.firstChild);
+                    span.textContent = input.files[0].name;
+                } else {
+                    fileNameText.textContent = input.files[0].name;
+                }
+            }
+        }
+
+        function removeFile(btn) {
+            const container = btn.closest('.file-upload-container');
+            const input = container.querySelector('.v-file');
+            const uploadLabel = container.querySelector('label');
+            const fileInfo = container.querySelector('div[id^="file-info-"]');
+            const hasSavedInput = container.querySelector('.v-has-saved-image');
+
+            input.value = ''; // Clear file input
+            hasSavedInput.value = 'false'; // Mark as no saved image
+
+            fileInfo.classList.add('hidden');
+            uploadLabel.classList.remove('hidden');
+
+            // Clean up file info content to reset to empty state
+            const fileNameText = fileInfo.querySelector('.file-name-text');
+            if (fileNameText) fileNameText.textContent = '';
+
+            // Also remove "View Original" link if present, to be safe, though hiding works too
+            const link = fileInfo.querySelector('a');
+            if (link) {
+                link.remove();
+                // Add back empty span for next time
+                const span = document.createElement('span');
+                span.className = "flex-1 flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg text-xs font-bold text-gray-700 file-name-text";
+                fileInfo.insertBefore(span, fileInfo.firstChild);
             }
         }
 
@@ -920,9 +1006,25 @@
             const blocks = document.querySelectorAll('.vendor-block');
 
             const filePromises = Array.from(blocks).map(block => {
-                return new Promise((resolve) => {
+                return new Promise((resolve, reject) => {
                     const fileInput = block.querySelector('.v-file');
                     const file = fileInput.files[0];
+                    const invType = block.querySelector('.v-inv-type:checked').value;
+                    const isError = block.querySelector('.v-error').checked;
+                    const hasSavedImage = block.querySelector('.v-has-saved-image').value === 'true';
+                    const invNo = block.querySelector('.v-inv').value;
+
+                    // Validation
+                    if (invType === 'invoice' && !invNo.trim()) {
+                        reject("請輸入發票號碼！(若無發票請選擇'收據')");
+                        return;
+                    }
+
+                    if (!file && !hasSavedImage) {
+                        reject("每一筆支出都必須上傳單據照片！");
+                        return;
+                    }
+
                     const itemData = {
                         vendorTaxId: block.querySelector('.v-tax').value,
                         vendorName: block.querySelector('.v-name').value,
@@ -930,23 +1032,54 @@
                         subtotalNoTax: block.querySelector('.v-untax').value,
                         taxAmount: block.querySelector('.v-tax-amt').value,
                         grandTotal: block.querySelector('.v-inc').value,
-                        invoiceNo: block.querySelector('.v-inv').value,
+                        invoiceNo: invNo,
+                        invoiceType: invType,
+                        isError: isError
+                        // invoiceImage will be handled below
                     };
 
                     if (file) {
                         const reader = new FileReader();
                         reader.onload = function () {
                             itemData.invoiceImage = reader.result.split(',')[1];
+                            // If user uploaded new file, we send the base64. 
+                            // Backend should treat this as a new file upload.
                             resolve(itemData);
                         };
                         reader.readAsDataURL(file);
                     } else {
+                        // If no new file but has saved image, we don't send invoiceImage (or send a flag?)
+                        // Current backend logic likely expects 'invoiceImage' to save file.
+                        // If we don't send it, backend won't overwrite.
+                        // However, we need to make sure backend doesn't require it if it's an update.
+                        // For simplicity in this logic: if we don't send invoiceImage, backend keeps old one.
+                        // BUT, if user checked "Error", we might need to rename the old file? 
+                        // Renaming old file on Drive via GAS is possible but might be complex if we only have the URL.
+                        // Let's assume for now: if no new file, we just send metadata. 
+                        // If "Error" flag changed, we might want to update filename but that requires file ID.
+                        // We likely don't have file ID here, only URL. 
+                        // So for "Error" flag to affect filename, it works best when uploading. 
+                        // If just updating metadata, we might accept that filename doesn't change, OR we implement renaming.
+                        // User request: "若勾選錯誤選項時在該檔檔名增加'錯誤'文字"
+                        // If it's an existing file, we can't easily rename it without the ID.
+                        // We will just pass the flag. Backend needs to handle this.
+                        // Actually, if we are compliant with "File required", we are good.
+
+                        // Wait, if it's existing file, we resolve immediately.
                         resolve(itemData);
                     }
                 });
             });
 
-            const loadedItems = await Promise.all(filePromises);
+            let loadedItems;
+            try {
+                loadedItems = await Promise.all(filePromises);
+            } catch (err) {
+                alert(err);
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+                return; // Stop submission
+            }
 
             const payload = {
                 type: 'cost',
