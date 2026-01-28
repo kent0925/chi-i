@@ -29,6 +29,27 @@
             align-items: center;
             transition: opacity 0.5s ease;
         }
+
+        /* Mobile Optimization: Prevent iOS Zoom */
+        @media (max-width: 768px) {
+
+            input,
+            select,
+            textarea {
+                font-size: 16px !important;
+            }
+        }
+
+        /* Touch-friendly tap targets */
+        @media (pointer: coarse) {
+
+            button,
+            a,
+            label,
+            select {
+                min-height: 44px;
+            }
+        }
     </style>
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>

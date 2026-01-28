@@ -128,6 +128,17 @@
             }
         }
 
+        /* Touch-friendly tap targets */
+        @media (pointer: coarse) {
+
+            button,
+            a,
+            label,
+            select {
+                min-height: 44px;
+            }
+        }
+
         /* Loading Overlay */
         #loading-overlay {
             position: fixed;
@@ -166,13 +177,13 @@
             <div class="absolute -top-10 -right-10 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl pointer-events-none">
             </div>
 
-            <div class="flex items-center gap-5 z-10">
-                <div class="bg-white/20 p-4 rounded-2xl shadow-inner backdrop-blur-md border border-white/10">
-                    <i class="fa-solid fa-file-invoice-dollar text-3xl text-blue-100"></i>
+            <div class="flex items-center gap-3 md:gap-5 z-10">
+                <div class="bg-white/20 p-3 md:p-4 rounded-2xl shadow-inner backdrop-blur-md border border-white/10">
+                    <i class="fa-solid fa-file-invoice-dollar text-2xl md:text-3xl text-blue-100"></i>
                 </div>
                 <div>
-                    <h1 class="text-3xl font-bold tracking-wide text-white drop-shadow-sm">工程報價系統</h1>
-                    <p class="text-blue-100/80 text-sm font-medium mt-1">Quotation Management System</p>
+                    <h1 class="text-xl md:text-3xl font-bold tracking-wide text-white drop-shadow-sm">工程報價系統</h1>
+                    <p class="text-blue-100/80 text-xs md:text-sm font-medium mt-1">Quotation Management System</p>
                 </div>
             </div>
 
@@ -186,9 +197,9 @@
                 </div>
 
                 <button onclick="location.href='index.html'"
-                    class="group bg-white/10 hover:bg-white/20 text-white text-sm py-2 px-5 rounded-full border border-white/30 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
-                    <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
-                    <span>返回主選單</span>
+                    class="group bg-white/10 hover:bg-white/20 text-white text-sm py-2 px-4 md:px-5 rounded-full border border-white/30 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+                    <i class="fa-solid fa-house group-hover:scale-110 transition-transform"></i>
+                    <span class="hidden md:inline">返回主選單</span>
                 </button>
             </div>
         </div>
@@ -625,7 +636,7 @@
              <input type="text" class="input-name w-full border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="細項描述">
         </div>
         <div class="md:col-span-4 grid grid-cols-3 gap-2">
-            <input type="number" class="input-qty border border-gray-200 rounded-lg p-2 text-sm text-center focus:ring-2 focus:ring-blue-500 outline-none" placeholder="數量" value="1">
+            <input type="text" inputmode="numeric" pattern="[0-9]*" class="input-qty border border-gray-200 rounded-lg p-2 text-sm text-center focus:ring-2 focus:ring-blue-500 outline-none" placeholder="數量" value="1">
             <div class="relative">
                 <select onchange="handleUnitChange(this)"
                     class="input-unit-select w-full border border-gray-200 rounded-lg p-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white">
@@ -636,7 +647,7 @@
                 <input type="text" onblur="checkNewUnit(this)"
                     class="input-unit-custom hidden w-full border border-blue-300 rounded-lg p-2 text-xs bg-blue-50 focus:bg-white transition-all" placeholder="新單位">
             </div>
-            <input type="number" onchange="checkPrice(this)"
+            <input type="text" inputmode="numeric" pattern="[0-9]*" onchange="checkPrice(this)"
                  class="input-price border border-gray-200 rounded-lg p-2 text-sm text-right focus:ring-2 focus:ring-blue-500 outline-none font-mono" placeholder="單價">
         </div>
         <div class="md:col-span-3">
@@ -704,7 +715,7 @@
                     <option value="fixed">固定金額($)</option>
                     <option value="percent">百分比(%)</option>
                 </select>
-                <input type="number" class="fee-value w-20 border border-gray-200 rounded-md p-1 text-sm text-right focus:ring-1 focus:ring-yellow-400" placeholder="0" min="0">
+                <input type="text" inputmode="numeric" pattern="[0-9]*" class="fee-value w-20 border border-gray-200 rounded-md p-1 text-sm text-right focus:ring-1 focus:ring-yellow-400" placeholder="0">
                 <button onclick="this.parentElement.remove()" class="w-6 h-6 rounded-full hover:bg-red-100 text-gray-300 hover:text-red-500 flex items-center justify-center transition-colors">
                     <i class="fa-solid fa-times"></i>
                 </button>
