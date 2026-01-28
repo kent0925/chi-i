@@ -386,7 +386,8 @@
                     liff.login();
                 }
             } catch (e) {
-                console.error('LIFF Init Error', e);
+                console.error('LIFF 初始化錯誤:', e);
+                alert(`LINE 登入初始化失敗\n請確認網路連線或重新開啟頁面\n錯誤詳情: ${e.message}`);
             }
         }
 
@@ -414,7 +415,8 @@
                     }
                 })
                 .catch(err => {
-                    console.error("GAS Error", err);
+                    console.error("系統設定載入錯誤:", err);
+                    alert(`系統設定載入失敗\n請重新整理頁面或聯繫管理員\n錯誤詳情: ${err.message}`);
                     // Fallback for UI testing if GAS fails
                     addVendorBlock();
                     // Hide Loading even on error
@@ -768,6 +770,7 @@
 
             try {
                 const res = await fetch(`${GAS_URL}?action=lookup&taxId=${val}`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
                 const data = await res.json();
                 if (data.name) {
                     nameInput.value = data.name;
@@ -775,7 +778,10 @@
                 } else {
                     // Optional: Toast or small alert
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error("統編查詢錯誤:", e);
+                alert(`統編查詢失敗\n請確認網路連線或稍後再試\n錯誤詳情: ${e.message}`);
+            }
 
             msg.classList.add('hidden');
         }

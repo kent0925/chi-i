@@ -29,10 +29,33 @@
             /* gray-500 */
             border-bottom: 2px solid transparent;
         }
+
+        /* Loading Overlay */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
     </style>
 </head>
 
 <body class="bg-gradient-to-br from-slate-100 to-gray-200 min-h-screen p-4 md:p-8 font-sans text-gray-700">
+    <!-- Loading Overlay -->
+    <div id="loading-overlay">
+        <div class="text-center">
+            <i class="fa-solid fa-circle-notch fa-spin text-4xl text-orange-600 mb-4"></i>
+            <p class="text-orange-800 font-bold tracking-widest animate-pulse">資料載入中...</p>
+        </div>
+    </div>
+
     <div
         class="max-w-5xl mx-auto bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-white/50">
 
@@ -443,21 +466,35 @@
         window.onload = async function () {
             initializeLiff();
             document.getElementById('accDate').value = new Date().toISOString().split('T')[0];
+
+            const overlay = document.getElementById('loading-overlay');
+
             try {
-                const res = await fetch(`${GAS_URL}?action=getProjectList`);
+                const res = await fetch(GAS_URL);
+                if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
                 const config = await res.json();
                 const list = document.getElementById('project-list');
-                if (config.projectList) {
-                    config.projectList.forEach(p => {
+                if (config.projects) {
+                    config.projects.forEach(p => {
                         const opt = document.createElement('option');
-                        opt.value = p;
+                        opt.value = p.project;
                         list.appendChild(opt);
                     });
                 }
-            } catch (e) { console.error("Load projects error", e); }
+            } catch (e) {
+                console.error("專案清單載入錯誤:", e);
+                alert(`專案清單載入失敗\n請重新整理頁面或聯繫管理員\n錯誤詳情: ${e.message}`);
+            }
 
             // Ensure banks are loaded
             await loadBanks();
+
+            // Hide loading overlay
+            if (overlay) {
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.remove(), 500);
+            }
+
             document.getElementById('projectSelect').focus();
         };
 
@@ -490,12 +527,16 @@
         async function loadBanks() {
             try {
                 const res = await fetch(`${GAS_URL}?action=getBanks`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
                 const data = await res.json();
                 if (Array.isArray(data)) {
                     bankList = data;
-                    console.log(`Loaded ${bankList.length} banks`);
+                    console.log(`已載入 ${bankList.length} 家銀行`);
                 }
-            } catch (e) { console.error("Banks load error", e); }
+            } catch (e) {
+                console.error("銀行清單載入錯誤:", e);
+                alert(`銀行清單載入失敗\n部分功能可能受影響\n錯誤詳情: ${e.message}`);
+            }
         }
 
         function lookupBank(input, outputId) {
@@ -524,9 +565,26 @@
 
         async function loadProjectInfo(pid) {
             if (!pid) return;
-            // Show Loading?
+
+            const overlay = document.getElementById('loading-overlay');
+            if (!overlay) {
+                // Create temporary overlay if not exists
+                const tempOverlay = document.createElement('div');
+                tempOverlay.id = 'loading-overlay-temp';
+                tempOverlay.className = 'fixed inset-0 bg-white/95 z-[9999] flex items-center justify-center';
+                tempOverlay.innerHTML = `
+                    <div class="text-center">
+                        <i class="fa-solid fa-circle-notch fa-spin text-4xl text-orange-600 mb-4"></i>
+                        <p class="text-orange-800 font-bold tracking-widest animate-pulse">載入專案資料...</p>
+                    </div>
+                `;
+                document.body.appendChild(tempOverlay);
+                setTimeout(() => tempOverlay.remove(), 3000);
+            }
+
             try {
                 const res = await fetch(`${GAS_URL}?action=getProjectFinancials&projectId=${encodeURIComponent(pid)}`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
                 const data = await res.json();
                 projectFinancials = data;
                 selectedCustomer = data.customer || "";
@@ -566,7 +624,10 @@
 
                 calcBonus();
 
-            } catch (e) { console.error("Fin data error", e); }
+            } catch (e) {
+                console.error("專案財務資料載入錯誤:", e);
+                alert(`專案財務資料載入失敗\n請確認專案名稱正確或聯繫管理員\n錯誤詳情: ${e.message}`);
+            }
         }
 
         function validateInvoice() {
@@ -709,8 +770,13 @@
                 if (liff.isLoggedIn()) {
                     const profile = await liff.getProfile();
                     lineUser = profile;
-                } else { liff.login(); }
-            } catch (e) { }
+                } else {
+                    liff.login();
+                }
+            } catch (e) {
+                console.error('LIFF 初始化錯誤:', e);
+                alert(`LINE 登入初始化失敗\n請確認網路連線或重新開啟頁面\n錯誤詳情: ${e.message}`);
+            }
         }
 
         async function submitAccData() {

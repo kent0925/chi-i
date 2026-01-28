@@ -14,11 +14,34 @@
             font-family: 'Noto Sans TC', sans-serif;
             background-color: #f3f4f6;
         }
+
+        /* Loading Overlay */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
     </style>
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 
 <body class="bg-gradient-to-br from-slate-100 to-gray-200 min-h-screen flex items-center justify-center p-4 relative">
+    <!-- Loading Overlay -->
+    <div id="loading-overlay">
+        <div class="text-center">
+            <i class="fa-solid fa-circle-notch fa-spin text-4xl text-blue-600 mb-4"></i>
+            <p class="text-blue-800 font-bold tracking-widest animate-pulse">資料載入中...</p>
+        </div>
+    </div>
+
     <!-- LIFF Profile 區域 -->
     <div id="liff-profile"
         class="hidden absolute top-4 right-4 flex items-center gap-3 bg-white/90 backdrop-blur-sm p-2 pr-4 rounded-full shadow-md border border-white/50 z-50">
@@ -129,7 +152,8 @@
                     liff.login();
                 }
             } catch (error) {
-                console.error('LIFF Init Error:', error);
+                console.error('LIFF 初始化錯誤:', error);
+                alert(`LINE 登入初始化失敗\n請確認網路連線或重新開啟頁面\n錯誤詳情: ${error.message}`);
             }
             // 載入儀表板數據
             loadFinancialDashboard();
@@ -149,12 +173,37 @@
 
         async function loadFinancialDashboard() {
             const container = document.getElementById('dashboard-container');
+            const overlay = document.getElementById('loading-overlay');
+
+            // Show loading
+            container.innerHTML = `
+                <div class="text-center py-10 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                    <i class="fa-solid fa-spinner fa-spin mb-2"></i>
+                    <p class="text-[10px]">載入數據中...</p>
+                </div>
+            `;
+
             try {
                 const res = await fetch(`${GAS_URL}?action=getGlobalFinancials`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
                 const data = await res.json();
                 renderDashboard(data);
             } catch (e) {
-                container.innerHTML = `<div class="text-center py-4 text-red-400 text-[10px]">載入失敗: ${e}</div>`;
+                console.error('財務數據載入錯誤:', e);
+                container.innerHTML = `
+                    <div class="text-center py-6 text-red-500 bg-red-50 rounded-xl border border-red-200">
+                        <i class="fa-solid fa-exclamation-triangle mb-2"></i>
+                        <p class="text-xs font-bold mb-1">財務數據載入失敗</p>
+                        <p class="text-[10px] text-gray-500">請重新整理頁面或聯繫管理員</p>
+                        <p class="text-[9px] text-gray-400 mt-2">錯誤: ${e.message}</p>
+                    </div>
+                `;
+            } finally {
+                // Hide loading overlay on first load
+                if (overlay) {
+                    overlay.style.opacity = '0';
+                    setTimeout(() => overlay.remove(), 500);
+                }
             }
         }
 
