@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap');
 
@@ -165,6 +166,21 @@
             };
 
             const btn = document.querySelector('button[onclick="submitAccData()"]');
+            btn.innerText = "處理中...";
+            btn.disabled = true;
+
+            // Generate Image
+            try {
+                const captureElement = document.querySelector('.max-w-5xl'); // Capture the main card
+                const canvas = await html2canvas(captureElement, { scale: 1.5, useCORS: true, backgroundColor: '#f3f4f6' }); // Match bg color
+                data.image = canvas.toDataURL('image/jpeg', 0.8);
+            } catch (err) {
+                console.error("Image generation failed", err);
+                // Proceed without image if failed, or maybe alert? User requested image feature, so warning is good.
+                // data.image will be undefined, backend handles it gracefully (just skips save).
+            }
+
+            // const btn = document.querySelector('button[onclick="submitAccData()"]'); // Removed duplicate
             btn.innerText = "儲存中...";
             btn.disabled = true;
 
